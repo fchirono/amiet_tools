@@ -1,4 +1,4 @@
-b"""
+"""
 *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 Implementing Amiet's model for airfoil noise sources (normal incidence gust)
 and a model for monopole and dipole source radiation in a uniform flow based on
