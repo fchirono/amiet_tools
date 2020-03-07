@@ -63,4 +63,3 @@ Turbulent Shear Flows: Fundamentals and Applications". Springer-Verlag,
 de Santana, L., "Semi-analytical methodologies for airfoil noise
 prediction", PhD Thesis, Faculty of Engineering Sciences - Katholieke
 Universiteit Leuven, Leuven, Belgium, 2015.
-
