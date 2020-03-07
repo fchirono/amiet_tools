@@ -1,25 +1,64 @@
 """
-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-Implementing Amiet's model for airfoil noise sources (normal incidence gust)
-and a model for monopole and dipole source radiation in a uniform flow based on
-Chapman's similarity variables.
+amiet_tools - a Python package for turbulence-aerofoil noise prediction.
+https://github.com/fchirono/amiet_tools
+Copyright (c) 2020, Fabio Casagrande Hirono
 
-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
->>> Sources:
+The 'amiet_tools' (AmT) Python package provides a reference implementation of
+Amiet's [JSV 41, 1975] model for turbulence-aerofoil interaction noise with
+extensions. These functions allow the calculation of the surface pressure jump
+developed over the aerofoil surface (i.e. the acoustic source distribution) in
+response to incoming turbulence, and of the acoustic field radiated by the
+interaction.
 
---- C Chapman   -   Similarity Variables for Sound Radiation in a Uniform Flow
-                    [JSV 233(1), p.157-164, 2000]
+Incoming turbulence can be a single sinusoidal gust, or a sum of incoherent
+gusts with amplitudes given by a prescribed energy spectrum.
 
-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+Dependencies:
+    - numpy: array processing for numbers, strings, records, and objects;
+    - scipy: scientific library;
+    - mpmath: library for arbitrary-precision floating-point arithmetic.
+
+
+All dependencies are already included in the Anaconda Python Distribution, a
+free and open source distribution of Python. Anaconda 4.8.2 (with Python 3.7)
+was used to develop and test AmT, and is recommended for using AmT.
+
+
 Author:
-Fabio Casagrande Hirono
-fch1g10@soton.ac.uk
-April 2015
-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    Fabio Casagrande Hirono - fchirono@gmail.com
+
+
+Main Technical References:
+
+    Amiet, R. K., "Acoustic radiation from an airfoil in a turbulent stream",
+    Journal of Sound and Vibration, Vol. 41, No. 4:407–420, 1975.
+
+    Blandeau, V., "Aerodynamic Broadband Noise from Contra-Rotating Open
+    Rotors", PhD Thesis, Institute of Sound and Vibration Research, University
+    of Southampton, Southampton - UK, 2011.
+
+    Casagrande Hirono, F., "Far-Field Microphone Array Techniques for Acoustic
+    Characterisation of Aerofoils", PhD Thesis, Institute of Sound and
+    Vibration Research, University of Southampton, Southampton - UK, 2018.
+
+    Reboul, G., "Modélisation du bruit à large bande de soufflante de
+    turboréacteur", PhD Thesis, Laboratoire de Mécanique des Fluides et
+    d’Acoustique - École Centrale de Lyon, Lyon - France, 2010.
+
+    Roger, M., "Broadband noise from lifting surfaces: Analytical modeling and
+    experimental validation". In Roberto Camussi, editor, "Noise Sources in
+    Turbulent Shear Flows: Fundamentals and Applications". Springer-Verlag,
+    2013.
+
+    de Santana, L., "Semi-analytical methodologies for airfoil noise
+    prediction", PhD Thesis, Faculty of Engineering Sciences - Katholieke
+    Universiteit Leuven, Leuven, Belgium, 2015.
 """
 
 import numpy as np
 import scipy.special as ss
+import scipy.optimize as so     # for shear layer correction functions
 import mpmath as mp
 
 
@@ -29,12 +68,415 @@ def H(A):
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> "Convenience" functions
+# --->>> "Convenience" functions for vectorizing calculations with mpmath
 
 mpexp = np.vectorize(mp.exp)
 mpsqrt = np.vectorize(mp.sqrt)
 mperf = np.vectorize(mp.erf)
 
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>> Sound propagation functions
+
+def dipole3D(xyz_source, xyz_obs, k0, dipole_axis='z', flow_param=None,
+             far_field=False):
+    """
+    Calculates a (M, N)-shaped matrix of dipole transfer functions
+    between 'N' sources and 'M' observers/microphones at a single frequency.
+
+    Parameters
+    ----------
+    xyz_source : (3, N) array_like
+        Array containing the (x, y, z) coordinates of the 'N' sources.
+
+    xyz_obs : (3, M) array_like
+        Array containing the (x, y, z) coordinates of the 'M' observers /
+        microphones.
+
+    k0 : float
+        Acoustic wavenumber / spatial frequency. Can be obtained from the
+        temporal frequency 'f' [in Hz] and the speed of sound 'c0' [in m/s]
+        as 'k0 = 2*pi*f/c0'.
+
+    dipole_axis : {'x', 'y', 'z'}
+        String indicating the direction aligned with the dipole axis; default
+        is 'z'.
+
+    flow_param : (flow_dir = {'x', 'y', 'z'}, Mach = float), optional
+        Tuple containing the flow parameters: 'flow_dir' is the flow direction
+        and can assume the strings 'x', 'y' or 'z'; 'Mach' is the Mach number
+        of the flow, calculated by 'Mach = U/c0', where 'U' is the flow
+        velocity [in m/s].
+
+    far_field : boolean, optional
+        Boolean variable determining if returns far-field approximation;
+        default is 'False'
+
+    Returns
+    -------
+    G : (M, N) array_like
+        Matrix of complex transfer functions between sources and observers.
+
+    Notes
+    -----
+    To calculate a vector of acoustic pressures 'p' at the observer locations
+    as induced by a vector of source strengths 'q' at the source locations,
+    simply do
+
+    >>> p = G @ q
+
+    """
+
+    # check if source/observer coordinates have appropriate shape
+    # ( i.e. [3, N_points])
+    if (xyz_source.ndim == 1):
+        xyz_source = np.array([xyz_source]).transpose()
+
+    if (xyz_obs.ndim == 1):
+        xyz_obs = np.array([xyz_obs]).transpose()
+
+    # M = xyz_obs.shape[1]
+    # N = xyz_source.shape[1]
+
+    # if calculating Greens function for a steady medium (no flow):
+    if not flow_param:
+
+        # matrix of mic-source distances (Euclidean distance)
+        r = np.sqrt(((xyz_obs[:, :, np.newaxis]
+                      - xyz_source[:, np.newaxis, :])**2).sum(0))
+
+        # dictionary with direction-to-axis mapping
+        dir_keys = {'x': 0, 'y': 1, 'z': 2}
+
+        # read dictionary entry for 'flow_dir'
+        i_dip = dir_keys[dipole_axis]
+
+        # dipole directivity term (cosine)
+        dip_cos = (xyz_obs[i_dip, :, np.newaxis]-xyz_source[i_dip])/r
+
+        # matrix of Green's functions
+        G_dipole = (1j*k0 + 1/r)*dip_cos*np.exp(-1j*k0*r)/(4*np.pi*r)
+
+        return G_dipole
+
+    # if calculating Greens function for a convected medium :
+    else:
+
+        # parse 'flow_param' tuple
+        flow_dir, Mach = flow_param
+
+        # flow correction factor
+        beta = np.sqrt(1.-Mach**2)
+
+        # dictionary with direction-to-axis mapping
+        dir_keys = {'x': 0, 'y': 1, 'z': 2}
+
+        # read dictionary entry for 'flow_dir'
+        i_flow = dir_keys[flow_dir]
+
+        # apply '1/beta' factor to all coordinates
+        xyz_obsB = xyz_obs/beta
+        xyz_sourceB = xyz_source/beta
+
+        # apply extra '1/beta' factor to flow direction
+        xyz_obsB[i_flow] = xyz_obsB[i_flow]/beta
+        xyz_sourceB[i_flow] = xyz_sourceB[i_flow]/beta
+
+        # matrix of delta-x in flow direction (uses broadcasting)
+        xB = xyz_obsB[i_flow, :, np.newaxis] - xyz_sourceB[i_flow, :]
+
+        # matrix of transformed mic-source distances (Euclidean distance)
+        rB = np.sqrt(((xyz_obsB[:, :, np.newaxis]
+                       - xyz_sourceB[:, np.newaxis, :])**2).sum(0))
+
+        # read dictionary entry for 'flow_dir'
+        i_dip = dir_keys[dipole_axis]
+
+        # dipole directivity term (cosine)
+        dip_cos = (xyz_obsB[i_dip, :, np.newaxis]-xyz_sourceB[i_dip])/(rB*beta)
+
+        # if using far-field approximation...
+        if far_field:
+            # matrix of convected far-field greens functions
+            sigma = np.sqrt(xyz_obs[0, :, np.newaxis]**2
+                            + (beta**2)*(xyz_obs[1, :, np.newaxis]**2
+                                         + xyz_obs[2, :, np.newaxis]**2))
+
+            G_dipole = ((1j*k0*xyz_obs[2, :, np.newaxis]/(4*np.pi*(sigma**2)))
+                        * np.exp(1j*k0*(Mach*xyz_obs[0, :, np.newaxis]-sigma)
+                                 / (beta**2))
+                        * np.exp(1j*k0*(xyz_obs[0, :, np.newaxis]-Mach*sigma)
+                                 * xyz_source[0]/(sigma*(beta**2)))
+                        * np.exp(1j*k0*(xyz_obs[1, :, np.newaxis]/sigma)
+                                 *xyz_source[1]))
+
+        else:
+            # Matrix of convected Green's functions
+            G_dipole = ((1j*k0 + 1./rB)*dip_cos*np.exp(1j*k0*Mach*xB)
+                        * np.exp(-1j*k0*rB)/(4*np.pi*(beta**2)*rB))
+
+        return G_dipole
+
+
+def dipole_shear(XYZ_source, XYZ_obs, XYZ_sl, T_sl, k0, c0, Mach):
+    """
+    Calculates a (M, N)-shaped matrix of dipole transfer functions
+    between 'N' sources and 'M' observers/microphones at a single frequency
+    including shear layer refraction effects. The mean flow is assumed to be
+    in the '+x' direction with velocity 'Ux = Mach*c0', and the dipoles are
+    assumed to be located with their axes in the '+z' direction.
+
+
+    Parameters
+    ----------
+    XYZ_source : (3, N) array_like
+        Array containing the (x, y, z) coordinates of the 'N' sources.
+
+    XYZ_obs : (3, M) array_like
+        Array containing the (x, y, z) coordinates of the 'M' observers /
+        microphones.
+
+    XYZ_sl : (3, M, N) array_like
+        Array containing the (x, y, z) coordinates of the shear-layer crossing
+        point for an acoustic ray leaving the 'n'-th source and reaching
+        the 'm'-th observer. Can be obtained from 'ShearLayer_matrix' function.
+
+    T_sl : (3, M, N) array_like
+        Array containing the total propagation time for an acoustic ray leaving
+        the 'n'-th source and reaching the 'm'-th observer. Can be obtained
+        from 'ShearLayer_matrix' function.
+
+    k0 : float
+        Acoustic wavenumber / spatial frequency. Can be obtained from the speed
+        of sound 'c0' [m/s] and the angular frequency 'omega0' [rad/s] (or
+        temporal frequency 'f0' [in Hz]) as 'k0 = 2*np.pi*f0/c0 = omega0/c0'.
+
+    c0 : float
+        Speed of sound in free air [m/s].
+
+    Mach : float
+        Mean flow Mach number; the flow velocity is 'Ux = Mach*c0'.
+
+    Returns
+    -------
+    G : (M, N) array_like
+        Matrix of complex transfer functions between sources and observers,
+        including shear layer refraction effects.
+
+    Notes
+    -----
+    This code uses a ray-acoustics approximation to predict the refraction
+    effects at the shear layer crossing: for every source-observer pair, it
+    shoots an acoustic ray that leaves the source, gets refracted at the shear
+    layer and reaches the observer. The ray obeys the convected wave equation
+    within the convecting region (i.e. before the shear layer), and the
+    standard wave equation outside the convecting region.
+
+    To calculate a vector of acoustic pressures 'p' at the observer locations
+    as induced by a vector of source strengths 'q' at the source locations,
+    simply do
+
+    >>> p = G @ q
+
+    """
+
+    # check if source/observer coordinates have appropriate shape
+    # ( i.e. [3, N_points])
+    if (XYZ_source.ndim == 1):
+        XYZ_source = np.array([XYZ_source]).transpose()
+
+    if (XYZ_obs.ndim == 1):
+        XYZ_obs = np.array([XYZ_obs]).transpose()
+
+    # flow-corrected source-to-shear-layer propag distance
+    sigma_sl = _sigma(XYZ_sl - XYZ_source[:, np.newaxis, :], Mach)
+
+    # dipole in-flow (cosine) directivity2
+    dip_cos = (XYZ_sl[2]-XYZ_source[2, np.newaxis, :])/sigma_sl
+
+    beta2 = 1-Mach**2
+    rbar_sl = sigma_sl/beta2
+
+    # geometric shear-layer-to-mic distance
+    r_lm = r(XYZ_sl - XYZ_obs[:, :, np.newaxis])
+
+    omega0 = k0*c0
+
+    G_dip_sl = ((1j*k0 + 1/(rbar_sl + r_lm))*dip_cos
+                * np.exp(-1j*omega0*T_sl)/(4*np.pi*(sigma_sl + r_lm)))
+
+    return G_dip_sl
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>> Shear Layer Correction Functions
+
+def r(x):
+    """ cartesian radius """
+    return np.sqrt(x[0]**2 + x[1]**2 + x[2]**2)
+
+
+def r_bar(x, Mach):
+    """ flow-corrected cartesian radius """
+    beta = np.sqrt(1-Mach**2)
+    return np.sqrt((x[0]/beta**2)**2 + (x[1]/beta)**2 + (x[2]/beta)**2)
+
+
+def _sigma(x, Mach):
+    """ flow-corrected radius """
+    beta2 = 1-Mach**2
+    return np.sqrt(x[0]**2 + beta2*(x[1]**2 + x[2]**2))
+
+
+def t_sound(x1, x2, c0):
+    """ propagation time for sound in steady medium """
+    return r(x1-x2)/c0
+
+
+def t_convect(x1, x2, Ux, c0):
+    """
+    Propagation time for sound in convected medium, flow in 'x' direction
+    """
+    Mach = Ux/c0
+    beta2 = 1-Mach**2  # beta squared
+    return (-(x2[0]-x1[0])*Mach + _sigma(x2-x1, Mach))/(c0*beta2)
+
+
+def t_total(x_layer, x_source, x_mic, Ux, c0):
+    """ total propagation time through shear layer """
+    return t_convect(x_source, x_layer, Ux, c0) + t_sound(x_layer, x_mic, c0)
+
+
+def zeta(x, Mach):
+    return np.sqrt((1-Mach*x[0]/r(x))**2 - (x[0]**2 + x[1]**2)/(r(x)**2))
+
+
+def constr_xl(XYZ_sl, XYZ_s, XYZ_m, Ux, c0):
+    """
+    Shear layer solver constraint in 'xl'
+    """
+    Mach = Ux/c0
+    beta2 = 1-Mach**2
+
+    return np.abs((XYZ_sl[0]-XYZ_s[0])/_sigma(XYZ_sl-XYZ_s, Mach) - Mach
+                  - beta2*(XYZ_m[0]-XYZ_sl[0])/r(XYZ_m-XYZ_sl))
+
+
+def constr_yl(XYZ_sl, XYZ_s, XYZ_m, Ux, c0):
+    """
+    Shear layer solver constraint in 'yl'
+    """
+    Mach = Ux/c0
+
+    return np.abs((XYZ_sl[1]-XYZ_s[1])/_sigma(XYZ_sl-XYZ_s, Mach)
+                  - (XYZ_m[1]-XYZ_sl[1])/r(XYZ_m-XYZ_sl))
+
+
+def ShearLayer_X(XYZ_s, XYZ_m, Ux, c0, z_sl):
+    """
+    Calculates the propagation time of an acoustic ray emitted from a source
+    at 'xs' to a microphone at 'xm' in two stages:
+
+        - through a mean flow in the '+x' direction, with Mach number
+        'Mach = Ux/c0', at height 'z_sl', up to the shear layer crossing point
+        'xL';
+
+        - and through a steady medium from the shear layer to the microphone
+        position.
+
+    Returns the shear layer crossing point 'xL' that minimises the total
+    propagation time.
+    """
+
+    # optimization constraints
+    cons = ({'type': 'eq', 'fun': lambda XYZ_sl: XYZ_sl[2]-z_sl},
+            {'type': 'eq', 'fun':
+             lambda XYZ_sl: constr_xl(XYZ_sl, XYZ_s, XYZ_m, Ux, c0)},
+            {'type': 'eq', 'fun':
+             lambda XYZ_sl: constr_yl(XYZ_sl, XYZ_s, XYZ_m, Ux, c0)})
+
+    # initial guess (straight line between source and mic)
+    XYZ_0 = ((XYZ_m + XYZ_s)*((z_sl-XYZ_s[2])/(XYZ_m[2] - XYZ_s[2])))
+
+    # optimize and get result
+    XYZ_sl_opt = so.minimize(t_total, XYZ_0, args=(XYZ_s, XYZ_m, Ux, c0),
+                             method='SLSQP', constraints=cons)
+    XYZ_sl = XYZ_sl_opt.x
+
+    return XYZ_sl
+
+
+def ShearLayer_Corr(XYZ_s, XYZ_sl, XYZ_m, Ux, c0):
+    """
+    Calculates a corrected position for a microphone measuring sound through
+    a shear layer using ray acoustics.
+
+    The corrected position is defined as that the acoustic ray would have
+    reached if there was no shear layer (i.e. flow everywhere).
+
+    The distance is corrected to that 'r(xc-xr) = r(xm-xs)' - see Amiet for
+    details.
+    """
+
+    # calculate travel time inside flow (source to shear layer)
+    tf = t_convect(XYZ_s, XYZ_sl, Ux, c0)
+
+    # determine ray phase velocity in flow (direction and magnitude)
+    cp_ray = (XYZ_sl-XYZ_s)/tf
+
+    # travel time for corrected position
+    tc = r(XYZ_m-XYZ_s)/c0
+
+    # corrected position
+    XYZ_c = XYZ_s + cp_ray*tc
+
+    # retarded source position
+    XYZ_r = XYZ_s + np.array([Ux, 0, 0])*tc
+
+    return XYZ_c, XYZ_r
+
+
+def ShearLayer_matrix(XYZ_s, XYZ_o, z_sl, Ux, c0):
+    """ Returns two matrices containing the propagation times and the shear
+    layer crossing points for each source-observer pair.
+
+    This is a convenience function, essentially two nested 'for'-loops around
+    the 'ShearLayer_X' and 'ShearLayer_t' functions."""
+
+    # ensure source/observer coordinates have appropriate shape
+    # ( i.e. [3, N_points])
+    if (XYZ_s.ndim == 1):
+        XYZ_s = np.array([XYZ_s]).transpose()
+
+    if (XYZ_o.ndim == 1):
+        XYZ_o = np.array([XYZ_o]).transpose()
+
+    # check if shear layer is located between sources and obs
+    sl_height_error = "Shear layer is not located between all sources and observers"
+    assert (np.prod(np.sign(XYZ_o[2] - z_sl))
+            == np.prod(np.sign(z_sl - XYZ_s[2]))), sl_height_error
+
+    # number of obs and sources
+    M = XYZ_o.shape[1]
+    N = XYZ_s.shape[1]
+
+    XYZ_sl = np.zeros((3, M, N))     # shear layer crossing point
+    T = np.zeros((M, N))            # propag time
+
+    for n in range(N):
+        for m in range(M):
+            # shear layer crossing point
+            XYZ_sl[:, m, n] = ShearLayer_X(XYZ_s[:, n], XYZ_o[:, m], Ux, c0,
+                                           z_sl)
+            # total propag time
+            T[m, n] = t_total(XYZ_sl[:, m, n], XYZ_s[:, n],
+                              XYZ_o[:, m], Ux, c0)
+
+    return T, XYZ_sl
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>>
 
 def chord_sampling(b, N=200, exp_length=2):
     """
@@ -67,6 +509,27 @@ def chord_sampling(b, N=200, exp_length=2):
 
     return x, dx
 
+
+def create_airf_mesh(b, d, Nx, Ny):
+    """ Creates the mesh containing the airfoil surface points. The 'z'
+    coordinate is set to always be zero.
+
+    The final array has shape (3, Ny, Nx). """
+
+    x_airfoil, dx = chord_sampling(b, Nx)
+
+    y_airfoil = np.linspace(-d, d, Ny)
+    dy = y_airfoil[1] - y_airfoil[0]
+
+    XY_airfoil = np.meshgrid(x_airfoil, y_airfoil)
+    Z_airfoil = np.zeros(XY_airfoil[0].shape)
+    XYZ_airfoil = np.array([XY_airfoil[0], XY_airfoil[1], Z_airfoil])
+
+    return XYZ_airfoil, dx, dy
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>> Other assorted functions
 
 def read_ffarray_lvm(filename):
     """
@@ -102,33 +565,38 @@ def read_ffarray_lvm(filename):
     return t, mics.T
 
 
-def create_airf_mesh(b, d, Nx, Ny):
-    """ Creates the mesh containing the airfoil surface points. The 'z'
-    coordinate is set to always be zero.
+def index_log(index_init, index_final, N):
+    """
+    Returns a 1D Numpy array containing (approximately) 'N' indices for
+    accessing a linearly-spaced vector in a (roughly) logarithmically-spaced
+    fashion.
 
-    The final array has shape (3, Ny, Nx). """
+    Given the necessary rounding of the resulting values to integers, some
+    lower indices may appear more than once; however, only unique indices are
+    returned, which in turn often does not result in exactly 'N' indices.
+    """
 
-    x_airfoil, dx = chord_sampling(b, Nx)
+    log10_init = np.log10(index_init)
+    log10_final = np.log10(index_final)
 
-    y_airfoil = np.linspace(-d, d, Ny)
-    dy = y_airfoil[1] - y_airfoil[0]
+    index_all = (np.logspace(log10_init, log10_final, N)).round().astype('int')
 
-    XY_airfoil = np.meshgrid(x_airfoil, y_airfoil)
-    Z_airfoil = np.zeros(XY_airfoil[0].shape)
-    XYZ_airfoil = np.array([XY_airfoil[0], XY_airfoil[1], Z_airfoil])
-
-    return XYZ_airfoil, dx, dy
+    return np.unique(index_all)
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> wrappers to create surface pressure cross-spectra matrix
 
+# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+#           >>> DO NOT USE - UNDER DEVELOPMENT! <<<
+# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+"""
 def calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky):
-    """
-    airfoil_tuple = (XYZ_airfoil, dx, dy)
-    turb_tuple = (Ux, turb_u_mean2, turb_length_scale, turb_model = {'K', 'L'})
-    how_may_ky = {'many', 'few'}
-    """
+
+    #airfoil_tuple = (XYZ_airfoil, dx, dy)
+    #turb_tuple = (Ux, turb_u_mean2, turb_length_scale, turb_model = {'K', 'L'})
+    #how_many_ky = {'many', 'few'}
+
 
     beta = np.sqrt(1-Mach**2)
 
@@ -154,6 +622,7 @@ def calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky):
         if ky_crit < 2*np.pi/d:
             N_ky = 41
             Ky = np.linspace(-ky_T, ky_T, N_ky)
+
         # 'high freq'
         else:
             # count how many sin(ky*d) periods in Ky range
@@ -205,7 +674,7 @@ def calc_Spp(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky, G):
     Sqq = calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky)
 
     return (G @ Sqq @ H(G))*4*np.pi
-
+"""
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> Aeroacoustic Functions
@@ -266,7 +735,7 @@ def delta_p(rho0, b, w0, Ux, Kx, ky, xy, M):
     # pressure difference over the whole airfoil surface
     delta_p = np.zeros(xy[0].shape, 'complex')
 
-    if xy.ndim is 3:
+    if xy.ndim == 3:
         # unsteady lift over the chord line (mid-span)
         g_x = np.zeros(xy[0][0].shape, 'complex')
 
@@ -276,7 +745,7 @@ def delta_p(rho0, b, w0, Ux, Kx, ky, xy, M):
         # broadcasts a copy of 'g_x' to 'delta_p'
         delta_p = g_x[np.newaxis, :]
 
-    elif xy.ndim is 2:
+    elif xy.ndim == 2:
         # unsteady lift over the chord line (mid-span)
         g_x = np.zeros(xy[0].shape, 'complex')
 
@@ -415,7 +884,7 @@ def ky_att(xs, b, M, k0, Att=-20):
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 def L_LE(x, sigma, Kx, ky, M, b):
-    """Analytical solutions for the unsteady lift (G Reboul's thesis - 2010)"""
+    """Effective lift functions (G Reboul's thesis - 2010)"""
 
     beta = np.sqrt(1-M**2)
     ky_critical = Kx*M/beta
@@ -463,7 +932,7 @@ def L_LE(x, sigma, Kx, ky, M, b):
 
 def L_LE_super(x, sigma, Kx, Ky, M, b):
     """
-    Analytical solution for unsteady lift integral - supercritical gust
+    Effective lift integral - supercritical gust
     """
 
     beta = np.sqrt(1-M**2)
@@ -490,7 +959,7 @@ def L_LE_super(x, sigma, Kx, Ky, M, b):
 
 def L_LE_sub(x, sigma, Kx, Ky, M, b):
     """
-    Analytical solution for unsteady lift integral - subcritical gust
+    Effective lift integral - subcritical gust
     """
 
     beta = np.sqrt(1-M**2)
@@ -527,7 +996,7 @@ def Phi_2D(kx, ky, u_mean2, length_scale, model='K'):
         kx = np.asarray([kx])
 
     # von Karman model (Amiet 1975)
-    if model is 'K':
+    if model == 'K':
         ke = (np.sqrt(np.pi)/length_scale)*(ss.gamma(5./6)/ss.gamma(1./3))
 
         kxe2_ye2 = (kx[:, np.newaxis]/ke)**2 + (ky/ke)**2
@@ -535,7 +1004,7 @@ def Phi_2D(kx, ky, u_mean2, length_scale, model='K'):
         return (4./(9*np.pi))*(u_mean2/(ke**2))*kxe2_ye2/((1+kxe2_ye2)**(7./3))
 
     # 2D Liepmann turbulence spectrum (Chaitanya's Upgrade)
-    elif model is 'L':
+    elif model == 'L':
 
         ls2 = length_scale**2
 
@@ -565,7 +1034,7 @@ N = 201
 b = 1
 M = 0.3
 Kx = np.pi/(b*M)
-xs, _ = AmT.chord_sampling(b, N, exp_length=2)
+xs, _ = chord_sampling(b, N, exp_length=2)
 
 beta = np.sqrt(1-M**2)
 mu = Kx*b*M/(beta**2)
@@ -573,122 +1042,37 @@ mu = Kx*b*M/(beta**2)
 plt.figure()
 for k in [0.1, 0.2, 0.3, 0.4, 0.5, 0.9, 0.95, 1.05, 1.5, 2., 5]:
     ky = k*beta*mu/b
-    g = AmT.g_LE(xs, Kx, ky, M, b)
+    g = g_LE(xs, Kx, ky, M, b)
     plt.plot(xs, np.abs(g))
 """
+
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # show non-uniform chordwise sampling
+
 """
 import matplotlib.pyplot as plt
-
 b = 0.075       # airfoil half chord [m]
 d = 0.225       # airfoil half span [m]
 
-Nx = 50
-length = 2
+Nx = 50         # number of points sampling the chord (non-uniformly)
+Ny = 101
 
-xn = np.linspace(-length, length, Nx+1)
-x = np.exp(xn)
+# create airfoil mesh coordinates, and reshape for calculations
+XYZ_airfoil, dx, dy = create_airf_mesh(b, d, Nx, Ny)
 
-# normalise to [0, 1] interval
-x = x-x.min()
-x = x/x.max()
 
-# normalise to [-b, b] interval
-x = (x*2*b)-b
-
-xn = xn[1:]
-xs = x[1:]
-
-# plot sampling
-plt.figure()
-plt.plot(xn, np.zeros(Nx), 'bs')
-plt.plot(xn, xs)
-plt.plot(np.zeros(Nx), xs, 'ro')
-plt.title('Nx = {}, length = {}'.format(Nx, length))
-
-# plot flat plate grid
-Ny = 31
-ys = np.linspace(-d, d, Ny)
-
-plt.figure(figsize=(5, 11))
+plt.figure(figsize=(6, 6))
 for nx in range(Nx):
-    plt.plot((xs[nx], xs[nx]), (ys[0], ys[-1]), 'k')
-
-for ny in range(Ny):
-    plt.plot((xs[0], xs[-1]), (ys[ny], ys[ny]), 'k')
+    plt.plot((XYZ_airfoil[0, 0, nx], XYZ_airfoil[0, 0, nx]),
+            (XYZ_airfoil[1, 0, nx], XYZ_airfoil[1, -1, nx]),
+            linestyle='-', color='k', linewidth='1')
+for ny in range(Ny//2, Ny):
+    plt.plot((XYZ_airfoil[0, ny, 0], XYZ_airfoil[0, ny, -1]),
+            (XYZ_airfoil[1, ny, 0], XYZ_airfoil[1, ny, -1]), 'k-')
 plt.axis('equal')
-plt.title('Flat plate mesh')
-plt.xlabel('x [m]')
-plt.ylabel('y [m]')
-plt.tight_layout()
-"""
-# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-## plot aerofoil grid
-#b = 0.075       # airfoil half chord [m]
-#d = 0.225       # airfoil half span [m]
-#
-#Nx = 50         # number of points sampling the chord (non-uniformly)
-#Ny = 101
-#
-## create airfoil mesh coordinates, and reshape for calculations
-#XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
-#
-#
-#plt.figure(figsize=(6, 6))
-#for nx in range(Nx):
-#    plt.plot((XYZ_airfoil[0, 0, nx], XYZ_airfoil[0, 0, nx]),
-#             (XYZ_airfoil[1, 0, nx], XYZ_airfoil[1, -1, nx]),
-#             linestyle='-', color='k', linewidth='1')
-#for ny in range(Ny//2, Ny):
-#    plt.plot((XYZ_airfoil[0, ny, 0], XYZ_airfoil[0, ny, -1]),
-#             (XYZ_airfoil[1, ny, 0], XYZ_airfoil[1, ny, -1]), 'k-')
-#plt.axis('equal')
-#plt.xlim(-1.2*b, 1.2*b)
-#plt.ylim(-2.1*b + d, 0.5*b+d)
-#plt.xticks([-b, 0, b], [r'$-b$', r'$0$', r'$b$'], fontsize=20)
-#plt.yticks([0.5*d, d], [r'$0.5d$', r'$d$'], fontsize=20)
+plt.xlim(-1.2*b, 1.2*b)
+plt.ylim(-2.1*b + d, 0.5*b+d)
+plt.xticks([-b, 0, b], [r'$-b$', r'$0$', r'$b$'], fontsize=20)
+plt.yticks([0.5*d, d], [r'$0.5d$', r'$d$'], fontsize=20)
 #plt.savefig('Aerofoil_mesh.eps')
-
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# testing L integral
-"""
-from matplotlib import pylab
-
-
-b = 0.075
-#xs = np.linspace(-b, b, 200)
-Nx = 100
-xs, dx = AmT.chord_sampling(b, Nx, 1)
-
-M = 0.3
-
-Kx = np.pi/(b*M)
-
-k0 = Kx*M
-ky = 0.
-
-beta = np.sqrt(1-M**2)
-mu = Kx*b*M/(beta**2)
-
-Nx = 1001
-
-x = np.linspace(-10, 10, Nx)
-y = np.zeros(Nx)
-z = np.ones(Nx)*10.
-
-sigma = np.sqrt(x**2 + (beta**2)*(y**2 + z**2))
-
-L_integrand = lambda xs: AmT.g_LE(xs, Kx, ky, M, b)*np.exp(-1j*k0*xs*(M-x/sigma)/(beta**2))
-#L_int = (1/b)*mp.quad(L_integrand, [-b, b])
-
-L_int = np.zeros(Nx, 'complex')
-for xi in range(xs.shape[0]):
-    L_int += (1/b)*L_integrand(xs[xi])*dx[xi]
-
-L_analytical = AmT.L_LE(x, sigma, Kx, ky, M, b)
-
-plt.figure()
-plt.plot(x, 10*np.log10(np.abs(L_int)), label='L_int')
-plt.plot(x, 10*np.log10(np.abs(L_analytical)), label='L_analytical')
 """
