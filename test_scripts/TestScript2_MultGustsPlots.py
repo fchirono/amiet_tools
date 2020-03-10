@@ -4,9 +4,11 @@ https://github.com/fchirono/amiet_tools
 Copyright (c) 2020, Fabio Casagrande Hirono
 
 
-Test script 3: calculates chordwise (y=0) and spanwise (x=0) far-field
+Test script 2: calculates chordwise (y=0) and spanwise (x=0) far-field
     directivities (in dB) for the multiple-gusts, near-field model.
 
+    The code calculates the airfoil response only to gusts that are
+    significant
     This script may take a few minutes to run, due to the sum of the many
     gusts' contributions.
 
@@ -18,14 +20,10 @@ fchirono@gmail.com
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-
-import matplotlib.patches as patches
 
 import amiet_tools as AmT
-import array_tools as ArT
 
-
+import matplotlib.pyplot as plt
 plt.rc('text', usetex=True)
 plt.close('all')
 
@@ -155,11 +153,11 @@ for kyi in range(Ky.shape[0]):
     Sqq[:, :] = np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
 
     # Calculate the matrices of Greens functions
-    G_Xdir = ArT.dipole3D(XYZ_airfoil_calc, XZ_farfield, k0, dipole_axis,
+    G_Xdir = AmT.dipole3D(XYZ_airfoil_calc, XZ_farfield, k0, dipole_axis,
                           flow_param)
     Spp_Xdir += np.real(np.diag(G_Xdir @ Sqq @ H(G_Xdir)))*4*np.pi
 
-    G_Ydir = ArT.dipole3D(XYZ_airfoil_calc, YZ_farfield, k0, dipole_axis,
+    G_Ydir = AmT.dipole3D(XYZ_airfoil_calc, YZ_farfield, k0, dipole_axis,
                           flow_param)
     Spp_Ydir += np.real(np.diag(G_Ydir @ Sqq @ H(G_Ydir)))*4*np.pi
 

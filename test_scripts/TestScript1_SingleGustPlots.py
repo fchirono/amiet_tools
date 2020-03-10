@@ -12,7 +12,11 @@ plate aerofoil, and plot:
     c) the chordwise (y=0) and spanwise (x=0) far-field directivities (in dB).
 
 The flow speed is assumed constant through all space (including far-field) -
-i.e. there are no shear layer effects.
+i.e. there are no shear layer refraction effects.
+
+
+This code was used to generate the Figures in Chap. 4, Section 4.1 of the
+Authors' PhD thesis [Casagrande Hirono, 2018].
 
 
 Author:
@@ -35,12 +39,19 @@ save_fig = False
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# Aeroacoustic characteristics
-
+# define airfoil points over the whole chord
 b = 0.075       # airfoil half chord [m]
-d = 0.225        # airfoil half span [m]
-Ux = 60         # flow velocity [m/s]
+d = 0.225       # airfoil half span [m]
 
+Nx = 100         # number of points sampling the chord (non-uniformly)
+Ny = 101
+
+# create airfoil mesh coordinates, and reshape for calculations
+XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
+XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Acoustic characteristics
 c0 = 340.       # Speed of sound [m/s]
 rho0 = 1.2      # Air density [kg/m**3]
@@ -55,19 +66,22 @@ ac_wavelength = c0/f0           # [m/rad]
 # Acoustic wavenumber
 k0 = 2*np.pi/ac_wavelength      # [rad/m]
 
+# Aeroacoustic characteristics
+Ux = 60         # flow velocity [m/s]
 Mach = Ux/c0                    # Mach number
 beta = np.sqrt(1-Mach**2)
 
 w0 = 1                          # turbulence/gust amplitude
 Kx = 2*np.pi*f0/Ux              # turbulence/gust wavenumber
 
+# Critical turbulent waevenumber
 ky_crit = Kx*Mach/beta
 
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # parallel incidence wavenumber component - pick one
 
-ky = 0
-fig_title = 'Kphi_000'
+# ky = 0
+# fig_title = 'Kphi_000'
 
 #ky = 0.35*ky_crit
 #fig_title = 'Kphi_035'
@@ -75,8 +89,8 @@ fig_title = 'Kphi_000'
 # ky = 0.75*ky_crit
 # fig_title = 'Kphi_075'
 
-#ky = 1.25*ky_crit
-#fig_title = 'Kphi_125'
+ky = 1.25*ky_crit
+fig_title = 'Kphi_125'
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency
@@ -90,16 +104,6 @@ flow_param = (flow_dir, Mach)
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# define airfoil points over the whole chord
-b = 0.075       # airfoil half chord [m]
-d = 0.225       # airfoil half span [m]
-
-Nx = 100         # number of points sampling the chord (non-uniformly)
-Ny = 101
-
-# create airfoil mesh coordinates, and reshape for calculations
-XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
-XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
 
 # Calculate the pressure 'jump' over the airfoil
 delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, ky, XYZ_airfoil[0:2], Mach)
@@ -215,7 +219,7 @@ for s in range(delta_p1_calc.shape[0]):
     p_XZ_farfield += delta_p1_calc[s]*G_ffXZ[:, 0]
     p_YZ_farfield += delta_p1_calc[s]*G_ffYZ[:, 0]
 
-# reshape nearfield meshs
+# reshape nearfield meshes
 pressure_XZ = pressure_XZ_calc.reshape(XZ_mesh1[0].shape)
 pressure_YZ = pressure_YZ_calc.reshape(YZ_mesh2[0].shape)
 
@@ -267,7 +271,7 @@ if save_fig:
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # plot the far field directivities [in dB]
 
-# normalise with respect to maximum ff pressure for parallel gust
+# normalise with respect to maximum FF pressure for parallel gust
 # (obtained from previous analysis)
 p_ff_max = 0.001139
 
