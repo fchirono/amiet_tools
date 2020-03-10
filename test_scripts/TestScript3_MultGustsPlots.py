@@ -1,11 +1,20 @@
 """
-NEEDS CLEANING!
+amiet_tools - a Python package for turbulence-aerofoil noise prediction.
+https://github.com/fchirono/amiet_tools
+Copyright (c) 2020, Fabio Casagrande Hirono
 
-Create multiple-gust response figures
+
+Test script 3: calculates chordwise (y=0) and spanwise (x=0) far-field
+    directivities (in dB) for the multiple-gusts, near-field model.
+
+    This script may take a few minutes to run, due to the sum of the many
+    gusts' contributions.
+
 
 Author:
 Fabio Casagrande Hirono
 fchirono@gmail.com
+
 """
 
 import numpy as np
@@ -26,7 +35,7 @@ def H(A):
     return A.conj().T
 
 
-save_fig = True
+save_fig = False
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -46,9 +55,9 @@ c0 = 340.       # Speed of sound [m/s]
 rho0 = 1.2      # Air density [kg/m**3]
 
 # frequency of operation
-#kc = 0.5    # approx 180 Hz
+kc = 0.5    # approx 180 Hz
 #kc = 5      # approx 1.8 kHz
-kc = 20     # approx 7.2 kHz
+# kc = 20     # approx 7.2 kHz
 
 f0 = kc*c0/(2*np.pi*(2*b))      # Hz
 
@@ -63,14 +72,14 @@ beta = np.sqrt(1-Mach**2)
 
 Kx = 2*np.pi*f0/Ux              # turbulence/gust wavenumber
 
-ky_crit = Kx*Mach/beta
+ky_crit = Kx*Mach/beta          # critical spanwise wavenumber
 
 mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency
 mu_a = mu_h*Mach        # chord-based acoustic reduced frequency
 
 
-dipole_axis = 'z'
-flow_dir = 'x'
+dipole_axis = 'z'       # airfoil dipoles are pointing 'up' (+z dir)
+flow_dir = 'x'          # mean flow in the +x dir
 flow_param = (flow_dir, Mach)
 
 
@@ -87,10 +96,10 @@ XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
 XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# Create far field points for directivity
+# Create arc of far field points for directivity measurements
 
-R_farfield = 50     # [m]
-M_farfield = 181
+R_farfield = 50     # far-field mic radius [m]
+M_farfield = 181    # number of far-field mics in arc
 
 theta_farfield = np.linspace(-np.pi/2, np.pi/2, M_farfield)
 x_farfield = R_farfield*np.sin(theta_farfield)
@@ -115,6 +124,10 @@ else:
     N_T = 2*ky_crit/ky_T
     N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period
     Ky = np.linspace(-ky_crit, ky_crit, N_ky)
+
+print('Frequency is {:.1f} Hz'.format(f0))
+print('Calculating airfoil response with {:d} gusts'.format(N_ky))
+
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 dky = Ky[1]-Ky[0]
@@ -221,39 +234,3 @@ if save_fig:
         fig_dir_XZ.savefig('MultGust_Xdir_kc20.png'.format(kc))
         fig_dir_YZ.savefig('MultGust_Ydir_kc20.png'.format(kc))
 
-# %%
-# makes diagram with sinc function and mark main lobe + 1st sidelobe
-
-#x = np.linspace(-4, 4, 1001)
-#
-#sinc = np.sinc(x)
-#
-#plt.figure(figsize=(8, 4.5))
-#ax1 = plt.subplot(111)
-#ax1.plot(x, 20*np.log10(np.abs(sinc)))
-#ax1.set_xlim([-3.5, 3.5])
-#ax1.set_ylim([-35, 5])
-#
-#plt.vlines((-2, 2), -35, 5, colors='0.5', linestyle='--', linewidth=2)
-#
-#plt.axvspan(xmin=-2, xmax=2, color='C7', alpha=0.2)
-#
-#plt.grid()
-#
-#ax1.set_xlabel(r'$k_\psi$', fontsize=25)
-#ax1.set_ylabel(r'Magnitude', fontsize=25)
-#
-#ax1.set_xticks([-3, -2, -1, 0, 1, 2, 3])
-#ax1.set_xticklabels([r'$-\frac{3 \pi}{d}$', r'$-\frac{2 \pi}{d}$',
-#                     r'$-\frac{\pi}{d}$', r'$0$', r'$+\frac{\pi}{d}$',
-#                     r'$+\frac{2\pi}{d}$', r'$+\frac{3\pi}{d}$'], fontsize=22)
-#
-#ax1.tick_params(axis='x', pad=10)
-#
-#ax1.set_yticks([0, -10, -20, -30])
-#ax1.set_yticklabels([])
-#
-#plt.tight_layout()
-#
-#if save_fig:
-#    plt.savefig('SincFunction.png', dpi=200)

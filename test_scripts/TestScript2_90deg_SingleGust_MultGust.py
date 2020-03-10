@@ -11,6 +11,11 @@ above aerofoil, at two distances (1.2m and 15m), and compare results for:
     b) near-field, single gust (ky=0) model;
     c) far-field, single gust model.
 
+The test configuration simulates an open-jet wind tunnel measurement, where
+the aerofoil is immersed in the moving medium and the microphone is positioned
+outside the moving medium (in the steady medium). The shear layer is 7.5 cm
+above the aerofoil.
+
 
 This test case requires an external file 'Spp_SumKy_NearFar.mat', containing
 the microphone PSD pre-calculated over multiple gusts (see file
@@ -46,14 +51,6 @@ N_dft = 2**10
 fs = 50e3
 df = fs/N_dft
 freq = np.linspace(0, fs-df, N_dft)[:N_dft//2+1]
-
-# mic arc radius
-R = 1.18
-
-# mic arc angles
-angles = np.array([130, 120, 110, 100, 95, 90, 85, 80, 70, 60, 50,
-                    40])*np.pi/180
-m_FF_90deg = 5
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -127,8 +124,12 @@ X_mic = np.array([0., 0.])
 Y_mic = np.array([0., 0.])
 XYZ_mic = np.array([X_mic, Y_mic, R_mic])
 
-# shear layer height
-sl_z = 0.075
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# Calculate shear layer correction- assume airfoil sound originates from the
+# center of the airfoil
+
+# shear layer height (above airfoil)
+sl_z = 0.075        # [m]
 
 # airfoil centre location
 xs_centre = np.array([0., 0., 0.])

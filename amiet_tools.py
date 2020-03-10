@@ -62,11 +62,6 @@ import scipy.optimize as so     # for shear layer correction functions
 import mpmath as mp
 
 
-def H(A):
-    """ Calculate the Hermitian conjugate transpose of a matrix 'A' """
-    return A.conj().T
-
-
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> "Convenience" functions for vectorizing calculations with mpmath
 
@@ -74,6 +69,102 @@ mpexp = np.vectorize(mp.exp)
 mpsqrt = np.vectorize(mp.sqrt)
 mperf = np.vectorize(mp.erf)
 
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>> wrappers to create surface pressure cross-spectra matrix
+
+# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+# --->>> DO NOT USE - UNDER DEVELOPMENT! <<<---
+# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+"""
+def calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky):
+
+    #airfoil_tuple = (XYZ_airfoil, dx, dy)
+    #turb_tuple = (Ux, turb_u_mean2, turb_length_scale, turb_model = {'K', 'L'})
+    #how_many_ky = {'many', 'few'}
+
+    beta = np.sqrt(1-Mach**2)
+
+    # untuple turbulence properties
+    Ux, turb_u_mean2, turb_length_scale, turb_model = turb_tuple
+
+    # untuple airfoil geometry
+    XYZ_airfoil, dx, dy = airfoil_tuple
+    Ny, Nx = XYZ_airfoil.shape[1:]
+    d = XYZ_airfoil[1, -1, 0]   # airfoil semi span
+    b = XYZ_airfoil[0, 0, -1]   # airfoil semi chord
+
+    # critical gusts
+    ky_crit = kx*Mach/beta
+
+    # period of sin in sinc
+    ky_T = 2*np.pi/d
+
+    # integrating ky with many points
+    if how_many_ky == 'many':
+
+        # 'low freq'
+        if ky_crit < 2*np.pi/d:
+            N_ky = 41
+            Ky = np.linspace(-ky_T, ky_T, N_ky)
+
+        # 'high freq'
+        else:
+            # count how many sin(ky*d) periods in Ky range
+            N_T = 2*ky_crit/ky_T
+            N_ky = np.int(np.ceil(N_T*20)) + 1      # use 20 points per period
+            Ky = np.linspace(-ky_crit, ky_crit, N_ky)
+
+    # integrating ky with few points
+    elif how_many_ky == 'few':
+        # 'low freq'
+        if ky_crit < 2*np.pi/d:
+            N_ky = 5
+            Ky = np.linspace(-ky_T, ky_T, N_ky)
+
+        # ' high freq'
+        else:
+            # count how many sin(ky*d) periods in Ky range
+            N_T = 2*ky_crit/ky_T
+            N_ky = np.int(np.ceil(N_T*2))          # use 2 points per period
+            Ky = np.linspace(-ky_crit, ky_crit, N_ky)
+
+    dky = Ky[1]-Ky[0]
+
+    # create turbulence wavenumber spectrum
+    Phi2 = Phi_2D(kx, Ky, turb_u_mean2, turb_length_scale, turb_model)[0]
+
+    Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
+
+    # for every gust...
+    for kyi in range(Ky.shape[0]):
+        # sinusoidal gust peak value
+        w0 = np.sqrt(Phi2[kyi])
+
+        # Pressure 'jump' over the airfoil
+        delta_p1 = delta_p(rho0, b, w0, Ux, kx, Ky[kyi], XYZ_airfoil[0:2],
+                           Mach)
+
+        # reshape and reweight for vector calculation
+        delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
+
+        # add cross-product to source amplitude CSM
+        Sqq += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+
+    return Sqq
+
+
+def calc_Spp(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky, G):
+
+    def H(A):
+        # Hermitian complex conjugate transpose of a matrix
+        return A.conj().T
+
+    Sqq = calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky)
+
+    return (G @ Sqq @ H(G))*4*np.pi
+
+"""
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> Sound propagation functions
@@ -476,7 +567,7 @@ def ShearLayer_matrix(XYZ_s, XYZ_o, z_sl, Ux, c0):
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>>
+# --->>> Functions for discretization of aerofoil surface
 
 def chord_sampling(b, N=200, exp_length=2):
     """
@@ -584,97 +675,6 @@ def index_log(index_init, index_final, N):
     return np.unique(index_all)
 
 
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> wrappers to create surface pressure cross-spectra matrix
-
-# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-#           >>> DO NOT USE - UNDER DEVELOPMENT! <<<
-# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-"""
-def calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky):
-
-    #airfoil_tuple = (XYZ_airfoil, dx, dy)
-    #turb_tuple = (Ux, turb_u_mean2, turb_length_scale, turb_model = {'K', 'L'})
-    #how_many_ky = {'many', 'few'}
-
-
-    beta = np.sqrt(1-Mach**2)
-
-    # untuple turbulence properties
-    Ux, turb_u_mean2, turb_length_scale, turb_model = turb_tuple
-
-    # untuple airfoil geometry
-    XYZ_airfoil, dx, dy = airfoil_tuple
-    Ny, Nx = XYZ_airfoil.shape[1:]
-    d = XYZ_airfoil[1, -1, 0]   # airfoil semi span
-    b = XYZ_airfoil[0, 0, -1]   # airfoil semi chord
-
-    # critical gusts
-    ky_crit = kx*Mach/beta
-
-    # period of sin in sinc
-    ky_T = 2*np.pi/d
-
-    # integrating ky with many points
-    if how_many_ky is 'many':
-
-        # 'low freq'
-        if ky_crit < 2*np.pi/d:
-            N_ky = 41
-            Ky = np.linspace(-ky_T, ky_T, N_ky)
-
-        # 'high freq'
-        else:
-            # count how many sin(ky*d) periods in Ky range
-            N_T = 2*ky_crit/ky_T
-            N_ky = np.int(np.ceil(N_T*20)) + 1      # use 20 points per period
-            Ky = np.linspace(-ky_crit, ky_crit, N_ky)
-
-    # integrating ky with few points
-    elif how_many_ky is 'few':
-        # 'low freq'
-        if ky_crit < 2*np.pi/d:
-            N_ky = 5
-            Ky = np.linspace(-ky_T, ky_T, N_ky)
-
-        # ' high freq'
-        else:
-            # count how many sin(ky*d) periods in Ky range
-            N_T = 2*ky_crit/ky_T
-            N_ky = np.int(np.ceil(N_T*2))          # use 2 points per period
-            Ky = np.linspace(-ky_crit, ky_crit, N_ky)
-
-    dky = Ky[1]-Ky[0]
-
-    # create turbulence wavenumber spectrum
-    Phi2 = Phi_2D(kx, Ky, turb_u_mean2, turb_length_scale, turb_model)[0]
-
-    Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
-
-    # for every gust...
-    for kyi in range(Ky.shape[0]):
-        # sinusoidal gust peak value
-        w0 = np.sqrt(Phi2[kyi])
-
-        # Pressure 'jump' over the airfoil
-        delta_p1 = delta_p(rho0, b, w0, Ux, kx, Ky[kyi], XYZ_airfoil[0:2],
-                           Mach)
-
-        # reshape and reweight for vector calculation
-        delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
-
-        # add cross-product to source amplitude CSM
-        Sqq += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
-
-    return Sqq
-
-
-def calc_Spp(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky, G):
-
-    Sqq = calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky)
-
-    return (G @ Sqq @ H(G))*4*np.pi
-"""
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> Aeroacoustic Functions
@@ -727,7 +727,6 @@ def fr_int_cc(zeta):
     return E_conj
 
 
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 def delta_p(rho0, b, w0, Ux, Kx, ky, xy, M):
     """ Calculates the pressure 'jump' across the airfoil from the airfoil
     response function - see Blandeau (2011), eq. 2.19. """
@@ -882,7 +881,7 @@ def ky_att(xs, b, M, k0, Att=-20):
     return ky_crit*np.sqrt(term1**2 + 1)
 
 
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
 def L_LE(x, sigma, Kx, ky, M, b):
     """Effective lift functions (G Reboul's thesis - 2010)"""
 
