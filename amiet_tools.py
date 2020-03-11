@@ -166,6 +166,8 @@ def calc_Spp(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky, G):
 
 """
 
+
+
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> Sound propagation functions
 
@@ -567,7 +569,7 @@ def ShearLayer_matrix(XYZ_s, XYZ_o, z_sl, Ux, c0):
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> Functions for discretization of aerofoil surface
+# --->>> Discretization of aerofoil surface
 
 def chord_sampling(b, N=200, exp_length=2):
     """
@@ -863,25 +865,6 @@ def g_LE_sub(xs, Kx, ky, M, beta, b):
     return g1_sb + g2_sb
 
 
-def ky_att(xs, b, M, k0, Att=-20):
-    """
-    For a given chord point 'xs', Mach number 'M', ac wavenumber 'k0' and
-    attenuation 'Att' [in dB], calculates the subcritical gust spanwise
-    wavenumber 'ky_att' (> 'ky_crit' by definition) such that the aerofoil
-    response at that point is 'Att' dB reduced.
-    """
-
-    beta = np.sqrt(1-M**2)
-
-    # critical gust spanwise wavenumber
-    ky_crit = k0/beta
-
-    term1 = -(beta**2)*np.log(10**(Att/20))/(k0*(xs + b))
-
-    return ky_crit*np.sqrt(term1**2 + 1)
-
-
-
 def L_LE(x, sigma, Kx, ky, M, b):
     """Effective lift functions (G Reboul's thesis - 2010)"""
 
@@ -980,6 +963,111 @@ def L_LE_sub(x, sigma, Kx, Ky, M, b):
               * fr_int(2*(1j*kappa1 - mu_a*x/sigma))))
 
     return L1+L2
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# Hydrodynamic spanwise wavenumber sampling
+
+
+def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
+    """
+    Returns a vector of equally-spaced spanwise hydrodynamic (gust) wavenumber
+    values for calculations of airfoil response, either for calculating
+    the airfoil acoustic radiation (method = 'AcRad') or for calculating the
+    airfoil surface pressure cross-spectrum (method = 'SurfPressure').
+
+    Returned values go from 0 to 'ky_max'; each value must be used twice when
+    calculating the responses - one for positive ky, one for negative ky.
+
+    d: airfoil semi span
+
+    k0: acoustic wavenumber
+
+    Mach: mean flow Mach number
+
+    beta: sqrt(1-Mach**2)
+
+    method: {'AcRad', 'SurfPressure'}
+        Choose ''AcRad' for calculating airfoil acoustic radiation (smaller
+        range of gusts), or 'SurfPressure'  for calculating airfoil surface
+        pressure cross-spectrum (wider range of gusts)
+
+    xs_ref: float
+        Reference point for surface pressure cross-spectrum (None if
+        interested in acoustic radiation)
+    """
+
+    # Assert 'method' string for valid inputs
+    method_error = "'method' not recognized; please use either 'AcRad' or 'SurfPressure'"
+    assert method in ['AcRad', 'SurfPressure'], method_error
+
+    # critical hydrodynamic spanwise wavenumber
+    ky_crit = k0/beta
+
+    # period of sin in sinc
+    ky_T = 2*np.pi/d
+
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # for acoustic radiation calculations:
+    if method == 'AcRad':
+
+        # check frequency
+        if ky_crit < 2*np.pi/d:
+            # 'low freq' - include some subcritical gusts (up to 1st sidelobe
+            # of sinc function)
+            N_ky = 21       # value validated empirically
+            Ky = np.linspace(0, ky_T, N_ky)
+
+        else:
+            # 'high freq' - restrict to supercritical gusts only
+            N_T = ky_crit/ky_T      # count how many sin(ky*d) periods within Ky
+                                    # supercritical range
+            N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period +1
+            Ky = np.linspace(0, ky_crit, N_ky)
+
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # for surface pressure cross-spectra calculations
+    elif method == 'SurfPressure':
+
+        # find ky that is at -20 dB at reference chord point
+        ky_20dBAtt = ky_att(xs_ref, b, Mach, k0, Att=-20)
+
+        # largest ky under consideration (25% above ky_20dBAtt, for safety)
+        ky_max = 1.25*ky_20dBAtt
+
+        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        # OLD CODE WITH COARSER SAMPLING - 4 samples per sinc function width
+        # # width of ky sinc function
+        # sinc_width = 2*np.pi/(2*d)
+        # # get ky with spacing equal to 1/4 width of sinc function
+        # N_ky = np.int(np.ceil(ky_max/(sinc_width/4)))
+        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+        N_T = ky_max/ky_T      # count how many sin(ky*d) periods within range
+        N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period +1
+        Ky = np.linspace(0, ky_max, N_ky)
+
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+    return Ky
+
+
+def ky_att(xs, b, M, k0, Att=-20):
+    """
+    For a given chord point 'xs', Mach number 'M', ac wavenumber 'k0' and
+    attenuation 'Att' [in dB], calculates the subcritical gust spanwise
+    wavenumber 'ky_att' (> 'ky_crit' by definition) such that the aerofoil
+    response at that point is 'Att' dB reduced.
+    """
+
+    beta = np.sqrt(1-M**2)
+
+    # critical gust spanwise wavenumber
+    ky_crit = k0/beta
+
+    term1 = -(beta**2)*np.log(10**(Att/20))/(k0*(xs + b))
+
+    return ky_crit*np.sqrt(term1**2 + 1)
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
