@@ -37,6 +37,9 @@ plt.close('all')
 # flag for saving figures
 save_fig = False
 
+# load test setup from file - NOT WORKING!
+#AmT.loadTestSetup('../DARP2016_setup.txt')
+
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # define airfoil points over the whole chord
@@ -78,19 +81,31 @@ Kx = 2*np.pi*f0/Ux              # turbulence/gust wavenumber
 ky_crit = Kx*Mach/beta
 
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# parallel incidence wavenumber component - pick one
+# parallel incidence wavenumber component - select one case
 
-# ky = 0
-# fig_title = 'Kphi_000'
+test_case = 1       # int between 1 and 4
 
-#ky = 0.35*ky_crit
-#fig_title = 'Kphi_035'
 
-# ky = 0.75*ky_crit
-# fig_title = 'Kphi_075'
+if test_case == 1:
+    # supercritical, normal incidence gust
+    ky = 0
+    fig_title = 'Kphi_000'
 
-ky = 1.25*ky_crit
-fig_title = 'Kphi_125'
+elif test_case == 2:
+    # supercritical gust, oblique incidence
+    ky = 0.35*ky_crit
+    fig_title = 'Kphi_035'
+
+elif test_case == 3:
+    # supercritical gust, oblique incidence / close to critical
+    ky = 0.75*ky_crit
+    fig_title = 'Kphi_075'
+
+elif test_case == 4:
+    # subcritical gust
+    ky = 1.25*ky_crit
+    fig_title = 'Kphi_125'
+
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency

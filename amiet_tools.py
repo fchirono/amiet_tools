@@ -61,6 +61,8 @@ import scipy.special as ss
 import scipy.optimize as so     # for shear layer correction functions
 import mpmath as mp
 
+from scipy.io import loadmat, savemat
+
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> "Convenience" functions for vectorizing calculations with mpmath
@@ -603,11 +605,22 @@ def chord_sampling(b, N=200, exp_length=2):
     return x, dx
 
 
-def create_airf_mesh(b, d, Nx, Ny):
+def create_airf_mesh(b, d, Nx=100, Ny=101):
     """ Creates the mesh containing the airfoil surface points. The 'z'
-    coordinate is set to always be zero.
+    coordinate is set to always be zero. The final array has shape (3, Ny, Nx).
 
-    The final array has shape (3, Ny, Nx). """
+    b: float
+        Airfoil semi chord [m]
+
+    d: float
+        Airfoil semi span [m]
+
+    Nx: int
+        Number of points in chordwise direction (non-uniform sampling)
+
+    Ny: int
+        Number of points in spanwise direction (uniform sampling)
+    """
 
     x_airfoil, dx = chord_sampling(b, Nx)
 
@@ -968,7 +981,6 @@ def L_LE_sub(x, sigma, Kx, Ky, M, b):
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Hydrodynamic spanwise wavenumber sampling
 
-
 def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
     """
     Returns a vector of equally-spaced spanwise hydrodynamic (gust) wavenumber
@@ -1108,6 +1120,101 @@ def Phi_1D(kx, u_mean2, length_scale):
 
     return ((u_mean2*length_scale/(2*np.pi))*(1+8.*kxe2/3)
             / ((1+kxe2)**(11./6)))
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# load test setup from file - NOT WORKING! ****
+
+# --->>> create and return dict with keys as variable names? <<<---
+
+def loadTestSetup(path_to_file):
+    """
+    Load default values from a given test configuration setup file. File must
+    contain the following variable names followed by values (tab-separated):
+        c0                  speed of sound [m/s]
+        rho0                density of air [kg/m**3]
+        p_ref               reference pressure [Pa RMS]
+        b                   airfoil semi chord [m]
+        d                   airfoil semi span [m]
+        Nx                  Number of chordwise points (non-uniform sampl)
+        Ny                  Number of spanwise points (uniform sampl)
+        Ux                  mean flow velocity [m/s]
+        turb_intensity      turbulent flow intensity [ = u_rms/Ux]
+        length_scale        turbulence integral length scale [m]
+        z_sl                shear layer height (from aerofoil)
+
+    Empty lines and 'comments' (starting with '#') are ignored.
+
+    path_to_file: str
+        Relative path to setup file
+    """
+
+    # Read and parses file with test configurations
+    with open(path_to_file) as f:
+        # get list with file lines as strings
+        all_lines = f.readlines()
+
+        # for each line...
+        for line in all_lines:
+            # skip comments and empty lines
+            if line[0] in ['#', '\n']:
+                pass
+
+            else:
+                words = line.split('\t')
+                 # 1st and 2nd elements are name and value (ignore comments)
+                var_name, var_value = words[0], words[1]
+                exec(var_name + ' = ' + var_value)
+
+    # create other setup variables from previous ones
+    Mach = Ux/c0
+    beta = np.sqrt(1-Mach**2)
+    flow_dir = 'x'              # mean flow in the +x dir
+    flow_param = (flow_dir, Mach)
+    dipole_axis = 'z'           # airfoil dipoles are pointing 'up' (+z dir)
+
+    return c0, rho0, p_ref, b, d, Nx, Ny, Ux, turb_intensity, length_scale, z_sl, beta, flow_param, dipole_axis
+
+
+
+def DARP2016_MicArray():
+    """
+    Returns the microphone coordinates for the 'near-field' planar microphone
+    array used in the 2016 experiments with the DARP open-jet wind tunnel at
+    the ISVR, Univ. of Southampton, UK [Casagrande Hirono, 2018].
+
+    The array is a Underbrink multi-arm spiral array with 36 electret
+    microphones, with 7 spiral arms containing 5 mics each and one central mic.
+    The array has a circular aperture (diameter) of 0.5 m.
+
+    The calibration factors stored in the 'SpiralArray_1kHzCalibration.mat'
+    were obtained using a 1 kHz, 1 Pa RMS calibrator. Multiply the raw mic data
+    by its corresponding factor to obtain a calibrated signal in Pascals.
+    """
+
+    M = 36                      # number of mics
+    array_height = -0.49        # [m] (ref. to airfoil height at z=0)
+
+    # mic coordinates (corrected for DARP2016 configuration)
+    XYZ_array = np.array([[  0.     ,  0.025  ,  0.08477,  0.12044,  0.18311,  0.19394,
+                             0.01559,  0.08549,  0.16173,  0.19659,  0.24426, -0.00556,
+                             0.02184,  0.08124,  0.06203,  0.11065, -0.02252, -0.05825,
+                            -0.06043, -0.11924, -0.10628, -0.02252, -0.09449, -0.15659,
+                            -0.21072, -0.24318, -0.00556, -0.05957, -0.13484, -0.14352,
+                            -0.19696,  0.01559,  0.02021, -0.01155,  0.03174, -0.00242],
+                           [-0.     , -0.     ,  0.04175,  0.11082,  0.10542,  0.15776,
+                            -0.01955, -0.04024, -0.02507, -0.07743, -0.05327, -0.02437,
+                            -0.09193, -0.14208, -0.20198, -0.22418, -0.01085, -0.0744 ,
+                            -0.1521 , -0.17443, -0.22628,  0.01085, -0.00084, -0.04759,
+                            -0.01553, -0.05799,  0.02437,  0.07335,  0.09276,  0.15506,
+                             0.15397,  0.01955,  0.09231,  0.16326,  0.20889,  0.24999],
+                          array_height*np.ones(M)])
+
+    # load calibration factor from .mat file
+    cal_mat = loadmat('SpiralArray_1kHzCalibration')
+    array_cal = cal_mat['calibration_factor_1khz'][:, 0]
+
+    return XYZ_array, array_cal
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-

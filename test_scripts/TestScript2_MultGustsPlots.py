@@ -106,28 +106,11 @@ z_farfield = -R_farfield*np.cos(theta_farfield)
 XZ_farfield = np.array([x_farfield, np.zeros(x_farfield.shape), z_farfield])
 YZ_farfield = np.array([np.zeros(x_farfield.shape), x_farfield, z_farfield])
 
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# period of sin in sinc
-ky_T = 2*np.pi/d
 
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# integrating ky with many points
-if ky_crit < 2*np.pi/d:
-    # 'low freq'
-    N_ky = 41       # many points
-    Ky = np.linspace(-ky_T, ky_T, N_ky)
+# obtain vector of spanwise hydrodynamic gusts 'Ky' for acoustic radiation
 
-else:
-    # 'high freq' - count how many sin(ky*d) periods in Ky range
-    N_T = 2*ky_crit/ky_T
-    N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period
-    Ky = np.linspace(-ky_crit, ky_crit, N_ky)
-
-print('Frequency is {:.1f} Hz'.format(f0))
-print('Calculating airfoil response with {:d} gusts'.format(N_ky))
-
-# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
+Ky = AmT.ky_vector(b, d, k0, Mach, beta, method='AcRad')
 dky = Ky[1]-Ky[0]
 
 # mic PSD
