@@ -1,0 +1,20 @@
+# DARP2016 test setup (columns are tab separated)
+
+# Acoustic characteristics
+c0	340.	# Speed of sound [m/s]
+rho0	1.2	# Air density [kg/m**3]
+p_ref	20e-6	# Ref acoustic pressure [Pa RMS]
+
+# Aerofoil geometry
+b	0.075	# airfoil half chord [m]
+d	0.225	# airfoil half span [m]
+Nx	100	# number of chordwise points (non-uniform sampl)
+Ny	101	# number of spanwise points (uniform sampl)
+
+# turbulent flow properties
+Ux	60		# flow velocity [m/s]
+turb_intensity	0.025	# turb intensity = u_rms/U
+length_scale	0.007	# turb length scale [m]
+
+# shear layer height
+z_sl	-0.075	# [m]
