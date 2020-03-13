@@ -53,9 +53,9 @@ c0 = 340.       # Speed of sound [m/s]
 rho0 = 1.2      # Air density [kg/m**3]
 
 # frequency of operation
-kc = 0.5    # approx 180 Hz
+# kc = 0.5    # approx 180 Hz
 #kc = 5      # approx 1.8 kHz
-# kc = 20     # approx 7.2 kHz
+kc = 20     # approx 7.2 kHz
 
 f0 = kc*c0/(2*np.pi*(2*b))      # Hz
 
@@ -109,7 +109,7 @@ YZ_farfield = np.array([np.zeros(x_farfield.shape), x_farfield, z_farfield])
 
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # obtain vector of spanwise hydrodynamic gusts 'Ky' for acoustic radiation
-
+# (vector is in interval [0, ky_max])
 Ky = AmT.ky_vector(b, d, k0, Mach, beta, method='AcRad')
 dky = Ky[1]-Ky[0]
 
@@ -125,6 +125,9 @@ for kyi in range(Ky.shape[0]):
 
     # sinusoidal gust peak value
     w0 = np.sqrt(Phi2[kyi])
+    
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # positive gusts (ky >= 0)
 
     # Pressure 'jump' over the airfoil (for single gust)
     delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, Ky[kyi], XYZ_airfoil[0:2],
@@ -135,14 +138,28 @@ for kyi in range(Ky.shape[0]):
 
     Sqq[:, :] = np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
 
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # negative gusts (ky < 0)
+    
+    # Pressure 'jump' over the airfoil (for single gust)
+    delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, -Ky[kyi], XYZ_airfoil[0:2],
+                           Mach)
+
+    # reshape and reweight for vector calculation
+    delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
+
+    # add negative gusts' radiated pressure to source CSD
+    Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+    
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # Calculate the matrices of Greens functions
     G_Xdir = AmT.dipole3D(XYZ_airfoil_calc, XZ_farfield, k0, dipole_axis,
                           flow_param)
-    Spp_Xdir += np.real(np.diag(G_Xdir @ Sqq @ H(G_Xdir)))*4*np.pi
-
     G_Ydir = AmT.dipole3D(XYZ_airfoil_calc, YZ_farfield, k0, dipole_axis,
                           flow_param)
+    Spp_Xdir += np.real(np.diag(G_Xdir @ Sqq @ H(G_Xdir)))*4*np.pi
     Spp_Ydir += np.real(np.diag(G_Ydir @ Sqq @ H(G_Ydir)))*4*np.pi
+    
 
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # plot the far field directivities
