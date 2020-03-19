@@ -4,7 +4,7 @@ https://github.com/fchirono/amiet_tools
 Copyright (c) 2020, Fabio Casagrande Hirono
 
 
-Test script 2: calculates chordwise (y=0) and spanwise (x=0) far-field
+Test script 2: calculates airfoil chordwise (y=0) and spanwise (x=0) far-field
     directivities (in dB) for the multiple-gusts, near-field model.
 
     The code calculates the airfoil response only to gusts that are

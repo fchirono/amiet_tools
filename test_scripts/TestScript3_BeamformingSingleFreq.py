@@ -86,6 +86,9 @@ for kyi in range(Ky.shape[0]):
     # sinusoidal gust peak value
     w0 = np.sqrt(Phi2[kyi])
 
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # positive gusts (ky < 0)
+
     # Pressure 'jump' over the airfoil (for single gust)
     delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, Ky[kyi], XYZ_airfoil[0:2],
                            Mach)
@@ -93,6 +96,19 @@ for kyi in range(Ky.shape[0]):
     # reshape and reweight for vector calculation
     delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
 
+    Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # negative gusts (ky < 0)
+
+    # Pressure 'jump' over the airfoil (for single gust)
+    delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, -Ky[kyi], XYZ_airfoil[0:2],
+                           Mach)
+
+    # reshape and reweight for vector calculation
+    delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
+
+    # add negative gusts' radiated pressure to source CSD
     Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
 
 

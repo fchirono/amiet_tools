@@ -107,15 +107,6 @@ class testSetup:
                 self.dipole_axis)
 
 
-
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> "Convenience" functions for vectorizing calculations with mpmath
-
-mpexp = np.vectorize(mp.exp)
-mpsqrt = np.vectorize(mp.sqrt)
-mperf = np.vectorize(mp.erf)
-
-
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> wrappers to create surface pressure cross-spectra matrix
 
@@ -1265,9 +1256,15 @@ def DARP2016_MicArray():
                              0.15397,  0.01955,  0.09231,  0.16326,  0.20889,  0.24999],
                           array_height*np.ones(M)])
 
-    # load calibration factor from .mat file
-    cal_mat = loadmat('SpiralArray_1kHzCalibration')
-    array_cal = cal_mat['calibration_factor_1khz'][:, 0]
+    # # load calibration factor from .mat file
+    # cal_mat = loadmat('SpiralArray_1kHzCalibration')
+    # array_cal = cal_mat['calibration_factor_1khz'][:, 0]
+
+    # load calibration factors from .txt file
+    array_cal = np.zeros(M)
+    with open('../SpiralArray_1kHzCalibration.txt', 'r') as calfile:
+        for m in range(M):
+            array_cal[m] = calfile.readline()
 
     return XYZ_array, array_cal
 
