@@ -100,6 +100,13 @@ class testSetup:
         self.flow_param = (self.flow_dir, self.Mach)
         self.dipole_axis = 'z'           # airfoil dipoles are pointing 'up' (+z dir)
 
+    def export_values(self):
+        return (self.c0, self.rho0, self.p_ref, self.b, self.d, self.Nx,
+                self.Ny, self.Ux, self.turb_intensity, self.length_scale,
+                self.z_sl, self.Mach, self.beta, self.flow_param,
+                self.dipole_axis)
+
+
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> "Convenience" functions for vectorizing calculations with mpmath
@@ -1160,14 +1167,14 @@ def Phi_1D(kx, u_mean2, length_scale):
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# load test setup from file - NOT WORKING! ****
+# load test setup from file
 
-# --->>> create and return dict with keys as variable names? <<<---
-
-def loadTestSetup(path_to_file):
+def loadTestSetup(*args):
     """
-    Load default values from a given .txt test configuration setup file. File
-    must contain the following variable values, in order:
+    Load test variable values for calculations, either from default values or
+    from a given .txt test configuration setup file. File must contain the
+    following variable values, in order:
+
         c0                  speed of sound [m/s]
         rho0                density of air [kg/m**3]
         p_ref               reference pressure [Pa RMS]
@@ -1182,39 +1189,44 @@ def loadTestSetup(path_to_file):
 
     Empty lines and 'comments' (starting with '#') are ignored.
 
-    path_to_file: str
+    path_to_file: str [Optional]
         Relative path to setup file
     """
 
-    # initialize new instance of testSetup
-    testSetupFromFile = testSetup()
+    # if called without path to file, load default testSetup
+    if len(args)==0:
+        return testSetup()
 
-    varList = ['c0', 'rho0', 'p_ref', 'b', 'd', 'Nx', 'Ny', 'Ux',
-               'turb_intensity', 'length_scale', 'z_sl']
-    i=0
+    else:
+        # initialize new instance of testSetup
+        testSetupFromFile = testSetup()
 
-    #path_to_file = '../DARP2016_setup.txt'
-    with open(path_to_file) as f:
-        # get list with file lines as strings
-        all_lines = f.readlines()
+        varList = ['c0', 'rho0', 'p_ref', 'b', 'd', 'Nx', 'Ny', 'Ux',
+                   'turb_intensity', 'length_scale', 'z_sl']
+        i=0
 
-        # for each line...
-        for line in all_lines:
+        #path_to_file = '../DARP2016_setup.txt'
+        with open(args[0]) as f:
+            # get list with file lines as strings
+            all_lines = f.readlines()
 
-            # skip comments and empty lines
-            if line[0] in ['#', '\n']:
-                pass
+            # for each line...
+            for line in all_lines:
 
-            else:
-                words = line.split('\t')
-                # 1st and 2nd elements are name and value (ignore comments)
-                exec('testSetupFromFile.' + varList[i] + '=' + words[0])
-                i+=1
+                # skip comments and empty lines
+                if line[0] in ['#', '\n']:
+                    pass
 
-    # calculate other setup variables from previous ones
-    testSetupFromFile._calc_secondary_vars()
+                else:
+                    words = line.split('\t')
+                    # 1st and 2nd elements are name and value (ignore comments)
+                    exec('testSetupFromFile.' + varList[i] + '=' + words[0])
+                    i+=1
 
-    return testSetupFromFile
+        # calculate other setup variables from previous ones
+        testSetupFromFile._calc_secondary_vars()
+
+        return testSetupFromFile
 
 
 
