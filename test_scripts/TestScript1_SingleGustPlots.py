@@ -25,6 +25,7 @@ fchirono@gmail.com
 
 """
 
+
 import numpy as np
 
 import amiet_tools as AmT
@@ -37,27 +38,26 @@ plt.close('all')
 # flag for saving figures
 save_fig = False
 
-# load test setup from file - NOT WORKING!
-#AmT.loadTestSetup('../DARP2016_setup.txt')
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# # load test setup from file (DARP2016 configuration by default)
+# data = AmT.loadTestSetup()
 
+# alternative: load from setup file
+DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
+
+# export variables to current namespace
+(c0, rho0, p_ref, b, d, Nx, Ny, Ux, turb_intensity, length_scale, z_sl, Mach,
+ beta,flow_param, dipole_axis) = DARP2016Setup.export_values()
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # define airfoil points over the whole chord
-b = 0.075       # airfoil half chord [m]
-d = 0.225       # airfoil half span [m]
-
-Nx = 100         # number of points sampling the chord (non-uniformly)
-Ny = 101
 
 # create airfoil mesh coordinates, and reshape for calculations
 XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
 XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
 
-
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Acoustic characteristics
-c0 = 340.       # Speed of sound [m/s]
-rho0 = 1.2      # Air density [kg/m**3]
 
 # frequency of operation
 kc = 5                          # approx 1.8 kHz
@@ -68,11 +68,6 @@ ac_wavelength = c0/f0           # [m/rad]
 
 # Acoustic wavenumber
 k0 = 2*np.pi/ac_wavelength      # [rad/m]
-
-# Aeroacoustic characteristics
-Ux = 60         # flow velocity [m/s]
-Mach = Ux/c0                    # Mach number
-beta = np.sqrt(1-Mach**2)
 
 w0 = 1                          # turbulence/gust amplitude
 Kx = 2*np.pi*f0/Ux              # turbulence/gust wavenumber
@@ -110,13 +105,6 @@ elif test_case == 4:
 
 mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency
 mu_a = mu_h*Mach        # chord-based acoustic reduced frequency
-
-# dipoles are assumed perpendicular to flat plate and pointing up (i.e. +z)
-dip_axis = 'z'
-
-flow_dir = 'x'
-flow_param = (flow_dir, Mach)
-
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -215,16 +203,16 @@ for s in range(delta_p1_calc.shape[0]):
     # calculate matrices of convected dipole Greens functions for each source
     # to observers
     G_pXZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], XZ_mesh1_calc, k0,
-                         dip_axis, flow_param)
+                         dipole_axis, flow_param)
 
     G_pYZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], YZ_mesh2_calc, k0,
-                         dip_axis, flow_param)
+                         dipole_axis, flow_param)
 
     G_ffXZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], XZ_farfield, k0,
-                          dip_axis, flow_param)
+                          dipole_axis, flow_param)
 
     G_ffYZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], YZ_farfield, k0,
-                          dip_axis, flow_param)
+                          dipole_axis, flow_param)
 
     # Calculate the pressure in the near field
     pressure_XZ_calc += delta_p1_calc[s]*G_pXZ[:, 0]

@@ -37,20 +37,19 @@ save_fig = False
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# Aeroacoustic characteristics
+# # load test setup from file (DARP2016 configuration by default)
+# data = AmT.loadTestSetup()
 
-b = 0.075       # airfoil half chord [m]
-d = 0.225        # airfoil half span [m]
-Ux = 60         # flow velocity [m/s]
+# alternative: load from setup file
+DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
 
-turb_intensity = 0.025   # turb intensity = u_rms/U  [m/s]
-length_scale = 0.007     # turb length scale [m]
+# export variables to current namespace
+(c0, rho0, p_ref, b, d, Nx, Ny, Ux, turb_intensity, length_scale, z_sl, Mach,
+ beta,flow_param, dipole_axis) = DARP2016Setup.export_values()
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 u_mean2 = (Ux*turb_intensity)**2
-
-# Acoustic characteristics
-c0 = 340.       # Speed of sound [m/s]
-rho0 = 1.2      # Air density [kg/m**3]
 
 # frequency of operation
 # kc = 0.5    # approx 180 Hz
@@ -65,9 +64,6 @@ ac_wavelength = c0/f0           # [m/rad]
 # Acoustic wavenumber
 k0 = 2*np.pi/ac_wavelength      # [rad/m]
 
-Mach = Ux/c0                    # Mach number
-beta = np.sqrt(1-Mach**2)
-
 Kx = 2*np.pi*f0/Ux              # turbulence/gust wavenumber
 
 ky_crit = Kx*Mach/beta          # critical spanwise wavenumber
@@ -76,19 +72,8 @@ mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency
 mu_a = mu_h*Mach        # chord-based acoustic reduced frequency
 
 
-dipole_axis = 'z'       # airfoil dipoles are pointing 'up' (+z dir)
-flow_dir = 'x'          # mean flow in the +x dir
-flow_param = (flow_dir, Mach)
-
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# define airfoil points over the whole chord
-b = 0.075       # airfoil half chord [m]
-d = 0.225       # airfoil half span [m]
-
-Nx = 100         # number of points sampling the chord (non-uniformly)
-Ny = 101
-
 # create airfoil mesh coordinates, and reshape for calculations
 XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
 XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
@@ -125,7 +110,7 @@ for kyi in range(Ky.shape[0]):
 
     # sinusoidal gust peak value
     w0 = np.sqrt(Phi2[kyi])
-    
+
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # positive gusts (ky >= 0)
 
@@ -140,7 +125,7 @@ for kyi in range(Ky.shape[0]):
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # negative gusts (ky < 0)
-    
+
     # Pressure 'jump' over the airfoil (for single gust)
     delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, -Ky[kyi], XYZ_airfoil[0:2],
                            Mach)
@@ -150,7 +135,7 @@ for kyi in range(Ky.shape[0]):
 
     # add negative gusts' radiated pressure to source CSD
     Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
-    
+
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # Calculate the matrices of Greens functions
     G_Xdir = AmT.dipole3D(XYZ_airfoil_calc, XZ_farfield, k0, dipole_axis,
@@ -159,7 +144,7 @@ for kyi in range(Ky.shape[0]):
                           flow_param)
     Spp_Xdir += np.real(np.diag(G_Xdir @ Sqq @ H(G_Xdir)))*4*np.pi
     Spp_Ydir += np.real(np.diag(G_Ydir @ Sqq @ H(G_Ydir)))*4*np.pi
-    
+
 
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # plot the far field directivities
