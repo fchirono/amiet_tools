@@ -64,6 +64,43 @@ import mpmath as mp
 from scipy.io import loadmat, savemat
 
 
+class testSetup:
+    """
+    Class to store test setup variables. Initializes to DARP2016 default.
+    """
+
+    def __init__(self):
+        # Acoustic characteristics
+        self.c0 = 340.	# Speed of sound [m/s]
+        self.rho0 =1.2	# Air density [kg/m**3]
+        self.p_ref = 20e-6	# Ref acoustic pressure [Pa RMS]
+
+        # Aerofoil geometry
+        self.b = 0.075	# airfoil half chord [m]
+        self. d = 0.225	# airfoil half span [m]
+        self.Nx = 100	# number of chordwise points (non-uniform sampl)
+        self.Ny = 101	# number of spanwise points (uniform sampl)
+
+        # turbulent flow properties
+        self.Ux = 60			# flow velocity [m/s]
+        self.turb_intensity = 0.025	# turbulence intensity = u_rms/U
+        self.length_scale = 0.007	# turb length scale [m]
+
+        # shear layer height
+        self.z_sl = -0.075	# [m]
+
+        self._calc_secondary_vars()
+
+
+    def _calc_secondary_vars(self):
+        # calculate other setup variables from initial ones
+        self.Mach = self.Ux/self.c0
+        self.beta = np.sqrt(1-self.Mach**2)
+        self.flow_dir = 'x'              # mean flow in the +x dir
+        self.flow_param = (self.flow_dir, self.Mach)
+        self.dipole_axis = 'z'           # airfoil dipoles are pointing 'up' (+z dir)
+
+
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> "Convenience" functions for vectorizing calculations with mpmath
 
@@ -1129,8 +1166,8 @@ def Phi_1D(kx, u_mean2, length_scale):
 
 def loadTestSetup(path_to_file):
     """
-    Load default values from a given test configuration setup file. File must
-    contain the following variable names followed by values (tab-separated):
+    Load default values from a given .txt test configuration setup file. File
+    must contain the following variable values, in order:
         c0                  speed of sound [m/s]
         rho0                density of air [kg/m**3]
         p_ref               reference pressure [Pa RMS]
@@ -1149,31 +1186,35 @@ def loadTestSetup(path_to_file):
         Relative path to setup file
     """
 
-    # Read and parses file with test configurations
+    # initialize new instance of testSetup
+    testSetupFromFile = testSetup()
+
+    varList = ['c0', 'rho0', 'p_ref', 'b', 'd', 'Nx', 'Ny', 'Ux',
+               'turb_intensity', 'length_scale', 'z_sl']
+    i=0
+
+    #path_to_file = '../DARP2016_setup.txt'
     with open(path_to_file) as f:
         # get list with file lines as strings
         all_lines = f.readlines()
 
         # for each line...
         for line in all_lines:
+
             # skip comments and empty lines
             if line[0] in ['#', '\n']:
                 pass
 
             else:
                 words = line.split('\t')
-                 # 1st and 2nd elements are name and value (ignore comments)
-                var_name, var_value = words[0], words[1]
-                exec(var_name + ' = ' + var_value)
+                # 1st and 2nd elements are name and value (ignore comments)
+                exec('testSetupFromFile.' + varList[i] + '=' + words[0])
+                i+=1
 
-    # create other setup variables from previous ones
-    Mach = Ux/c0
-    beta = np.sqrt(1-Mach**2)
-    flow_dir = 'x'              # mean flow in the +x dir
-    flow_param = (flow_dir, Mach)
-    dipole_axis = 'z'           # airfoil dipoles are pointing 'up' (+z dir)
+    # calculate other setup variables from previous ones
+    testSetupFromFile._calc_secondary_vars()
 
-    return c0, rho0, p_ref, b, d, Nx, Ny, Ux, turb_intensity, length_scale, z_sl, beta, flow_param, dipole_axis
+    return testSetupFromFile
 
 
 

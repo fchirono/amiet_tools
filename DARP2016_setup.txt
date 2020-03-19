@@ -1,20 +1,22 @@
-# DARP2016 test setup (columns are tab separated)
+# amiet_tools Test Setup file
+#
+# DARP2016 test setup, ISVR, Univ. of Southampton, UK
 
 # Acoustic characteristics
-c0	340.	# Speed of sound [m/s]
-rho0	1.2	# Air density [kg/m**3]
-p_ref	20e-6	# Ref acoustic pressure [Pa RMS]
+340.	# c0	Speed of sound [m/s]
+1.2	# rho0	Air density [kg/m**3]
+20e-6	# p_ref	Ref acoustic pressure [Pa RMS]
 
 # Aerofoil geometry
-b	0.075	# airfoil half chord [m]
-d	0.225	# airfoil half span [m]
-Nx	100	# number of chordwise points (non-uniform sampl)
-Ny	101	# number of spanwise points (uniform sampl)
+0.075	# b 	airfoil half chord [m]
+0.225	# d	airfoil half span [m]
+100	# Nx	number of chordwise points (non-uniform sampl)
+101	# Ny	number of spanwise points (uniform sampl)
 
 # turbulent flow properties
-Ux	60		# flow velocity [m/s]
-turb_intensity	0.025	# turb intensity = u_rms/U
-length_scale	0.007	# turb length scale [m]
+60	# Ux			flow velocity [m/s]
+0.025	# turb_intensity	turbulence intensity = u_rms/U
+0.007	# length_scale		turb length scale [m]
 
 # shear layer height
-z_sl	-0.075	# [m]
+-0.075	# z_sl	[m]
