@@ -61,12 +61,12 @@ import scipy.special as ss
 import scipy.optimize as so     # for shear layer correction functions
 import mpmath as mp
 
-from scipy.io import loadmat, savemat
+from scipy.io import loadmat
 
 
 class testSetup:
     """
-    Class to store test setup variables. Initializes to DARP2016 default.
+    Class to store test setup variables. Initializes to DARP2016 configuration.
     """
 
     def __init__(self):
