@@ -49,8 +49,6 @@ DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-u_mean2 = (Ux*turb_intensity)**2
-
 # frequency of operation
 # kc = 0.5    # approx 180 Hz
 #kc = 5      # approx 1.8 kHz
@@ -70,7 +68,6 @@ ky_crit = Kx*Mach/beta          # critical spanwise wavenumber
 
 mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency
 mu_a = mu_h*Mach        # chord-based acoustic reduced frequency
-
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -104,7 +101,7 @@ Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
 Spp_Xdir = np.zeros((M_farfield,), 'complex')
 Spp_Ydir = np.zeros((M_farfield,), 'complex')
 
-Phi2 = AmT.Phi_2D(Kx, Ky, u_mean2, length_scale, model='K')[0]
+Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 
 for kyi in range(Ky.shape[0]):
 

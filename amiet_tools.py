@@ -1129,11 +1129,13 @@ def ky_att(xs, b, M, k0, Att=-20):
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # turbulent velocity spectra
 
-def Phi_2D(kx, ky, u_mean2, length_scale, model='K'):
+def Phi_2D(kx, ky, Ux, turb_intensity, length_scale, model='K'):
     """2D isotropic turbulence spectrum.
 
     'model' can be 'K' for von Karman spectrum, or 'L' for Liepmann
     spectrum."""
+
+    u_mean2 = (Ux*turb_intensity)**2
 
     if type(kx) is not np.ndarray:
         kx = np.asarray([kx])
