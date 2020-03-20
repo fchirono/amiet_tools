@@ -48,8 +48,8 @@ DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
 
 # frequency of operation
 # kc = 0.5    # approx 180 Hz
-#kc = 5      # approx 1.8 kHz
-kc = 20     # approx 7.2 kHz
+kc = 5      # approx 1.8 kHz
+# kc = 20     # approx 7.2 kHz
 
 f0 = kc*c0/(2*np.pi*(2*b))      # Hz
 
@@ -99,6 +99,14 @@ Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
 Spp_Xdir = np.zeros((M_farfield,), 'complex')
 Spp_Ydir = np.zeros((M_farfield,), 'complex')
 
+# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# Calculate the matrices of Greens functions
+G_Xdir = AmT.dipole3D(XYZ_airfoil_calc, XZ_farfield, k0, dipole_axis,
+                      flow_param)
+G_Ydir = AmT.dipole3D(XYZ_airfoil_calc, YZ_farfield, k0, dipole_axis,
+                      flow_param)
+
+# turbulent velocity spectrum
 Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 
 for kyi in range(Ky.shape[0]):
@@ -116,7 +124,7 @@ for kyi in range(Ky.shape[0]):
     # reshape and reweight for vector calculation
     delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
 
-    Sqq[:, :] = np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+    Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # negative gusts (ky < 0)
@@ -131,16 +139,9 @@ for kyi in range(Ky.shape[0]):
     # add negative gusts' radiated pressure to source CSD
     Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
 
-    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-    # Calculate the matrices of Greens functions
-    G_Xdir = AmT.dipole3D(XYZ_airfoil_calc, XZ_farfield, k0, dipole_axis,
-                          flow_param)
-    G_Ydir = AmT.dipole3D(XYZ_airfoil_calc, YZ_farfield, k0, dipole_axis,
-                          flow_param)
-
-    # calculates chordwise and spanwise PSDs (diag of mic CSMs)
-    Spp_Xdir += np.real(np.diag(G_Xdir @ Sqq @ H(G_Xdir)))*4*np.pi
-    Spp_Ydir += np.real(np.diag(G_Ydir @ Sqq @ H(G_Ydir)))*4*np.pi
+# calculates chordwise and spanwise PSDs (diag of mic CSMs)
+Spp_Xdir += np.real(np.diag(G_Xdir @ Sqq @ H(G_Xdir)))*4*np.pi
+Spp_Ydir += np.real(np.diag(G_Ydir @ Sqq @ H(G_Ydir)))*4*np.pi
 
 
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-

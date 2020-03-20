@@ -61,8 +61,6 @@ import scipy.special as ss
 import scipy.optimize as so     # for shear layer correction functions
 import mpmath as mp
 
-from scipy.io import loadmat
-
 
 class testSetup:
     """
@@ -660,7 +658,7 @@ def create_airf_mesh(b, d, Nx=100, Ny=101):
     x_airfoil, dx = chord_sampling(b, Nx)
 
     y_airfoil = np.linspace(-d, d, Ny)
-    dy = y_airfoil[1] - y_airfoil[0]
+    dy = np.array([y_airfoil[1] - y_airfoil[0]])
 
     XY_airfoil = np.meshgrid(x_airfoil, y_airfoil)
     Z_airfoil = np.zeros(XY_airfoil[0].shape)
