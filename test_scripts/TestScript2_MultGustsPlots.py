@@ -37,10 +37,7 @@ save_fig = False
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# # load test setup from file (DARP2016 configuration by default)
-# data = AmT.loadTestSetup()
-
-# alternative: load from setup file
+# load test setup from file
 DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
 
 # export variables to current namespace
@@ -95,9 +92,10 @@ YZ_farfield = np.array([np.zeros(x_farfield.shape), x_farfield, z_farfield])
 Ky = AmT.ky_vector(b, d, k0, Mach, beta, method='AcRad')
 dky = Ky[1]-Ky[0]
 
-# mic PSD
+# source CSM
 Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
 
+# chordwise and spanwise directivities (PSDs)
 Spp_Xdir = np.zeros((M_farfield,), 'complex')
 Spp_Ydir = np.zeros((M_farfield,), 'complex')
 
@@ -139,6 +137,8 @@ for kyi in range(Ky.shape[0]):
                           flow_param)
     G_Ydir = AmT.dipole3D(XYZ_airfoil_calc, YZ_farfield, k0, dipole_axis,
                           flow_param)
+
+    # calculates chordwise and spanwise PSDs (diag of mic CSMs)
     Spp_Xdir += np.real(np.diag(G_Xdir @ Sqq @ H(G_Xdir)))*4*np.pi
     Spp_Ydir += np.real(np.diag(G_Ydir @ Sqq @ H(G_Ydir)))*4*np.pi
 

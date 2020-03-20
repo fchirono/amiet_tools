@@ -39,10 +39,7 @@ plt.close('all')
 save_fig = False
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# # load test setup from file (DARP2016 configuration by default)
-# data = AmT.loadTestSetup()
-
-# alternative: load from setup file
+# load test setup from file
 DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
 
 # export variables to current namespace
@@ -107,12 +104,11 @@ mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency
 mu_a = mu_h*Mach        # chord-based acoustic reduced frequency
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
 # Calculate the pressure 'jump' over the airfoil
 delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, ky, XYZ_airfoil[0:2], Mach)
 
 
-# %% Plot the airfoil source strength distribution
+# Plot the airfoil source strength distribution
 re_p1_max = np.max(np.real(np.abs(delta_p1)))
 abs_p1_max = np.max(np.abs(delta_p1))
 
@@ -155,7 +151,8 @@ fig_airfoil.set_tight_layout(True)
 if save_fig:
     plt.savefig('DeltaP_' + fig_title + '.png')
 
-# %% Plot airfoil directivity in x-plane and y-plane
+# %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# Plot airfoil directivity in x-plane and y-plane
 
 # Create far field points for directivity
 R_farfield = 50     # [m]
@@ -166,10 +163,9 @@ z_farfield = -R_farfield*np.cos(theta_farfield)
 XZ_farfield = np.array([x_farfield, np.zeros(x_farfield.shape), z_farfield])
 YZ_farfield = np.array([np.zeros(x_farfield.shape), x_farfield, z_farfield])
 
-# create mesh for nearfield 2D cuts
+# create mesh for acoustic field 2D cuts
 mesh_side = 6*ac_wavelength  # [m]
 N_mesh = 201
-#N_mesh = 101
 
 coord_vector = np.linspace(-mesh_side/2., mesh_side/2., N_mesh)
 X_mesh1, Z_mesh1 = np.meshgrid(coord_vector, coord_vector)
@@ -188,9 +184,10 @@ pressure_YZ_calc = np.zeros(X_mesh2.shape[0]*X_mesh2.shape[1], 'complex')
 XZ_mesh1_calc = XZ_mesh1.reshape(3, XZ_mesh1.shape[1]*XZ_mesh1.shape[2])
 YZ_mesh2_calc = YZ_mesh2.reshape(3, YZ_mesh2.shape[1]*YZ_mesh2.shape[2])
 
-# reshape airfoil coordinates
+# reshape airfoil grid
 XYZ_airf_calc = XYZ_airfoil.reshape(3, Nx*Ny)
 
+# reshape airfoil ac. source strengths, apply weights by grid area
 delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
 
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
