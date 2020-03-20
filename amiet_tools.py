@@ -1186,7 +1186,7 @@ def loadTestSetup(*args):
         Relative path to setup file
     """
 
-    # if called without path to file, load default testSetup
+    # if called without path to file, load default testSetup (DARP2016)
     if len(args)==0:
         return testSetup()
 
@@ -1212,11 +1212,11 @@ def loadTestSetup(*args):
 
                 else:
                     words = line.split('\t')
-                    # 1st and 2nd elements are name and value (ignore comments)
+                    # take 1st element as value (ignore comments)
                     exec('testSetupFromFile.' + varList[i] + '=' + words[0])
                     i+=1
 
-        # calculate other setup variables from previous ones
+        # calculate other variables from previous ones
         testSetupFromFile._calc_secondary_vars()
 
         return testSetupFromFile
@@ -1233,7 +1233,7 @@ def DARP2016_MicArray():
     microphones, with 7 spiral arms containing 5 mics each and one central mic.
     The array has a circular aperture (diameter) of 0.5 m.
 
-    The calibration factors stored in the 'SpiralArray_1kHzCalibration.mat'
+    The calibration factors stored in the 'SpiralArray_1kHzCalibration.txt'
     were obtained using a 1 kHz, 1 Pa RMS calibrator. Multiply the raw mic data
     by its corresponding factor to obtain a calibrated signal in Pascals.
     """
