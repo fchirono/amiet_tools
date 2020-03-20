@@ -1269,6 +1269,27 @@ def DARP2016_MicArray():
     return XYZ_array, array_cal
 
 
+def rect_grid(grid_sides, point_spacings):
+    """
+    Returns the 2D coordinates for a uniformly spaced rectangular grid
+    with its sides given by 'grid_sides = (x_length, y_length)' and the
+    spacing between the points in each direction given by
+    'point_spacings = (delta_x, delta_y)'.
+    """
+
+    # number of points on each side = Dx/dx + 1
+    N_points = np.array([round(grid_sides[0]/point_spacings[0] + 1),
+                         round(grid_sides[1]/point_spacings[1] + 1)],
+                        dtype='int')
+
+    x_points = np.linspace(-grid_sides[0]/2., grid_sides[0]/2., N_points[0])
+    y_points = np.linspace(-grid_sides[1]/2., grid_sides[1]/2., N_points[1])
+
+    X_points, Y_points = np.meshgrid(x_points, y_points)
+
+    return np.array([X_points.flatten(), Y_points.flatten()])
+
+
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Reproduces Figure 6 from M Roger book chapter (unsteady lift)
 """

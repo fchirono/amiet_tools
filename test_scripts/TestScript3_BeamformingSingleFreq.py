@@ -19,6 +19,8 @@ fchirono@gmail.com
 import numpy as np
 
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.lines as mlines
 
 import amiet_tools as AmT
 import array_tools as ArT
@@ -115,11 +117,8 @@ for kyi in range(Ky.shape[0]):
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Create mic CSM
 
-# shear layer height (below airfoil)
-sl_z = -0.075
-
 # obtain propag time and shear layer crossing point for every airfoil-mic pair
-T_sl_fwd, XYZ_sl_fwd = AmT.ShearLayer_matrix(XYZ_airfoil_calc, XYZ_array, sl_z,
+T_sl_fwd, XYZ_sl_fwd = AmT.ShearLayer_matrix(XYZ_airfoil_calc, XYZ_array, z_sl,
                                              Ux, c0)
 
 # create fwd transfer function
@@ -130,12 +129,12 @@ G_fwd = AmT.dipole_shear(XYZ_airfoil_calc, XYZ_array, XYZ_sl_fwd, T_sl_fwd, k0,
 CSM = (G_fwd @ Sqq @ G_fwd.conj().T)*4*np.pi
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# scan plane side length
-scan_sides = np.array([.55, .55])
+# Create grid of scan points
 
-# scan points spacing
-scan_spacings = np.array([0.01, 0.01])
-scan_xy = ArT.rect_array(scan_sides, scan_spacings, save_txt='False')
+scan_sides = np.array([.55, .55])       # scan plane side length
+scan_spacings = np.array([0.01, 0.01])  # scan points spacing
+
+scan_xy = AmT.rect_grid(scan_sides, scan_spacings)
 
 # Reshape grid points for 2D plotting
 plotting_shape = (scan_sides/scan_spacings+1)[::-1].astype(int)
@@ -148,8 +147,10 @@ N = scan_xy.shape[1]
 # create array with (x, y, z) coordinates of the scan points
 scan_xyz = np.concatenate((scan_xy, np.zeros((1, N))))
 
-"""
-# Plot the mics and grid points as 3D scatter plot
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+## Plot the mics and grid points as 3D scatter plot
+
 fig_grid = plt.figure()
 ascan_x = fig_grid.add_subplot(111, projection='3d')
 plot_grid1 = ascan_x.scatter(XYZ_array[0], XYZ_array[1], XYZ_array[2], c='r',
@@ -167,7 +168,7 @@ scatter1_proxy = mlines.Line2D([0], [0], linestyle="none", c='r', marker='o')
 scatter2_proxy = mlines.Line2D([0], [0], linestyle="none", c='b', marker='^')
 ascan_x.legend([scatter1_proxy, scatter2_proxy], ['Mic Array', 'Grid Points'],
                numpoints=1)
-"""
+
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -177,7 +178,7 @@ ascan_x.legend([scatter1_proxy, scatter2_proxy], ['Mic Array', 'Grid Points'],
 dynamic_range = 15      # [dB]
 
 # obtain propag time and shear layer crossing point for every airfoil-mic pair
-T_sl, XYZ_sl = AmT.ShearLayer_matrix(scan_xyz, XYZ_array, sl_z, Ux, c0)
+T_sl, XYZ_sl = AmT.ShearLayer_matrix(scan_xyz, XYZ_array, z_sl, Ux, c0)
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Apply classical beamforming algorithm
