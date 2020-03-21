@@ -34,24 +34,20 @@ save_fig = False
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # load test setup from file
-DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
+DARP2016Setup = AmT.loadTestSetup('../DARP2016_TestSetup.txt')
 
 # export variables to current namespace
-(c0, rho0, p_ref, b, d, Nx, Ny, Ux, turb_intensity, length_scale, z_sl, Mach,
- beta,flow_param, dipole_axis) = DARP2016Setup.export_values()
+(c0, rho0, p_ref, Ux, turb_intensity, length_scale, z_sl, Mach, beta,
+ flow_param, dipole_axis) = DARP2016Setup.export_values()
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # define airfoil points over the whole chord
 
-# # create airfoil mesh coordinates, and reshape for calculations
-# XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
-# XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
-
-# define airfoil points over the whole chord
-DARP2016Airfoil = AmT.airfoilGeom()
+# load airfoil geometry from file
+DARP2016Airfoil = AmT.loadAirfoilGeom('../DARP2016_AirfoilGeom.txt')
 (b, d, Nx, Ny, XYZ_airfoil, dx, dy) = DARP2016Airfoil.export_values()
-
 XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # create DARP array
@@ -70,64 +66,32 @@ T_sl_fwd, XYZ_sl_fwd = AmT.ShearLayer_matrix(XYZ_airfoil_calc, XYZ_array, z_sl,
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Define frequency of analysis
-f0 = 5000
 
-# Hydrodynamic (gust) chordwise wavenumber
-Kx = 2*np.pi*f0/Ux
+# # Chordwise normalised frequency = k0*(2*b)
+# kc = 5      # approx 1.8 kHz
+kc = 10      # approx 3.6 kHz
+# kc = 20     # approx 7.2 kHz
 
-# critical gusts
-ky_crit = Kx*Mach/beta
+# frequency [Hz]
+f0 = kc*c0/(2*np.pi*(2*b))
 
-# acoustic wavenumber
-k0 = 2*np.pi*f0/c0
-
+FreqVars = AmT.FrequencyVars(f0, DARP2016Setup)
+(k0, Kx, Ky_crit) = FreqVars.export_values()
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Calculate airfoil acoustic source strength CSM
 
-# period of sin in sinc
-ky_T = 2*np.pi/d
-
 # vector of spanwise gust wavenumbers
 Ky =  AmT.ky_vector(b, d, k0, Mach, beta)
-dky = Ky[1]-Ky[0]
 
 # Turbulence spectrum (von Karman)
 Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 
-# Cross-spectral matrix (CSM) of source strengths
-Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
+# calculate source CSM
+Sqq, Sqq_dxy = AmT.calc_airfoil_Sqq(DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
 
-for kyi in range(Ky.shape[0]):
-
-    # sinusoidal gust peak value
-    w0 = np.sqrt(Phi2[kyi])
-
-    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-    # positive spanwise wavenumbers (ky < 0)
-
-    # Pressure 'jump' over the airfoil (for single gust)
-    delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, Ky[kyi], XYZ_airfoil[0:2],
-                           Mach)
-
-    # reshape and reweight for vector calculation
-    delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
-
-    Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
-
-    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-    # negative spanwise wavenumbers (ky < 0)
-
-    # Pressure 'jump' over the airfoil (for single gust)
-    delta_p1 = AmT.delta_p(rho0, b, w0, Ux, Kx, -Ky[kyi], XYZ_airfoil[0:2],
-                           Mach)
-
-    # reshape and reweight for vector calculation
-    delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
-
-    # add negative gusts' radiated pressure to source CSD
-    Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
-
+# apply weighting for airfoil grid areas
+Sqq *= Sqq_dxy
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Create mic array CSM

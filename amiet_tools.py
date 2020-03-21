@@ -62,7 +62,7 @@ import scipy.optimize as so     # for shear layer correction functions
 import mpmath as mp
 
 
-class testSetup:
+class TestSetup:
     """
     Class to store test setup variables. Initializes to DARP2016 configuration.
     """
@@ -81,6 +81,9 @@ class testSetup:
         # shear layer height
         self.z_sl = -0.075	# [m]
 
+        self.flow_dir = 'x'              # mean flow in the +x dir
+        self.dipole_axis = 'z'           # airfoil dipoles are pointing 'up' (+z dir)
+
         self._calc_secondary_vars()
 
 
@@ -88,19 +91,15 @@ class testSetup:
         # calculate other setup variables from initial ones
         self.Mach = self.Ux/self.c0
         self.beta = np.sqrt(1-self.Mach**2)
-        self.flow_dir = 'x'              # mean flow in the +x dir
         self.flow_param = (self.flow_dir, self.Mach)
-        self.dipole_axis = 'z'           # airfoil dipoles are pointing 'up' (+z dir)
 
     def export_values(self):
-        return (self.c0, self.rho0, self.p_ref, self.b, self.d, self.Nx,
-                self.Ny, self.Ux, self.turb_intensity, self.length_scale,
-                self.z_sl, self.Mach, self.beta, self.flow_param,
-                self.dipole_axis)
+        return (self.c0, self.rho0, self.p_ref, self.Ux, self.turb_intensity,
+                self.length_scale, self.z_sl, self.Mach, self.beta,
+                self.flow_param, self.dipole_axis)
 
 
-
-class airfoilGeom:
+class AirfoilGeom:
     """
     Class to store aerofoil geometry
     """
@@ -124,6 +123,28 @@ class airfoilGeom:
                 self.dy)
 
 
+class FrequencyVars:
+    """
+    Class to store frequency-related variables
+    """
+    def __init__(self, f0, testSetup):
+
+        self.f0 = f0                # frequency [Hz]
+
+        c0 = testSetup.c0           # speed of sound [m/s]
+        Mach = testSetup.Mach       # Mach number
+        beta = testSetup.beta
+
+        self.k0 = 2*np.pi*f0/c0     # acoustic wavenumber
+        self.Kx =self.k0/Mach       # gust/hydrodynamic chordwise wavenumber
+
+        # gust/hydrodynamic spanwise critical wavenumber
+        self.Ky_crit = self.Kx*Mach/beta
+
+    def export_values(self):
+        return (self.k0, self.Kx, self.Ky_crit)
+
+
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # load test setup from file
 
@@ -136,10 +157,6 @@ def loadTestSetup(*args):
         c0                  speed of sound [m/s]
         rho0                density of air [kg/m**3]
         p_ref               reference pressure [Pa RMS]
-        b                   airfoil semi chord [m]
-        d                   airfoil semi span [m]
-        Nx                  Number of chordwise points (non-uniform sampl)
-        Ny                  Number of spanwise points (uniform sampl)
         Ux                  mean flow velocity [m/s]
         turb_intensity      turbulent flow intensity [ = u_rms/Ux]
         length_scale        turbulence integral length scale [m]
@@ -153,17 +170,17 @@ def loadTestSetup(*args):
 
     # if called without path to file, load default testSetup (DARP2016)
     if len(args)==0:
-        return testSetup()
+        return TestSetup()
 
     else:
         # initialize new instance of testSetup
-        testSetupFromFile = testSetup()
+        testSetupFromFile = TestSetup()
 
-        varList = ['c0', 'rho0', 'p_ref', 'b', 'd', 'Nx', 'Ny', 'Ux',
-                   'turb_intensity', 'length_scale', 'z_sl']
+        varList = ['c0', 'rho0', 'p_ref', 'Ux', 'turb_intensity',
+                   'length_scale', 'z_sl']
         i=0
 
-        #path_to_file = '../DARP2016_setup.txt'
+        #path_to_file = '../DARP2016_TestSetup.txt'
         with open(args[0]) as f:
             # get list with file lines as strings
             all_lines = f.readlines()
@@ -185,6 +202,59 @@ def loadTestSetup(*args):
         testSetupFromFile._calc_secondary_vars()
 
         return testSetupFromFile
+
+
+
+def loadAirfoilGeom(*args):
+    """
+    Load airfoil geometry values for calculations, either from default values or
+    from a given .txt airfoil geometry file. File must contain the
+    following variable values, in order:
+
+        b       Airfoil semichord [m]
+        d       Airfoil semispan [m]
+        Nx      Number of chordwise points (non-uniform sampling)
+        Ny      Number of spanwise points (uniform sampling)
+
+    Empty lines and 'comments' (starting with '#') are ignored.
+
+    path_to_file: str [Optional]
+        Relative path to airfoil geometry file
+    """
+
+    # if called without path to file, load default geometry (DARP2016)
+    if len(args)==0:
+        return AirfoilGeom()
+
+    else:
+        # initialize new instance of testSetup
+        airfoilGeomFromFile = AirfoilGeom()
+
+        varList = ['b', 'd', 'Nx', 'Ny']
+        i=0
+
+        #path_to_file = '../DARP2016_AirfoilGeom.txt'
+        with open(args[0]) as f:
+            # get list with file lines as strings
+            all_lines = f.readlines()
+
+            # for each line...
+            for line in all_lines:
+
+                # skip comments and empty lines
+                if line[0] in ['#', '\n']:
+                    pass
+
+                else:
+                    words = line.split('\t')
+                    # take 1st element as value (ignore comments)
+                    exec('airfoilGeomFromFile.' + varList[i] + '=' + words[0])
+                    i+=1
+
+        # calculate other variables from previous ones
+        airfoilGeomFromFile._calc_grid()
+
+        return airfoilGeomFromFile
 
 
 
@@ -258,85 +328,67 @@ def rect_grid(grid_sides, point_spacings):
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> wrappers to create surface pressure cross-spectral matrix
 
-def calc_Sqq(XYZ_airfoil, dx, dy, Nx, Ny, b, d, rho0, Ux, Mach, beta, k0, Ky,
-             Phi):
+def calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi):
     """
     Calculates the aerofoil surface pressure jump / acoustic source
     cross-spectral matrix (CSM).
+
+    testSetup: instance of TestSetup class
+    airfoilGeom: instance of AirfoilGeom class
+    frequencyVars: instance of FrequencyVars class
+
+    Ky_vec: vector contains negative and positive spanwise gust wavenumber values
     """
+
+    # export variables to current namespace
+    (c0, rho0, p_ref, Ux, turb_intensity, length_scale, z_sl, Mach, beta,
+     flow_param, dipole_axis) = testSetup.export_values()
+    (b, d, Nx, Ny, XYZ_airfoil, dx, dy) = airfoilGeom.export_values()
+    (k0, Kx, Ky_crit) = frequencyVars.export_values()
+
+    # Surface area weighting matrix for applying to Sqq
+    dxy = dx[np.newaxis, :]*(np.ones(Ny)*dy)[:, np.newaxis]
+    Sqq_dxy = np.outer(dxy, dxy)
 
     # gust chordwise wavenumber
     Kx = k0/Mach
 
     # gust spanwise wavenumber interval
-    dky = Ky[1]-Ky[0]
+    dky = Ky_vec[1]-Ky_vec[0]
 
     # source CSM
     Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
 
-    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-    # for ky= 0:
-
-    # sinusoidal gust peak value
-    w0 = np.sqrt(Phi[0])
-
-    # Pressure 'jump' over the airfoil (for single gust)
-    delta_p1 = delta_p(rho0, b, w0, Ux, Kx, Ky[0], XYZ_airfoil[0:2], Mach)
-
-    # reshape and reweight for vector calculation
-    delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
-
-    Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
-
-    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-    # for ky != 0:
-    for kyi in range(1, Ky.shape[0]):
+    for kyi in range(Ky_vec.shape[0]):
 
         # sinusoidal gust peak value
         w0 = np.sqrt(Phi[kyi])
 
-        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-        # positive spanwise wavenumbers (ky < 0)
-
         # Pressure 'jump' over the airfoil (for single gust)
-        delta_p1 = delta_p(rho0, b, w0, Ux, Kx, Ky[kyi], XYZ_airfoil[0:2],
+        delta_p1 = delta_p(rho0, b, w0, Ux, Kx, Ky_vec[kyi], XYZ_airfoil[0:2],
                            Mach)
 
-        # reshape and reweight for vector calculation
-        delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
+        # reshape for vector calculation
+        delta_p1_calc = delta_p1.reshape(Nx*Ny)
 
         Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
 
-        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-        # negative spanwise wavenumbers (ky < 0)
-
-        # Pressure 'jump' over the airfoil (for single gust)
-        delta_p1 = delta_p(rho0, b, w0, Ux, Kx, -Ky[kyi], XYZ_airfoil[0:2],
-                           Mach)
-
-        # reshape and reweight for vector calculation
-        delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
-
-        # add negative gusts' radiated pressure to source CSD
-        Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
-
-    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
-    return Sqq
+    return Sqq, Sqq_dxy
 
 
-"""
-def calc_Spp(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky, G):
+def calc_radiated_Spp(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi, G):
+    """
+    Calculates the acoustic field CSM radiated by the airfoil
 
-    def H(A):
-        # Hermitian complex conjugate transpose of a matrix
-        return A.conj().T
+    G: matrix of transfer functions (airfoil to obs)
+    """
 
-    Sqq = calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky)
+    Sqq, Sqq_dxy = calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi)
 
-    return (G @ Sqq @ H(G))*4*np.pi
-"""
+    # apply weights for surface area
+    Sqq *= Sqq_dxy
 
+    return (G @ Sqq @ G.conj().T)*4*np.pi
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -794,7 +846,7 @@ def create_airf_mesh(b, d, Nx=100, Ny=101):
     x_airfoil, dx = chord_sampling(b, Nx)
 
     y_airfoil = np.linspace(-d, d, Ny)
-    dy = np.array([y_airfoil[1] - y_airfoil[0]])
+    dy = y_airfoil[1] - y_airfoil[0]
 
     XY_airfoil = np.meshgrid(x_airfoil, y_airfoil)
     Z_airfoil = np.zeros(XY_airfoil[0].shape)
@@ -1157,8 +1209,7 @@ def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
     the airfoil acoustic radiation (method = 'AcRad') or for calculating the
     airfoil surface pressure cross-spectrum (method = 'SurfPressure').
 
-    Returned values go from 0 to 'ky_max'; each value must be used twice when
-    calculating the responses - one for positive ky, one for negative ky.
+    Returned values go from '-ky_max' to 'ky_max', center sample is ky=0.
 
     d: airfoil semi span
 
@@ -1196,15 +1247,15 @@ def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
         if ky_crit < 2*np.pi/d:
             # 'low freq' - include some subcritical gusts (up to 1st sidelobe
             # of sinc function)
-            N_ky = 21       # value validated empirically
-            Ky = np.linspace(0, ky_T, N_ky)
+            N_ky = 41       # value validated empirically
+            Ky = np.linspace(-ky_T, ky_T, N_ky)
 
         else:
             # 'high freq' - restrict to supercritical gusts only
             N_T = ky_crit/ky_T      # count how many sin(ky*d) periods within Ky
                                     # supercritical range
             N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period +1
-            Ky = np.linspace(0, ky_crit, N_ky)
+            Ky = np.linspace(-ky_crit, ky_crit, N_ky)
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # for surface pressure cross-spectra calculations
@@ -1226,7 +1277,7 @@ def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
 
         N_T = ky_max/ky_T      # count how many sin(ky*d) periods within range
         N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period +1
-        Ky = np.linspace(0, ky_max, N_ky)
+        Ky = np.linspace(-ky_max, ky_max, N_ky)
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -1292,57 +1343,3 @@ def Phi_1D(kx, u_mean2, length_scale):
     return ((u_mean2*length_scale/(2*np.pi))*(1+8.*kxe2/3)
             / ((1+kxe2)**(11./6)))
 
-
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# Reproduces Figure 6 from M Roger book chapter (unsteady lift)
-"""
-import matplotlib.pyplot as plt
-
-N = 201
-
-
-b = 1
-M = 0.3
-Kx = np.pi/(b*M)
-xs, _ = chord_sampling(b, N, exp_length=2)
-
-beta = np.sqrt(1-M**2)
-mu = Kx*b*M/(beta**2)
-
-plt.figure()
-for k in [0.1, 0.2, 0.3, 0.4, 0.5, 0.9, 0.95, 1.05, 1.5, 2., 5]:
-    ky = k*beta*mu/b
-    g = g_LE(xs, Kx, ky, M, b)
-    plt.plot(xs, np.abs(g))
-"""
-
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# show non-uniform chordwise sampling
-
-"""
-import matplotlib.pyplot as plt
-b = 0.075       # airfoil half chord [m]
-d = 0.225       # airfoil half span [m]
-
-Nx = 50         # number of points sampling the chord (non-uniformly)
-Ny = 101
-
-# create airfoil mesh coordinates, and reshape for calculations
-XYZ_airfoil, dx, dy = create_airf_mesh(b, d, Nx, Ny)
-
-
-plt.figure(figsize=(6, 6))
-for nx in range(Nx):
-    plt.plot((XYZ_airfoil[0, 0, nx], XYZ_airfoil[0, 0, nx]),
-            (XYZ_airfoil[1, 0, nx], XYZ_airfoil[1, -1, nx]),
-            linestyle='-', color='k', linewidth='1')
-for ny in range(Ny//2, Ny):
-    plt.plot((XYZ_airfoil[0, ny, 0], XYZ_airfoil[0, ny, -1]),
-            (XYZ_airfoil[1, ny, 0], XYZ_airfoil[1, ny, -1]), 'k-')
-plt.axis('equal')
-plt.xlim(-1.2*b, 1.2*b)
-plt.ylim(-2.1*b + d, 0.5*b+d)
-plt.xticks([-b, 0, b], [r'$-b$', r'$0$', r'$b$'], fontsize=20)
-plt.yticks([0.5*d, d], [r'$0.5d$', r'$d$'], fontsize=20)
-#plt.savefig('Aerofoil_mesh.eps')
-"""
