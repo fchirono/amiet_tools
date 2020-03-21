@@ -1,0 +1,8 @@
+# amiet_tools AirfoilGeom file
+#
+# DARP2016 flat plate airfoil, ISVR, Univ. of Southampton, UK
+
+0.075	# b		airfoil half chord [m]
+0.225	# d 		airfoil half span [m]
+100	# Nx 		number of chordwise points (non-uniform sampl)
+101	# Ny 		number of spanwise points (uniform sampl)
