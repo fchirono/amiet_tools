@@ -3,15 +3,15 @@
 # DARP2016 test setup, ISVR, Univ. of Southampton, UK
 
 # Acoustic characteristics
-340.	# c0	Speed of sound [m/s]
-1.2	# rho0	Air density [kg/m**3]
-20e-6	# p_ref	Ref acoustic pressure [Pa RMS]
+340.	# c0		Speed of sound [m/s]
+1.2	# rho0		Air density [kg/m**3]
+20e-6	# p_ref		Ref acoustic pressure [Pa RMS]
 
 # Aerofoil geometry
-0.075	# b 	airfoil half chord [m]
-0.225	# d	airfoil half span [m]
-100	# Nx	number of chordwise points (non-uniform sampl)
-101	# Ny	number of spanwise points (uniform sampl)
+0.075	# b 		airfoil half chord [m]
+0.225	# d		airfoil half span [m]
+100	# Nx		number of chordwise points (non-uniform sampl)
+101	# Ny		number of spanwise points (uniform sampl)
 
 # turbulent flow properties
 60	# Ux			flow velocity [m/s]
@@ -19,4 +19,4 @@
 0.007	# length_scale		turb length scale [m]
 
 # shear layer height
--0.075	# z_sl	[m]
+-0.075	# z_sl		Shear layer height (aerofoil is at z=0) [m]

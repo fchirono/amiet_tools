@@ -73,12 +73,6 @@ class testSetup:
         self.rho0 =1.2	# Air density [kg/m**3]
         self.p_ref = 20e-6	# Ref acoustic pressure [Pa RMS]
 
-        # Aerofoil geometry
-        self.b = 0.075	# airfoil half chord [m]
-        self. d = 0.225	# airfoil half span [m]
-        self.Nx = 100	# number of chordwise points (non-uniform sampl)
-        self.Ny = 101	# number of spanwise points (uniform sampl)
-
         # turbulent flow properties
         self.Ux = 60			# flow velocity [m/s]
         self.turb_intensity = 0.025	# turbulence intensity = u_rms/U
@@ -105,90 +99,233 @@ class testSetup:
                 self.dipole_axis)
 
 
+
+class airfoilGeom:
+    """
+    Class to store aerofoil geometry
+    """
+
+    def __init__(self):
+        # Aerofoil geometry
+        self.b = 0.075	# airfoil half chord [m]
+        self.d = 0.225	# airfoil half span [m]
+        self.Nx = 100	# number of chordwise points (non-uniform sampl)
+        self.Ny = 101	# number of spanwise points (uniform sampl)
+
+        self._calc_grid()
+
+
+    def _calc_grid(self):
+        self.XYZ, self.dx, self.dy = create_airf_mesh(self.b, self.d, self.Nx,
+                                                      self.Ny)
+
+    def export_values(self):
+        return (self.b, self.d, self.Nx, self.Ny, self.XYZ, self.dx,
+                self.dy)
+
+
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> wrappers to create surface pressure cross-spectra matrix
+# load test setup from file
 
-# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-# --->>> DO NOT USE - UNDER DEVELOPMENT! <<<---
-# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-"""
-def calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky):
+def loadTestSetup(*args):
+    """
+    Load test variable values for calculations, either from default values or
+    from a given .txt test configuration setup file. File must contain the
+    following variable values, in order:
 
-    #airfoil_tuple = (XYZ_airfoil, dx, dy)
-    #turb_tuple = (Ux, turb_u_mean2, turb_length_scale, turb_model = {'K', 'L'})
-    #how_many_ky = {'many', 'few'}
+        c0                  speed of sound [m/s]
+        rho0                density of air [kg/m**3]
+        p_ref               reference pressure [Pa RMS]
+        b                   airfoil semi chord [m]
+        d                   airfoil semi span [m]
+        Nx                  Number of chordwise points (non-uniform sampl)
+        Ny                  Number of spanwise points (uniform sampl)
+        Ux                  mean flow velocity [m/s]
+        turb_intensity      turbulent flow intensity [ = u_rms/Ux]
+        length_scale        turbulence integral length scale [m]
+        z_sl                shear layer height (from aerofoil)
 
-    beta = np.sqrt(1-Mach**2)
+    Empty lines and 'comments' (starting with '#') are ignored.
 
-    # untuple turbulence properties
-    Ux, turb_u_mean2, turb_length_scale, turb_model = turb_tuple
+    path_to_file: str [Optional]
+        Relative path to setup file
+    """
 
-    # untuple airfoil geometry
-    XYZ_airfoil, dx, dy = airfoil_tuple
-    Ny, Nx = XYZ_airfoil.shape[1:]
-    d = XYZ_airfoil[1, -1, 0]   # airfoil semi span
-    b = XYZ_airfoil[0, 0, -1]   # airfoil semi chord
+    # if called without path to file, load default testSetup (DARP2016)
+    if len(args)==0:
+        return testSetup()
 
-    # critical gusts
-    ky_crit = kx*Mach/beta
+    else:
+        # initialize new instance of testSetup
+        testSetupFromFile = testSetup()
 
-    # period of sin in sinc
-    ky_T = 2*np.pi/d
+        varList = ['c0', 'rho0', 'p_ref', 'b', 'd', 'Nx', 'Ny', 'Ux',
+                   'turb_intensity', 'length_scale', 'z_sl']
+        i=0
 
-    # integrating ky with many points
-    if how_many_ky == 'many':
+        #path_to_file = '../DARP2016_setup.txt'
+        with open(args[0]) as f:
+            # get list with file lines as strings
+            all_lines = f.readlines()
 
-        # 'low freq'
-        if ky_crit < 2*np.pi/d:
-            N_ky = 41
-            Ky = np.linspace(-ky_T, ky_T, N_ky)
+            # for each line...
+            for line in all_lines:
 
-        # 'high freq'
-        else:
-            # count how many sin(ky*d) periods in Ky range
-            N_T = 2*ky_crit/ky_T
-            N_ky = np.int(np.ceil(N_T*20)) + 1      # use 20 points per period
-            Ky = np.linspace(-ky_crit, ky_crit, N_ky)
+                # skip comments and empty lines
+                if line[0] in ['#', '\n']:
+                    pass
 
-    # integrating ky with few points
-    elif how_many_ky == 'few':
-        # 'low freq'
-        if ky_crit < 2*np.pi/d:
-            N_ky = 5
-            Ky = np.linspace(-ky_T, ky_T, N_ky)
+                else:
+                    words = line.split('\t')
+                    # take 1st element as value (ignore comments)
+                    exec('testSetupFromFile.' + varList[i] + '=' + words[0])
+                    i+=1
 
-        # ' high freq'
-        else:
-            # count how many sin(ky*d) periods in Ky range
-            N_T = 2*ky_crit/ky_T
-            N_ky = np.int(np.ceil(N_T*2))          # use 2 points per period
-            Ky = np.linspace(-ky_crit, ky_crit, N_ky)
+        # calculate other variables from previous ones
+        testSetupFromFile._calc_secondary_vars()
 
+        return testSetupFromFile
+
+
+
+def DARP2016_MicArray():
+    """
+    Returns the microphone coordinates for the 'near-field' planar microphone
+    array used in the 2016 experiments with the DARP open-jet wind tunnel at
+    the ISVR, Univ. of Southampton, UK [Casagrande Hirono, 2018].
+
+    The array is a Underbrink multi-arm spiral array with 36 electret
+    microphones, with 7 spiral arms containing 5 mics each and one central mic.
+    The array has a circular aperture (diameter) of 0.5 m.
+
+    The calibration factors stored in the 'SpiralArray_1kHzCalibration.txt'
+    were obtained using a 1 kHz, 1 Pa RMS calibrator. Multiply the raw mic data
+    by its corresponding factor to obtain a calibrated signal in Pascals.
+    """
+
+    M = 36                      # number of mics
+    array_height = -0.49        # [m] (ref. to airfoil height at z=0)
+
+    # mic coordinates (corrected for DARP2016 configuration)
+    XYZ_array = np.array([[  0.     ,  0.025  ,  0.08477,  0.12044,  0.18311,  0.19394,
+                             0.01559,  0.08549,  0.16173,  0.19659,  0.24426, -0.00556,
+                             0.02184,  0.08124,  0.06203,  0.11065, -0.02252, -0.05825,
+                            -0.06043, -0.11924, -0.10628, -0.02252, -0.09449, -0.15659,
+                            -0.21072, -0.24318, -0.00556, -0.05957, -0.13484, -0.14352,
+                            -0.19696,  0.01559,  0.02021, -0.01155,  0.03174, -0.00242],
+                           [-0.     , -0.     ,  0.04175,  0.11082,  0.10542,  0.15776,
+                            -0.01955, -0.04024, -0.02507, -0.07743, -0.05327, -0.02437,
+                            -0.09193, -0.14208, -0.20198, -0.22418, -0.01085, -0.0744 ,
+                            -0.1521 , -0.17443, -0.22628,  0.01085, -0.00084, -0.04759,
+                            -0.01553, -0.05799,  0.02437,  0.07335,  0.09276,  0.15506,
+                             0.15397,  0.01955,  0.09231,  0.16326,  0.20889,  0.24999],
+                          array_height*np.ones(M)])
+
+    # # load calibration factor from .mat file
+    # cal_mat = loadmat('SpiralArray_1kHzCalibration')
+    # array_cal = cal_mat['calibration_factor_1khz'][:, 0]
+
+    # load calibration factors from .txt file
+    array_cal = np.zeros(M)
+    with open('../SpiralArray_1kHzCalibration.txt', 'r') as calfile:
+        for m in range(M):
+            array_cal[m] = calfile.readline()
+
+    return XYZ_array, array_cal
+
+
+def rect_grid(grid_sides, point_spacings):
+    """
+    Returns the 2D coordinates for a uniformly spaced rectangular grid
+    with its sides given by 'grid_sides = (x_length, y_length)' and the
+    spacing between the points in each direction given by
+    'point_spacings = (delta_x, delta_y)'.
+    """
+
+    # number of points on each side = Dx/dx + 1
+    N_points = np.array([round(grid_sides[0]/point_spacings[0] + 1),
+                         round(grid_sides[1]/point_spacings[1] + 1)],
+                        dtype='int')
+
+    x_points = np.linspace(-grid_sides[0]/2., grid_sides[0]/2., N_points[0])
+    y_points = np.linspace(-grid_sides[1]/2., grid_sides[1]/2., N_points[1])
+
+    X_points, Y_points = np.meshgrid(x_points, y_points)
+
+    return np.array([X_points.flatten(), Y_points.flatten()])
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>> wrappers to create surface pressure cross-spectral matrix
+
+def calc_Sqq(XYZ_airfoil, dx, dy, Nx, Ny, b, d, rho0, Ux, Mach, beta, k0, Ky,
+             Phi):
+    """
+    Calculates the aerofoil surface pressure jump / acoustic source
+    cross-spectral matrix (CSM).
+    """
+
+    # gust chordwise wavenumber
+    Kx = k0/Mach
+
+    # gust spanwise wavenumber interval
     dky = Ky[1]-Ky[0]
 
-    # create turbulence wavenumber spectrum
-    Phi2 = Phi_2D(kx, Ky, turb_u_mean2, turb_length_scale, turb_model)[0]
-
+    # source CSM
     Sqq = np.zeros((Nx*Ny, Nx*Ny), 'complex')
 
-    # for every gust...
-    for kyi in range(Ky.shape[0]):
-        # sinusoidal gust peak value
-        w0 = np.sqrt(Phi2[kyi])
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # for ky= 0:
 
-        # Pressure 'jump' over the airfoil
-        delta_p1 = delta_p(rho0, b, w0, Ux, kx, Ky[kyi], XYZ_airfoil[0:2],
+    # sinusoidal gust peak value
+    w0 = np.sqrt(Phi[0])
+
+    # Pressure 'jump' over the airfoil (for single gust)
+    delta_p1 = delta_p(rho0, b, w0, Ux, Kx, Ky[0], XYZ_airfoil[0:2], Mach)
+
+    # reshape and reweight for vector calculation
+    delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
+
+    Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    # for ky != 0:
+    for kyi in range(1, Ky.shape[0]):
+
+        # sinusoidal gust peak value
+        w0 = np.sqrt(Phi[kyi])
+
+        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        # positive spanwise wavenumbers (ky < 0)
+
+        # Pressure 'jump' over the airfoil (for single gust)
+        delta_p1 = delta_p(rho0, b, w0, Ux, Kx, Ky[kyi], XYZ_airfoil[0:2],
                            Mach)
 
         # reshape and reweight for vector calculation
         delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
 
-        # add cross-product to source amplitude CSM
-        Sqq += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+        Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+
+        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        # negative spanwise wavenumbers (ky < 0)
+
+        # Pressure 'jump' over the airfoil (for single gust)
+        delta_p1 = delta_p(rho0, b, w0, Ux, Kx, -Ky[kyi], XYZ_airfoil[0:2],
+                           Mach)
+
+        # reshape and reweight for vector calculation
+        delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
+
+        # add negative gusts' radiated pressure to source CSD
+        Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
     return Sqq
 
 
+"""
 def calc_Spp(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky, G):
 
     def H(A):
@@ -198,7 +335,6 @@ def calc_Spp(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky, G):
     Sqq = calc_Sqq(airfoil_tuple, kx, Mach, rho0, turb_tuple, how_many_ky)
 
     return (G @ Sqq @ H(G))*4*np.pi
-
 """
 
 
@@ -1155,137 +1291,6 @@ def Phi_1D(kx, u_mean2, length_scale):
 
     return ((u_mean2*length_scale/(2*np.pi))*(1+8.*kxe2/3)
             / ((1+kxe2)**(11./6)))
-
-
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# load test setup from file
-
-def loadTestSetup(*args):
-    """
-    Load test variable values for calculations, either from default values or
-    from a given .txt test configuration setup file. File must contain the
-    following variable values, in order:
-
-        c0                  speed of sound [m/s]
-        rho0                density of air [kg/m**3]
-        p_ref               reference pressure [Pa RMS]
-        b                   airfoil semi chord [m]
-        d                   airfoil semi span [m]
-        Nx                  Number of chordwise points (non-uniform sampl)
-        Ny                  Number of spanwise points (uniform sampl)
-        Ux                  mean flow velocity [m/s]
-        turb_intensity      turbulent flow intensity [ = u_rms/Ux]
-        length_scale        turbulence integral length scale [m]
-        z_sl                shear layer height (from aerofoil)
-
-    Empty lines and 'comments' (starting with '#') are ignored.
-
-    path_to_file: str [Optional]
-        Relative path to setup file
-    """
-
-    # if called without path to file, load default testSetup (DARP2016)
-    if len(args)==0:
-        return testSetup()
-
-    else:
-        # initialize new instance of testSetup
-        testSetupFromFile = testSetup()
-
-        varList = ['c0', 'rho0', 'p_ref', 'b', 'd', 'Nx', 'Ny', 'Ux',
-                   'turb_intensity', 'length_scale', 'z_sl']
-        i=0
-
-        #path_to_file = '../DARP2016_setup.txt'
-        with open(args[0]) as f:
-            # get list with file lines as strings
-            all_lines = f.readlines()
-
-            # for each line...
-            for line in all_lines:
-
-                # skip comments and empty lines
-                if line[0] in ['#', '\n']:
-                    pass
-
-                else:
-                    words = line.split('\t')
-                    # take 1st element as value (ignore comments)
-                    exec('testSetupFromFile.' + varList[i] + '=' + words[0])
-                    i+=1
-
-        # calculate other variables from previous ones
-        testSetupFromFile._calc_secondary_vars()
-
-        return testSetupFromFile
-
-
-
-def DARP2016_MicArray():
-    """
-    Returns the microphone coordinates for the 'near-field' planar microphone
-    array used in the 2016 experiments with the DARP open-jet wind tunnel at
-    the ISVR, Univ. of Southampton, UK [Casagrande Hirono, 2018].
-
-    The array is a Underbrink multi-arm spiral array with 36 electret
-    microphones, with 7 spiral arms containing 5 mics each and one central mic.
-    The array has a circular aperture (diameter) of 0.5 m.
-
-    The calibration factors stored in the 'SpiralArray_1kHzCalibration.txt'
-    were obtained using a 1 kHz, 1 Pa RMS calibrator. Multiply the raw mic data
-    by its corresponding factor to obtain a calibrated signal in Pascals.
-    """
-
-    M = 36                      # number of mics
-    array_height = -0.49        # [m] (ref. to airfoil height at z=0)
-
-    # mic coordinates (corrected for DARP2016 configuration)
-    XYZ_array = np.array([[  0.     ,  0.025  ,  0.08477,  0.12044,  0.18311,  0.19394,
-                             0.01559,  0.08549,  0.16173,  0.19659,  0.24426, -0.00556,
-                             0.02184,  0.08124,  0.06203,  0.11065, -0.02252, -0.05825,
-                            -0.06043, -0.11924, -0.10628, -0.02252, -0.09449, -0.15659,
-                            -0.21072, -0.24318, -0.00556, -0.05957, -0.13484, -0.14352,
-                            -0.19696,  0.01559,  0.02021, -0.01155,  0.03174, -0.00242],
-                           [-0.     , -0.     ,  0.04175,  0.11082,  0.10542,  0.15776,
-                            -0.01955, -0.04024, -0.02507, -0.07743, -0.05327, -0.02437,
-                            -0.09193, -0.14208, -0.20198, -0.22418, -0.01085, -0.0744 ,
-                            -0.1521 , -0.17443, -0.22628,  0.01085, -0.00084, -0.04759,
-                            -0.01553, -0.05799,  0.02437,  0.07335,  0.09276,  0.15506,
-                             0.15397,  0.01955,  0.09231,  0.16326,  0.20889,  0.24999],
-                          array_height*np.ones(M)])
-
-    # # load calibration factor from .mat file
-    # cal_mat = loadmat('SpiralArray_1kHzCalibration')
-    # array_cal = cal_mat['calibration_factor_1khz'][:, 0]
-
-    # load calibration factors from .txt file
-    array_cal = np.zeros(M)
-    with open('../SpiralArray_1kHzCalibration.txt', 'r') as calfile:
-        for m in range(M):
-            array_cal[m] = calfile.readline()
-
-    return XYZ_array, array_cal
-
-
-def rect_grid(grid_sides, point_spacings):
-    """
-    Returns the 2D coordinates for a uniformly spaced rectangular grid
-    with its sides given by 'grid_sides = (x_length, y_length)' and the
-    spacing between the points in each direction given by
-    'point_spacings = (delta_x, delta_y)'.
-    """
-
-    # number of points on each side = Dx/dx + 1
-    N_points = np.array([round(grid_sides[0]/point_spacings[0] + 1),
-                         round(grid_sides[1]/point_spacings[1] + 1)],
-                        dtype='int')
-
-    x_points = np.linspace(-grid_sides[0]/2., grid_sides[0]/2., N_points[0])
-    y_points = np.linspace(-grid_sides[1]/2., grid_sides[1]/2., N_points[1])
-
-    X_points, Y_points = np.meshgrid(x_points, y_points)
-
-    return np.array([X_points.flatten(), Y_points.flatten()])
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-

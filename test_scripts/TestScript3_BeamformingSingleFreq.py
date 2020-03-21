@@ -41,6 +41,19 @@ DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
  beta,flow_param, dipole_axis) = DARP2016Setup.export_values()
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# define airfoil points over the whole chord
+
+# # create airfoil mesh coordinates, and reshape for calculations
+# XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
+# XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+
+# define airfoil points over the whole chord
+DARP2016Airfoil = AmT.airfoilGeom()
+(b, d, Nx, Ny, XYZ_airfoil, dx, dy) = DARP2016Airfoil.export_values()
+
+XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # create DARP array
 
 # DARP2016 spiral microphone array coordinates
@@ -49,6 +62,11 @@ XYZ_array, array_cal = AmT.DARP2016_MicArray()
 # Number of mics
 M = XYZ_array.shape[1]
 
+
+# obtain propag time and shear layer crossing point for every source-mic pair
+# (Frequency independent!)
+T_sl_fwd, XYZ_sl_fwd = AmT.ShearLayer_matrix(XYZ_airfoil_calc, XYZ_array, z_sl,
+                                             Ux, c0)
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Define frequency of analysis
@@ -63,10 +81,9 @@ ky_crit = Kx*Mach/beta
 # acoustic wavenumber
 k0 = 2*np.pi*f0/c0
 
+
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# create airfoil mesh coordinates, and reshape for calculations
-XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
-XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+# Calculate airfoil acoustic source strength CSM
 
 # period of sin in sinc
 ky_T = 2*np.pi/d
@@ -113,11 +130,7 @@ for kyi in range(Ky.shape[0]):
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# Create mic CSM
-
-# obtain propag time and shear layer crossing point for every source-mic pair
-T_sl_fwd, XYZ_sl_fwd = AmT.ShearLayer_matrix(XYZ_airfoil_calc, XYZ_array, z_sl,
-                                             Ux, c0)
+# Create mic array CSM
 
 # create fwd transfer function
 G_fwd = AmT.dipole_shear(XYZ_airfoil_calc, XYZ_array, XYZ_sl_fwd, T_sl_fwd, k0,
@@ -129,7 +142,7 @@ CSM = (G_fwd @ Sqq @ G_fwd.conj().T)*4*np.pi
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Create grid of scan points
 
-scan_sides = np.array([.55, .55])       # scan plane side length
+scan_sides = np.array([.65, .65])       # scan plane side length
 scan_spacings = np.array([0.01, 0.01])  # scan points spacing
 
 scan_xy = AmT.rect_grid(scan_sides, scan_spacings)
@@ -147,8 +160,7 @@ scan_xyz = np.concatenate((scan_xy, np.zeros((1, N))))
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-## Plot the mics and grid points as 3D scatter plot
-
+# Plot the mics and grid points as 3D scatter plot
 
 fig_grid = plt.figure()
 ascan_x = fig_grid.add_subplot(111, projection='3d')

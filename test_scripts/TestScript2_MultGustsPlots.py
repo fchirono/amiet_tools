@@ -45,6 +45,17 @@ DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
  beta,flow_param, dipole_axis) = DARP2016Setup.export_values()
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# define airfoil points over the whole chord
+
+# # create airfoil mesh coordinates, and reshape for calculations
+# XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
+# XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+
+DARP2016Airfoil = AmT.airfoilGeom()
+(b, d, Nx, Ny, XYZ_airfoil, dx, dy) = DARP2016Airfoil.export_values()
+XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 # frequency of operation
 # kc = 0.5    # approx 180 Hz
@@ -66,11 +77,6 @@ ky_crit = Kx*Mach/beta          # critical spanwise wavenumber
 mu_h = Kx*b/(beta**2)   # hydrodynamic reduced frequency
 mu_a = mu_h*Mach        # chord-based acoustic reduced frequency
 
-
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# create airfoil mesh coordinates, and reshape for calculations
-XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
-XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Create arc of far field points for directivity measurements

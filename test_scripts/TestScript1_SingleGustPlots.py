@@ -49,8 +49,12 @@ DARP2016Setup = AmT.loadTestSetup('../DARP2016_setup.txt')
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # define airfoil points over the whole chord
 
-# create airfoil mesh coordinates, and reshape for calculations
-XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
+# # create airfoil mesh coordinates, and reshape for calculations
+# XYZ_airfoil, dx, dy = AmT.create_airf_mesh(b, d, Nx, Ny)
+# XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
+
+DARP2016Airfoil = AmT.airfoilGeom()
+(b, d, Nx, Ny, XYZ_airfoil, dx, dy) = DARP2016Airfoil.export_values()
 XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -184,9 +188,6 @@ pressure_YZ_calc = np.zeros(X_mesh2.shape[0]*X_mesh2.shape[1], 'complex')
 XZ_mesh1_calc = XZ_mesh1.reshape(3, XZ_mesh1.shape[1]*XZ_mesh1.shape[2])
 YZ_mesh2_calc = YZ_mesh2.reshape(3, YZ_mesh2.shape[1]*YZ_mesh2.shape[2])
 
-# reshape airfoil grid
-XYZ_airf_calc = XYZ_airfoil.reshape(3, Nx*Ny)
-
 # reshape airfoil ac. source strengths, apply weights by grid area
 delta_p1_calc = (delta_p1*dx).reshape(Nx*Ny)*dy
 
@@ -199,16 +200,16 @@ p_YZ_farfield = np.zeros(x_farfield.shape, 'complex')
 for s in range(delta_p1_calc.shape[0]):
     # calculate matrices of convected dipole Greens functions for each source
     # to observers
-    G_pXZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], XZ_mesh1_calc, k0,
+    G_pXZ = AmT.dipole3D(XYZ_airfoil_calc[:, s, np.newaxis], XZ_mesh1_calc, k0,
                          dipole_axis, flow_param)
 
-    G_pYZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], YZ_mesh2_calc, k0,
+    G_pYZ = AmT.dipole3D(XYZ_airfoil_calc[:, s, np.newaxis], YZ_mesh2_calc, k0,
                          dipole_axis, flow_param)
 
-    G_ffXZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], XZ_farfield, k0,
+    G_ffXZ = AmT.dipole3D(XYZ_airfoil_calc[:, s, np.newaxis], XZ_farfield, k0,
                           dipole_axis, flow_param)
 
-    G_ffYZ = AmT.dipole3D(XYZ_airf_calc[:, s, np.newaxis], YZ_farfield, k0,
+    G_ffYZ = AmT.dipole3D(XYZ_airfoil_calc[:, s, np.newaxis], YZ_farfield, k0,
                           dipole_axis, flow_param)
 
     # Calculate the pressure in the near field
