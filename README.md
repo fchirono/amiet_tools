@@ -34,8 +34,13 @@ free and open source distribution of Python. Anaconda 4.8.2 (with Python 3.7)
 was used to develop and test AmT, and is recommended for using AmT.
 
 
+## Python Tutorials
+Here are some recommended tutorials on Python programming for scientists and engineers. All are of excellent quality, and discuss not only the Python language itself but also good programming practices in general:
+* Hans Fangohr, *Python for Computational Science and Engineering*, 2018, DOI: 10.5281/zenodo.1411868, https://github.com/fangohr/introduction-to-python-for-computational-science-and-engineering (available in PDF, HTML, Jupyter Notebook files. A translated version in Portuguese is also available)
+* Software Carpentry, *Programming with Python*, http://swcarpentry.github.io/python-novice-inflammation/
+
 ## Author:
-Fabio Casagrande Hirono - fchirono@gmail.com
+Fabio Casagrande Hirono - fchirono [at] gmail.com
 
 
 ## Main Technical References:
