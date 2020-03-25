@@ -371,7 +371,7 @@ def calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi):
         # reshape for vector calculation
         delta_p1_calc = delta_p1.reshape(Nx*Ny)
 
-        Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux)*dky
+        Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux*dky)
 
     return Sqq, Sqq_dxy
 
@@ -845,8 +845,8 @@ def create_airf_mesh(b, d, Nx=100, Ny=101):
 
     x_airfoil, dx = chord_sampling(b, Nx)
 
-    y_airfoil = np.linspace(-d, d, Ny)
-    dy = y_airfoil[1] - y_airfoil[0]
+    y_airfoil, dy = np.linspace(-d, d, Ny, retstep=True)
+    #dy = y_airfoil[1] - y_airfoil[0]
 
     XY_airfoil = np.meshgrid(x_airfoil, y_airfoil)
     Z_airfoil = np.zeros(XY_airfoil[0].shape)
