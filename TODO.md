@@ -2,9 +2,6 @@
 
 - [ ] Analyse convergence of results vs. integration over gust spanwise wavenumbers (ky)
 
-- [ ] Add test script to analyse airfoil surface pressure (Sqq magnitude, relative phase, coherence)
-  - [ ] Take from codes used in PhD thesis
-
 - [ ] Add code to encapsulate simulated array CSM in HDF5 format
   - [ ] See Acoular for references?
 
