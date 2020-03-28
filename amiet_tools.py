@@ -1236,25 +1236,25 @@ def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
     # critical hydrodynamic spanwise wavenumber
     ky_crit = k0/beta
 
-    # period of sin in sinc
-    ky_T = 2*np.pi/d
+    # width of ky sinc function
+    sinc_width = 2*np.pi/(2*d)
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # for acoustic radiation calculations:
     if method == 'AcRad':
 
-        # check frequency
         if ky_crit < 2*np.pi/d:
             # 'low freq' - include some subcritical gusts (up to 1st sidelobe
             # of sinc function)
-            N_ky = 41       # value validated empirically
-            Ky = np.linspace(-ky_T, ky_T, N_ky)
+            N_ky = 41           # value validated empirically
+            ky_T = 2*np.pi/d    # period of sin in sinc
+            Ky = np.linspace(-2*sinc_width, ky_T, N_ky)
 
         else:
             # 'high freq' - restrict to supercritical gusts only
-            N_T = ky_crit/ky_T      # count how many sin(ky*d) periods within Ky
-                                    # supercritical range
-            N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period +1
+
+            # get ky with spacing equal to approx. 1/8 width of sinc function
+            N_ky = int(np.ceil(2*ky_crit/sinc_width)*8)+1            
             Ky = np.linspace(-ky_crit, ky_crit, N_ky)
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -1267,16 +1267,9 @@ def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
         # largest ky under consideration (25% above ky_20dBAtt, for safety)
         ky_max = 1.25*ky_20dBAtt
 
-        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-        # OLD CODE WITH COARSER SAMPLING - 4 samples per sinc function width
-        # # width of ky sinc function
-        # sinc_width = 2*np.pi/(2*d)
-        # # get ky with spacing equal to 1/4 width of sinc function
-        # N_ky = np.int(np.ceil(ky_max/(sinc_width/4)))
-        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        # get ky with spacing equal to approx. 1/8 width of sinc function
+        N_ky = int(np.ceil(2*ky_max/sinc_width)*8)+1
 
-        N_T = ky_max/ky_T      # count how many sin(ky*d) periods within range
-        N_ky = np.int(np.ceil(N_T*20)) + 1      # 20 points per period +1
         Ky = np.linspace(-ky_max, ky_max, N_ky)
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
