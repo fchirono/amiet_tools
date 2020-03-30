@@ -191,13 +191,14 @@ ky_crit = k0/beta
 
 ky_max = 1.5*ky_20dBAtt
 
-sinc_width = 2*np.pi/(2*d)
+# sinc function main lobe width
+sinc_width = 2*np.pi/d
 
-# get ky with spacing equal to 1/8 width of sinc function
-N_ky = np.int(np.ceil(ky_max/(sinc_width/8)))
+# # get ky with spacing equal to 1/8 width of sinc function main lobe
+# N_ky = np.int(np.ceil(ky_max/(sinc_width/8)))
 
-Ky, dKy = np.linspace(-ky_max, ky_max, (2*N_ky)+1, retstep=True)
-Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
+# Ky, dKy = np.linspace(-ky_max, ky_max, (2*N_ky)+1, retstep=True)
+# Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 
 # Calculate CSM for airfoil surface
 # CSM_q, CSMq_dxy = AmT.calc_airfoil_Sqq(DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
@@ -206,7 +207,7 @@ Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # test ky integratal convergence w/ ky_max
 
-# very fine ky sampling - 1/16th of sinc function width (start from ky=0)
+# very fine ky sampling - 1/16th of sinc function ML width (start from ky=0)
 N_ky_conv = int(np.ceil(ky_max/sinc_width)*16)
 
 Ky_conv, dKy_conv = np.linspace(0, ky_max, N_ky_conv, retstep=True)
@@ -331,7 +332,7 @@ for n in [1, 2, 4, 8]:
     # change line style per ky step size
     line_i = next(line_iter)
     
-    colors_iter = iter(['C0', 'C1', 'C2', 'C3', 'C4'])
+    colors_iter = iter(['C0', 'C4', 'C5', 'C6'])
     for i in range(4):
         # change color per chord point
         color_n = next(colors_iter)
