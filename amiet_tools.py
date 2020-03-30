@@ -392,6 +392,70 @@ def calc_radiated_Spp(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi, G):
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>> Discretization of aerofoil surface
+
+def chord_sampling(b, N=200, exp_length=2):
+    """
+    Calculates 'N' points non-uniformly sampled over the half-open
+    interval (-b, b], with the leading edge being at '-b'.
+
+    The code calculates the exponential function over an interval
+    [-exp_length/2, exp_length/2] with 'N' points, which is remapped to the
+    actual chord interval [-b, b] and the leading edge then removed. This type
+    of sampling assigns more points around the leading edge.
+
+    Lower values of 'exp_length' provide more uniform sampling.
+    """
+
+    # calculates exponential curve
+    x = np.exp(np.linspace(-exp_length/2, exp_length/2, N+1))
+
+    # normalise to [0, 1] interval
+    x = x-x.min()
+    x = x/x.max()
+
+    # normalise to [-b, b] interval
+    x = (x*2*b)-b
+
+    # calculate dx (for numerically integrating chord functions)
+    dx = np.diff(x)
+
+    # remove leading edge singularity
+    x = x[1:]
+
+    return x, dx
+
+
+def create_airf_mesh(b, d, Nx=100, Ny=101):
+    """ Creates the mesh containing the airfoil surface points. The 'z'
+    coordinate is set to always be zero. The final array has shape (3, Ny, Nx).
+
+    b: float
+        Airfoil semi chord [m]
+
+    d: float
+        Airfoil semi span [m]
+
+    Nx: int
+        Number of points in chordwise direction (non-uniform sampling)
+
+    Ny: int
+        Number of points in spanwise direction (uniform sampling)
+    """
+
+    x_airfoil, dx = chord_sampling(b, Nx)
+
+    y_airfoil, dy = np.linspace(-d, d, Ny, retstep=True)
+    #dy = y_airfoil[1] - y_airfoil[0]
+
+    XY_airfoil = np.meshgrid(x_airfoil, y_airfoil)
+    Z_airfoil = np.zeros(XY_airfoil[0].shape)
+    XYZ_airfoil = np.array([XY_airfoil[0], XY_airfoil[1], Z_airfoil])
+
+    return XYZ_airfoil, dx, dy
+
+
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> Sound propagation functions
 
 def dipole3D(xyz_source, xyz_obs, k0, dipole_axis='z', flow_param=None,
@@ -791,70 +855,6 @@ def ShearLayer_matrix(XYZ_s, XYZ_o, z_sl, Ux, c0):
     return T, XYZ_sl
 
 
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> Discretization of aerofoil surface
-
-def chord_sampling(b, N=200, exp_length=2):
-    """
-    Calculates 'N' points non-uniformly sampled over the half-open
-    interval (-b, b], with the leading edge being at '-b'.
-
-    The code calculates the exponential function over an interval
-    [-exp_length/2, exp_length/2] with 'N' points, which is remapped to the
-    actual chord interval [-b, b] and the leading edge then removed. This type
-    of sampling assigns more points around the leading edge.
-
-    Lower values of 'exp_length' provide more uniform sampling.
-    """
-
-    # calculates exponential curve
-    x = np.exp(np.linspace(-exp_length/2, exp_length/2, N+1))
-
-    # normalise to [0, 1] interval
-    x = x-x.min()
-    x = x/x.max()
-
-    # normalise to [-b, b] interval
-    x = (x*2*b)-b
-
-    # calculate dx (for numerically integrating chord functions)
-    dx = np.diff(x)
-
-    # remove leading edge singularity
-    x = x[1:]
-
-    return x, dx
-
-
-def create_airf_mesh(b, d, Nx=100, Ny=101):
-    """ Creates the mesh containing the airfoil surface points. The 'z'
-    coordinate is set to always be zero. The final array has shape (3, Ny, Nx).
-
-    b: float
-        Airfoil semi chord [m]
-
-    d: float
-        Airfoil semi span [m]
-
-    Nx: int
-        Number of points in chordwise direction (non-uniform sampling)
-
-    Ny: int
-        Number of points in spanwise direction (uniform sampling)
-    """
-
-    x_airfoil, dx = chord_sampling(b, Nx)
-
-    y_airfoil, dy = np.linspace(-d, d, Ny, retstep=True)
-    #dy = y_airfoil[1] - y_airfoil[0]
-
-    XY_airfoil = np.meshgrid(x_airfoil, y_airfoil)
-    Z_airfoil = np.zeros(XY_airfoil[0].shape)
-    XYZ_airfoil = np.array([XY_airfoil[0], XY_airfoil[1], Z_airfoil])
-
-    return XYZ_airfoil, dx, dy
-
-
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> Other assorted functions
 
@@ -890,26 +890,6 @@ def read_ffarray_lvm(filename):
     lvm_file.close()
 
     return t, mics.T
-
-
-def index_log(index_init, index_final, N):
-    """
-    Returns a 1D Numpy array containing (approximately) 'N' indices for
-    accessing a linearly-spaced vector in a (roughly) logarithmically-spaced
-    fashion.
-
-    Given the necessary rounding of the resulting values to integers, some
-    lower indices may appear more than once; however, only unique indices are
-    returned, which in turn often does not result in exactly 'N' indices.
-    """
-
-    log10_init = np.log10(index_init)
-    log10_final = np.log10(index_final)
-
-    index_all = (np.logspace(log10_init, log10_final, N)).round().astype('int')
-
-    return np.unique(index_all)
-
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
