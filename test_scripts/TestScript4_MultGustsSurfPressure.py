@@ -76,7 +76,7 @@ Y_plane = XYZ_airfoil[1]
 # frequency of operation
 # kx = [0.5, 5, 20], f0 ~= [180 Hz, 1.8 kHz, 7.2 kHz]
 
-kc = 5                          # chordwise normalised frequency = k0*(2*b)
+kc = 20                          # chordwise normalised frequency = k0*(2*b)
 f0 = kc*c0/(2*np.pi*(2*b))
 
 FreqVars = AmT.FrequencyVars(f0, DARP2016Setup)
@@ -122,7 +122,7 @@ Ky, dKy = np.linspace(-ky_max, ky_max, (2*N_ky)+1, retstep=True)
 Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 
 # Calculate CSM for airfoil surface
-CSM_q, CSMq_dxy = AmT.calc_airfoil_Sqq(DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
+Sqq, Sqq_dxy = AmT.calc_airfoil_Sqq(DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
 
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # display cross-spectrum magnitude, phase and coherence on aerofoil surface
@@ -141,7 +141,7 @@ rect_ax1 = [left, bottom, width, height]
 ax_XSpec_dB = plt.axes(rect_ax1)
 
 # original source distr
-xspec_ref = CSM_q[ref_index, :]
+xspec_ref = Sqq[ref_index, :]
 
 xspec_dB = 10*np.log10(np.abs(xspec_ref)).reshape(X_plane.shape)
 
@@ -185,8 +185,8 @@ cb_XSpec_ph.ax.tick_params(labelsize=11)
 # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # coherence
 cohere_ref = np.real((np.abs(xspec_ref)**2)
-                     / (CSM_q[ref_index, ref_index]
-                        * np.diag(CSM_q))).reshape(X_plane.shape)
+                     / (Sqq[ref_index, ref_index]
+                        * np.diag(Sqq))).reshape(X_plane.shape)
 
 rect_ax3 = [0.66 + left, bottom, width, height]
 ax_XSpec_Co = plt.axes(rect_ax3)
@@ -216,7 +216,7 @@ Kx_mesh, Ky_mesh = np.meshgrid(kx_vec, ky_vec)
 
 Kxy = np.array([Kx_mesh.reshape(Nkx*Nky), Ky_mesh.reshape(Nkx*Nky)])
 
-CSM_k = (ArT.wavenumber_spectrum2(CSM_q*np.outer(dxy, dxy),
+CSM_k = (ArT.wavenumber_spectrum2(Sqq*np.outer(dxy, dxy),
                                   XYZ_airfoil_calc[0:2], Kxy) / ((2*np.pi)**4))
 
 CSM_k_dBmax = 10*np.log10(np.abs(np.diag(CSM_k))).max()
