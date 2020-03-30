@@ -60,7 +60,7 @@ M = XYZ_array.shape[1]
 
 
 # obtain propag time and shear layer crossing point for every source-mic pair
-# (Frequency independent!)
+# (forward problem - frequency independent!)
 T_sl_fwd, XYZ_sl_fwd = AmT.ShearLayer_matrix(XYZ_airfoil_calc, XYZ_array, z_sl,
                                              Ux, c0)
 

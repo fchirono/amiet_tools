@@ -57,8 +57,8 @@ XYZ_airfoil_calc = XYZ_airfoil.reshape(3, Nx*Ny)
 
 # # Chordwise normalised frequency = k0*(2*b)
 # kc = 0.5    # approx 180 Hz
-kc = 5      # approx 1.8 kHz
-# kc = 20     # approx 7.2 kHz
+# kc = 5      # approx 1.8 kHz
+kc = 20     # approx 7.2 kHz
 
 # frequency [Hz]
 f0 = kc*c0/(2*np.pi*(2*b))
@@ -91,7 +91,7 @@ Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 # calculate source CSM
 Sqq, Sqq_dxy = AmT.calc_airfoil_Sqq(DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
 
-# apply weighting for airfoil grid areas
+# apply airfoil grid area weighting to source CSM
 Sqq *= Sqq_dxy
 
 
