@@ -1246,9 +1246,9 @@ def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
         if ky_crit < 2*np.pi/d:
             # 'low freq' - include some subcritical gusts (up to 1st sidelobe
             # of sinc function)
-            N_ky = 41           # value validated empirically
-            ky_T = 2*np.pi/d    # period of sin in sinc
-            Ky = np.linspace(-2*sinc_width, ky_T, N_ky)
+            N_ky = 41           # value obtained empirically
+            ky_T = 2*np.pi/d    # main lobe + 1st sidelobes in sinc function
+            Ky = np.linspace(-ky_T, ky_T, N_ky)
 
         else:
             # 'high freq' - restrict to supercritical gusts only
