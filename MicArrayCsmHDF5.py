@@ -507,17 +507,3 @@ def print_hdf5_item_structure(g, offset='    '):
             # print(offset, key,)
             print_hdf5_item_structure(subg, offset + '    ')
 
-# %%
-
-# h5Filename = 'Benchmark0.h5'
-# h5Filename = 'Benchmark1.h5'
-# h5Filename = 'ab7aCsmEss.h5'
-# h5Filename = 'ab7bCsmEss.h5'
-# h5Filename = 'ab8CsmEss.h5'
-h5Filename = 'b11aCsmEss.h5'
-# h5Filename = 'b11bCsmEss.h5'
-
-# print_hdf5_file_structure(h5Filename)
-
-benchmark_CsmEss = MicArrayCsmEss()
-benchmark_CsmEss.readCsmEssH5(h5Filename)
