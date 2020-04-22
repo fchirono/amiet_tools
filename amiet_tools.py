@@ -347,7 +347,7 @@ def calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi):
     (k0, Kx, Ky_crit) = frequencyVars.export_values()
 
     # Surface area weighting matrix for applying to Sqq
-    dxy = dx[np.newaxis, :]*(np.ones(Ny)*dy)[:, np.newaxis]
+    dxy = np.ones((Ny, Nx))*dx[np.newaxis, :]*dy
     Sqq_dxy = np.outer(dxy, dxy)
 
     # gust chordwise wavenumber
