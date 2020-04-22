@@ -4,7 +4,9 @@ https://github.com/fchirono/amiet_tools
 Copyright (c) 2020, Fabio Casagrande Hirono
 
 
-Test script 3: emulates a beamforming measurement at the ISVR open-jet wind
+TestScript4_BeamformingSingleFreq.py
+
+Test script 4: emulates a beamforming measurement at the ISVR open-jet wind
     tunnel. First, calculates aerofoil interaction noise as seen by a planar
     microphone array, positioned outsite of the mean flow (includes shear layer
     refraction effects). Then, computes the array cross-spectral matrix (CSM)

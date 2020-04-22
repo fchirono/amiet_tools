@@ -4,6 +4,8 @@ https://github.com/fchirono/amiet_tools
 Copyright (c) 2020, Fabio Casagrande Hirono
 
 
+TestScript1_SingleGustPlots.py
+
 Test script 1: calculate interaction of a single turbulent gust with a flat
 plate aerofoil, and plot:
     a) the surface pressure jump (real part and magnitude);

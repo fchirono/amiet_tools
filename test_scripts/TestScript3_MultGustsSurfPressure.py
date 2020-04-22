@@ -4,7 +4,9 @@ https://github.com/fchirono/amiet_tools
 Copyright (c) 2020, Fabio Casagrande Hirono
 
 
-Test script 4: calculate the surface pressure jump cross-spectral density
+TestScript3_MultGustsSurfPressure.py
+
+Test script 3: calculate the surface pressure jump cross-spectral density
 matrix and show the power spectrum magnitude, cross-spectrum phase and
 coherence vs. a reference point (xs, ys).
 
