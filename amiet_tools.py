@@ -61,6 +61,8 @@ import scipy.special as ss
 import scipy.optimize as so     # for shear layer correction functions
 import mpmath as mp
 
+import gc
+
 
 class TestSetup:
     """
@@ -295,11 +297,19 @@ def DARP2016_MicArray():
     # cal_mat = loadmat('SpiralArray_1kHzCalibration')
     # array_cal = cal_mat['calibration_factor_1khz'][:, 0]
 
-    # load calibration factors from .txt file
-    array_cal = np.zeros(M)
-    with open('../SpiralArray_1kHzCalibration.txt', 'r') as calfile:
-        for m in range(M):
-            array_cal[m] = calfile.readline()
+    # load calibration factors
+    array_cal = np.array([73.92182641429085,    96.84446743391487,  85.48777846463159,
+                          85.24410968090712,    83.63917149322562,  68.94090765134432,
+                          79.2385037527723,     112.77357210746612, 84.8483307868491,
+                          87.18956628936178,    97.75046920293282,  89.2829545690508,
+                          79.51644155562396,    90.39403884030057,  80.71754629014218,
+                          89.4418210091059,     98.33634233056068,  79.2212022850229,
+                          91.25543447201031,    89.55040012572815,  85.77495667666254,
+                          82.74418222820202,    84.63061055646973,  77.01568014644964,
+                          95.52764533324982,    92.16734812591154,  95.27123074600838,
+                          87.93335310521428,    96.65066131188675,  93.58564782091074,
+                          78.1446818728945,     101.3047738767648,  83.68569643491034,
+                          84.7981031520437,     94.40796508430756,  83.52266614867919])
 
     return XYZ_array, array_cal
 
@@ -372,6 +382,9 @@ def calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi):
         delta_p1_calc = delta_p1.reshape(Nx*Ny)
 
         Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux*dky)
+    
+    # use garbage collector to (maybe) recover some memory
+    gc.collect()
 
     return Sqq, Sqq_dxy
 
