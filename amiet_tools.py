@@ -1310,7 +1310,7 @@ def Phi_2D(kx, ky, Ux, turb_intensity, length_scale, model='K'):
 
         return (4./(9*np.pi))*(u_mean2/(ke**2))*kxe2_ye2/((1+kxe2_ye2)**(7./3))
 
-    # 2D Liepmann turbulence spectrum (Chaitanya's Upgrade)
+    # 2D Liepmann turbulence spectrum
     elif model == 'L':
 
         ls2 = length_scale**2
