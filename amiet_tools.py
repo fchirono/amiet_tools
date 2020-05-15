@@ -66,7 +66,8 @@ import gc
 
 class TestSetup:
     """
-    Class to store test setup variables. Initializes to DARP2016 configuration.
+    Class to store test setup variables. Initializes to DARP2016 configuration
+    by default.
     """
 
     def __init__(self):
@@ -182,7 +183,7 @@ def loadTestSetup(*args):
                    'length_scale', 'z_sl']
         i=0
 
-        #path_to_file = '../DARP2016_TestSetup.txt'
+        # open file name given by 'args[0]'
         with open(args[0]) as f:
             # get list with file lines as strings
             all_lines = f.readlines()
@@ -270,9 +271,9 @@ def DARP2016_MicArray():
     microphones, with 7 spiral arms containing 5 mics each and one central mic.
     The array has a circular aperture (diameter) of 0.5 m.
 
-    The calibration factors stored in the 'SpiralArray_1kHzCalibration.txt'
-    were obtained using a 1 kHz, 1 Pa RMS calibrator. Multiply the raw mic data
-    by its corresponding factor to obtain a calibrated signal in Pascals.
+    The calibration factors were obtained using a 1 kHz, 1 Pa RMS calibrator.
+    Multiply the raw mic data by its corresponding factor to obtain a
+    calibrated signal in Pascals.
     """
 
     M = 36                      # number of mics
@@ -293,11 +294,7 @@ def DARP2016_MicArray():
                              0.15397,  0.01955,  0.09231,  0.16326,  0.20889,  0.24999],
                           array_height*np.ones(M)])
 
-    # # load calibration factor from .mat file
-    # cal_mat = loadmat('SpiralArray_1kHzCalibration')
-    # array_cal = cal_mat['calibration_factor_1khz'][:, 0]
-
-    # load calibration factors
+    # calibration factors
     array_cal = np.array([73.92182641429085,    96.84446743391487,  85.48777846463159,
                           85.24410968090712,    83.63917149322562,  68.94090765134432,
                           79.2385037527723,     112.77357210746612, 84.8483307868491,
@@ -314,40 +311,53 @@ def DARP2016_MicArray():
     return XYZ_array, array_cal
 
 
-def rect_grid(grid_sides, point_spacings):
-    """
-    Returns the 2D coordinates for a uniformly spaced rectangular grid
-    with its sides given by 'grid_sides = (x_length, y_length)' and the
-    spacing between the points in each direction given by
-    'point_spacings = (delta_x, delta_y)'.
-    """
-
-    # number of points on each side = Dx/dx + 1
-    N_points = np.array([round(grid_sides[0]/point_spacings[0] + 1),
-                         round(grid_sides[1]/point_spacings[1] + 1)],
-                        dtype='int')
-
-    x_points = np.linspace(-grid_sides[0]/2., grid_sides[0]/2., N_points[0])
-    y_points = np.linspace(-grid_sides[1]/2., grid_sides[1]/2., N_points[1])
-
-    X_points, Y_points = np.meshgrid(x_points, y_points)
-
-    return np.array([X_points.flatten(), Y_points.flatten()])
-
-
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> wrappers to create surface pressure cross-spectral matrix
 
 def calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi):
     """
-    Calculates the aerofoil surface pressure jump / acoustic source
-    cross-spectral matrix (CSM).
+    Calculates the aerofoil surface pressure jump cross-spectral density matrix
+    (CSM).
 
-    testSetup: instance of TestSetup class
-    airfoilGeom: instance of AirfoilGeom class
-    frequencyVars: instance of FrequencyVars class
+    Parameters
+    ----------
+    testSetup : instance of TestSetup class
+        Instance containing test setup data.
 
-    Ky_vec: vector contains negative and positive spanwise gust wavenumber values
+    airfoilGeom : instance of AirfoilGeom class
+        Instance containing airfoil geometry data.
+
+    frequencyVars : instance of FrequencyVars class
+        Instance containing frequency data.
+
+    Ky_vec : (N_ky,) array_like
+        1D array containing range of negative and positive spanwise gust
+        wavenumber values.
+    
+    Phi : (N_ky,) array_like
+        1D array containing the turbulent wavenumber energy spectrum for values
+        of 'Ky_vec'.
+    
+    Returns
+    -------
+    Sqq : (Nx*Ny, Nx*Ny) array_like
+        2D array containing the cross-spectral density of the airfoil surface
+        pressure.
+    
+    Sqq_dxy : (Nx*Ny, Nx*Ny) array_like
+        2D array containing the surface area weights "(dx*dy)*(dx' * dy')" for
+        all pairs (x, y), (x', y') of airfoil points.
+
+    Notes
+    -----
+    'Ky_vec' can be calculated using 'amiet_tools.ky_vec' function.
+    
+    'Phi' can be calculated with 'amiet_tools.Phi_2D' function.
+    
+    For surface pressure analyses, such as cross-spectrum phase or coherence
+    lengths, use 'Sqq' only. For acoustic radiation analysis, the function
+    'amiet_tools.calc_radiated_Spp' applies the equivalent areas 'Sqq_dxy' to
+    numerically calculate the integration over the airfoil surface.
     """
 
     # export variables to current namespace
@@ -391,9 +401,44 @@ def calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi):
 
 def calc_radiated_Spp(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi, G):
     """
-    Calculates the acoustic field CSM radiated by the airfoil
+    Calculates the cross-spectral density matrix (CSM) of the acoustic field
+    radiated by the airfoil.
 
-    G: matrix of transfer functions (airfoil to obs)
+    Parameters
+    ----------
+    testSetup : instance of TestSetup class
+        Instance containing test setup data.
+
+    airfoilGeom : instance of AirfoilGeom class
+        Instance containing airfoil geometry data.
+
+    frequencyVars : instance of FrequencyVars class
+        Instance containing frequency data.
+
+    Ky_vec : (N_ky,) array_like
+        1D array containing range of negative and positive spanwise gust
+        wavenumber values. Calculate with 'amiet_tools.ky_vec' function.
+    
+    Phi : (N_ky,) array_like
+        1D array containing the turbulent wavenumber energy spectrum for values
+        of 'Ky_vec'. Calculate with 'amiet_tools.Phi_2D' function.
+    
+    G : (M, Nx*Ny) array_like
+        2D matrix of complex transfer function between 'M' observer locations
+        and 'Nx*Ny' points over the airfoil surface.
+    
+    Returns
+    -------
+    Spp : (M, M) array_like
+        2D matrix of cross-spectral density of the acoustic field seen at 'M'
+        observers/microphones.
+    
+    Notes
+    -----
+    'G' can be calculated using 'amiet_tools.dipole3D' for dipole sources in
+    steady or moving medium, or 'amiet_tools.dipole_shear' for dipole sources
+    in a shear layer medium.
+    
     """
 
     Sqq, Sqq_dxy = calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi)
@@ -407,21 +452,43 @@ def calc_radiated_Spp(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi, G):
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # --->>> Discretization of aerofoil surface
 
-def chord_sampling(b, N=200, exp_length=2):
+def chord_sampling(b, Nx=200, exp_length=2):
     """
-    Calculates 'N' points non-uniformly sampled over the half-open
-    interval (-b, b], with the leading edge being at '-b'.
+    Calculates 'Nx' points non-uniformly sampled over the half-open
+    interval (-b, b], with the leading edge at '-b'.
+              
+    Parameters
+    ----------
+    b : float
+        Airfoil semichord, in meters.
+    
+    Nx : int, optional
+        Number of points used in sampling.
+    
+    exp_length : float, optional
+        Length of exponential interval to be sampled.
+    
+    Returns
+    -------
+    x : (Nx,) array_like
+        1D array of non-uniformly sampled points in half-open interval (-b, +b]
+    
+    dx : (Nx,) array_like
+        1D vector of non-uniform sample intervals.
+    
+    Notes
+    -----
+    The function samples an exponential function over the interval
+    [-exp_length/2, exp_length/2] uniformly at 'Nx' points, which are remapped
+    to the actual chord interval [-b, b] and the leading edge then removed.
+    This type of sampling assigns more points around the leading edge.
 
-    The code calculates the exponential function over an interval
-    [-exp_length/2, exp_length/2] with 'N' points, which is remapped to the
-    actual chord interval [-b, b] and the leading edge then removed. This type
-    of sampling assigns more points around the leading edge.
-
-    Lower values of 'exp_length' provide more uniform sampling.
+    Higher values of 'exp_length' provide more non-uniform sampling, while
+    lower values provide more uniform sampling.
     """
 
     # calculates exponential curve
-    x = np.exp(np.linspace(-exp_length/2, exp_length/2, N+1))
+    x = np.exp(np.linspace(-exp_length/2, exp_length/2, Nx+1))
 
     # normalise to [0, 1] interval
     x = x-x.min()
@@ -440,20 +507,38 @@ def chord_sampling(b, N=200, exp_length=2):
 
 
 def create_airf_mesh(b, d, Nx=100, Ny=101):
-    """ Creates the mesh containing the airfoil surface points. The 'z'
-    coordinate is set to always be zero. The final array has shape (3, Ny, Nx).
-
-    b: float
-        Airfoil semi chord [m]
-
-    d: float
-        Airfoil semi span [m]
-
-    Nx: int
-        Number of points in chordwise direction (non-uniform sampling)
-
-    Ny: int
-        Number of points in spanwise direction (uniform sampling)
+    """
+    Creates a (3, Ny, Nx) mesh containing the airfoil surface points coordinates.
+    
+    Parameters
+    ----------
+    b : float
+        Airfoil semichord, in meters.
+    
+    d : float
+        Airfoil semispan, in meters.
+    
+    Nx : int, optional
+        Number of points used in sampling the chord (non-uniformly).
+    
+    Ny : int, optional
+        Number of points used in sampling the span (uniformly).
+    
+    Returns
+    -------
+    XYZ_airfoil : (3, Ny, Nx) array_like
+        3D array containing the coordinates of each point on the sampled
+        airfoil surface.
+    
+    dx : (Nx,) array_like
+        1D vector of non-uniform chord sample intervals.
+    
+    dy : float
+       Span sample interval.
+        
+    Notes
+    -----
+    The airfoil 'z' coordinate is always set to zero.
     """
 
     x_airfoil, dx = chord_sampling(b, Nx)
@@ -619,7 +704,6 @@ def dipole_shear(XYZ_source, XYZ_obs, XYZ_sl, T_sl, k0, c0, Mach):
     in the '+x' direction with velocity 'Ux = Mach*c0', and the dipoles are
     assumed to be located with their axes in the '+z' direction.
 
-
     Parameters
     ----------
     XYZ_source : (3, N) array_like
@@ -632,12 +716,11 @@ def dipole_shear(XYZ_source, XYZ_obs, XYZ_sl, T_sl, k0, c0, Mach):
     XYZ_sl : (3, M, N) array_like
         Array containing the (x, y, z) coordinates of the shear-layer crossing
         point for an acoustic ray leaving the 'n'-th source and reaching
-        the 'm'-th observer. Can be obtained from 'ShearLayer_matrix' function.
+        the 'm'-th observer.
 
     T_sl : (3, M, N) array_like
         Array containing the total propagation time for an acoustic ray leaving
-        the 'n'-th source and reaching the 'm'-th observer. Can be obtained
-        from 'ShearLayer_matrix' function.
+        the 'n'-th source and reaching the 'm'-th observer.
 
     k0 : float
         Acoustic wavenumber / spatial frequency. Can be obtained from the speed
@@ -664,6 +747,9 @@ def dipole_shear(XYZ_source, XYZ_obs, XYZ_sl, T_sl, k0, c0, Mach):
     layer and reaches the observer. The ray obeys the convected wave equation
     within the convecting region (i.e. before the shear layer), and the
     standard wave equation outside the convecting region.
+
+    The 'XYZ_sl' and the 'T_sl' variables can be obtained from the
+    'amiet_tools.ShearLayer_matrix' function.
 
     To calculate a vector of acoustic pressures 'p' at the observer locations
     as induced by a vector of source strengths 'q' at the source locations,
@@ -705,43 +791,168 @@ def dipole_shear(XYZ_source, XYZ_obs, XYZ_sl, T_sl, k0, c0, Mach):
 # --->>> Shear Layer Correction Functions
 
 def r(x):
-    """ cartesian radius """
+    """
+    Cartesian radius of a point 'x' in 3D space
+    
+    Parameters
+    ----------
+    x : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of a point.
+    
+    Returns
+    -------
+    r : float
+        Radius of point 'x' relative to origin of coordinate system 
+    """
     return np.sqrt(x[0]**2 + x[1]**2 + x[2]**2)
 
 
 def r_bar(x, Mach):
-    """ flow-corrected cartesian radius """
+    """
+    Flow-transformed cartesian radius of a point 'x' in 3D space, with mean
+    flow in the '+x' direction.
+    
+    Parameters
+    ----------
+    x : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of a point.
+    
+    Mach : float
+        Mach number of the mean flow (assumed in '+x' direction).
+    
+    Returns
+    -------
+    r_bar : float
+        Flow-transformed radius of point 'x' relative to origin of coordinate
+        system.
+    
+    Notes
+    -----
+    This function considers full flow-transformed coordinates [Chapman, JSV
+    233, 2000] to calculate the output.
+    """
     beta = np.sqrt(1-Mach**2)
     return np.sqrt((x[0]/beta**2)**2 + (x[1]/beta)**2 + (x[2]/beta)**2)
 
 
 def _sigma(x, Mach):
-    """ flow-corrected radius """
+    """
+    Flow-corrected cartesian radius of a point 'x' in 3D space, with mean flow
+    in the '+x' direction.
+    
+    Parameters
+    ----------
+    x : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of a point.
+    
+    Mach : float
+        Mach number of the mean flow (assumed in '+x' direction).
+    
+    Returns
+    -------
+    sigma : float
+        Flow-corrected radius of point 'x' relative to origin of coordinate
+        system 
+    
+    Notes
+    -----
+    This function does NOT considers full flow-transformed coordinates
+    [Chapman, JSV 233, 2000].
+    """
     beta2 = 1-Mach**2
     return np.sqrt(x[0]**2 + beta2*(x[1]**2 + x[2]**2))
 
 
 def t_sound(x1, x2, c0):
-    """ propagation time for sound in steady medium """
+    """
+    Calculates the time taken for sound to move from points 'x1' to 'x2' at
+    speed 'c0'.
+    
+    Parameters
+    ----------
+    x1 : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of initial point.
+    
+    x2 : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of final point.
+    
+    c0 : float
+        Speed of sound.
+    
+    Returns
+    -------
+    t : float
+        Time taken for sound to travel from point 'x1' to point 'x2' at speed
+        'c0'.
+    """
     return r(x1-x2)/c0
 
 
 def t_convect(x1, x2, Ux, c0):
     """
-    Propagation time for sound in convected medium, flow in 'x' direction
+    Propagation time for sound in convected medium, with mean flow in the '+x'
+    direction.
+    
+    Parameters
+    -----
+    x1 : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of initial point.
+    
+    x2 : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of final point.
+    
+    Ux : float
+        Mean flow velocity, assumed in '+x' direction.
+    
+    c0 : float
+        Speed of sound.
+    
+    Returns
+    -------
+    t_convect : float
+        Time taken for sound to travel from point 'x1' to point 'x2' at speed
+        'c0' while subject to convection effects in the '+x' direction.
     """
+    
     Mach = Ux/c0
     beta2 = 1-Mach**2  # beta squared
+    
     return (-(x2[0]-x1[0])*Mach + _sigma(x2-x1, Mach))/(c0*beta2)
 
 
 def t_total(x_layer, x_source, x_mic, Ux, c0):
-    """ total propagation time through shear layer """
+    """
+    Total propagation time for sound to move from source to mic and through a shear layer.
+    
+    Parameters
+    ----------
+    x_layer : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of shear layer crossing
+        point.
+    
+    x_source : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of final point.
+    
+    x_mic : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of final point.
+    
+    Ux : float
+        Mean flow velocity, assumed in '+x' direction.
+    
+    c0 : float
+        Speed of sound.
+    
+    Returns
+    -------
+    t_total : float
+        Time taken for sound to travel from source, through shear layer, to mic.
+    
+    Notes
+    -----
+    The shear layer crossing point 'x_layer' can be obtained from
+    'amiet_tools.ShearLayer_X' function.
+    """
     return t_convect(x_source, x_layer, Ux, c0) + t_sound(x_layer, x_mic, c0)
-
-
-def zeta(x, Mach):
-    return np.sqrt((1-Mach*x[0]/r(x))**2 - (x[0]**2 + x[1]**2)/(r(x)**2))
 
 
 def constr_xl(XYZ_sl, XYZ_s, XYZ_m, Ux, c0):
@@ -767,18 +978,38 @@ def constr_yl(XYZ_sl, XYZ_s, XYZ_m, Ux, c0):
 
 def ShearLayer_X(XYZ_s, XYZ_m, Ux, c0, z_sl):
     """
-    Calculates the propagation time of an acoustic ray emitted from a source
-    at 'xs' to a microphone at 'xm' in two stages:
+    Calculates the shear layer crossing point of an acoustic ray emitted from a
+    source at 'xs' to a microphone at 'xm'.
+    
+    Parameters
+    ----------
+    XYZ_s : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of source (within mean flow)
+        
+    XYZ_m : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of microphone (outside mean flow)
+        
+    Ux : float
+        Mean flow velocity, assumed in '+x' direction.
+    
+    c0 : float
+        Speed of sound.
+    
+    z_sl : float
+        Shear layer height.
 
-        - through a mean flow in the '+x' direction, with Mach number
-        'Mach = Ux/c0', at height 'z_sl', up to the shear layer crossing point
-        'xL';
+    Returns
+    -------
+    XYZ_sl : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of the shear layer
+        crossing point.
 
-        - and through a steady medium from the shear layer to the microphone
-        position.
-
-    Returns the shear layer crossing point 'xL' that minimises the total
-    propagation time.
+    Notes
+    -----
+    This code uses a numerical minimization routine to calculate the shear
+    layer crossing point 'XYZ_sl' that minimizes the total travel time that an
+    acoustic ray takes to propagate from a source point 'XYZ_s' within the
+    mean flow to a microphone 'XYZ_m' outside the mean flow.
     """
 
     # optimization constraints
@@ -799,42 +1030,44 @@ def ShearLayer_X(XYZ_s, XYZ_m, Ux, c0, z_sl):
     return XYZ_sl
 
 
-def ShearLayer_Corr(XYZ_s, XYZ_sl, XYZ_m, Ux, c0):
-    """
-    Calculates a corrected position for a microphone measuring sound through
-    a shear layer using ray acoustics.
-
-    The corrected position is defined as that the acoustic ray would have
-    reached if there was no shear layer (i.e. flow everywhere).
-
-    The distance is corrected to that 'r(xc-xr) = r(xm-xs)' - see Amiet for
-    details.
-    """
-
-    # calculate travel time inside flow (source to shear layer)
-    tf = t_convect(XYZ_s, XYZ_sl, Ux, c0)
-
-    # determine ray phase velocity in flow (direction and magnitude)
-    cp_ray = (XYZ_sl-XYZ_s)/tf
-
-    # travel time for corrected position
-    tc = r(XYZ_m-XYZ_s)/c0
-
-    # corrected position
-    XYZ_c = XYZ_s + cp_ray*tc
-
-    # retarded source position
-    XYZ_r = XYZ_s + np.array([Ux, 0, 0])*tc
-
-    return XYZ_c, XYZ_r
-
-
 def ShearLayer_matrix(XYZ_s, XYZ_o, z_sl, Ux, c0):
     """ Returns two matrices containing the propagation times and the shear
     layer crossing points for each source-observer pair.
 
+    Parameters
+    ----------
+    XYZ_s : (3, N) array_like
+        2D vector containing the (x, y, z) coordinates of 'N' source points 
+        (within mean flow)
+        
+    XYZ_o : (3, M) array_like
+        2D vector containing the (x, y, z) coordinates of 'M' observer points
+        (outside the mean flow)
+        
+    z_sl : float
+        Shear layer height.
+    
+    Ux : float
+        Mean flow velocity, assumed in '+x' direction.
+    
+    c0 : float
+        Speed of sound.
+    
+    Returns
+    -------
+    T : (M, N) array_like
+        2D array containing the total propagation times of the acoustic signal
+        from each source 'n' to each observer 'm'.
+    
+    XYZ_sl : (3, M, N) array_like
+        3D array containing the (x, y, z) coordinates of the shear layer
+        crossing point for each source 'n' to each observer 'm'.
+
+    Notes
+    -----
     This is a convenience function, essentially two nested 'for'-loops around
-    the 'ShearLayer_X' and 'ShearLayer_t' functions."""
+    the 'ShearLayer_X' and 'ShearLayer_t' functions.
+    """
 
     # ensure source/observer coordinates have appropriate shape
     # ( i.e. [3, N_points])
@@ -868,61 +1101,95 @@ def ShearLayer_matrix(XYZ_s, XYZ_o, z_sl, Ux, c0):
     return T, XYZ_sl
 
 
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> Other assorted functions
-
-def read_ffarray_lvm(filename):
+def ShearLayer_Corr(XYZ_s, XYZ_sl, XYZ_m, Ux, c0):
     """
-    Reads .lvm file from LabView: the first column contains the time samples,
-    and the remaining columns contain each mic signal; also removes the mean.
+    Calculates a corrected position for a microphone measuring sound through
+    a shear layer using Amiet's method [JSV 58, 1978].
+
+    Parameters
+    ----------
+    x_layer : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of shear layer crossing
+        point.
+    
+    x_source : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of final point.
+    
+    x_mic : (3,) array_like
+        1D vector containing the (x, y, z) coordinates of final point.
+    
+    Ux : float
+        Mean flow velocity, assumed in '+x' direction.
+    
+    c0 : float
+        Speed of sound.
+    
+    Returns
+    -------
+    t_total : float
+        Time taken for sound to travel from source, through shear layer, to mic.
+    
+    Notes
+    -----
+    The corrected position is calculated with Amiet's shear layer correction
+    method [JSV 58, 1978], and is defined as the point the acoustic ray would 
+    have reached if there was no shear layer (i.e. flow everywhere). The 
+    distance is corrected so that 'r(xc-xr) = r(xm-xs)'.
     """
 
-    # number of columns: time vector + 12 mic vectors
-    n_columns = 13
+    # calculate travel time inside flow (source to shear layer)
+    tf = t_convect(XYZ_s, XYZ_sl, Ux, c0)
 
-    # open file as text
-    lvm_file = open(filename, 'r')
+    # determine ray phase velocity in flow (direction and magnitude)
+    cp_ray = (XYZ_sl-XYZ_s)/tf
 
-    # count the number of lines (has to read the whole file,
-    # hence closing and opening again)
-    n_lines = len(list(lvm_file))
-    lvm_file.close()
+    # travel time for corrected position
+    tc = r(XYZ_m-XYZ_s)/c0
 
-    t = np.zeros(n_lines)
-    mics = np.zeros((n_lines, n_columns-1))
+    # corrected position
+    XYZ_c = XYZ_s + cp_ray*tc
 
-    # read line ignoring the '\r\n' at the end,
-    # and using '\t' as column separators
-    lvm_file = open(filename, 'r')
-    for line in range(n_lines):
-        current_line = lvm_file.readline().split('\r\n')[0].split('\t')
-        t[line] = float(current_line[0])
-        mics[line, :] = [float(x) for x in current_line][1:]
+    # retarded source position
+    XYZ_r = XYZ_s + np.array([Ux, 0, 0])*tc
 
-    # close file
-    lvm_file.close()
-
-    return t, mics.T
+    return XYZ_c, XYZ_r
 
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# --->>> Aeroacoustic Functions
+# --->>> Flat plate aeroacoustic response functions
 
 def fr_integrand(x):
     """ Creates the argument to the Fresnel integral."""
-
     return mp.exp(1j*x)/mp.sqrt(x)
 
 
 def fr_integrand_cc(x):
     """ Creates the argument to the complex conjugate Fresnel integral."""
-
     return mp.exp(-1j*x)/mp.sqrt(x)
 
 
 def fr_int(zeta):
-    """ Calculates the Fresnel integral, as defined in Blandeau (2011) -
-    eq. 2.84. """
+    """
+    Calculates the Fresnel integral of 'zeta'
+    
+    Parameters
+    ----------
+    zeta : (Nz,) array_like
+        1D array of parameter 'zeta' for integration.
+    
+    Returns
+    -------
+    E_conj : (Nz,) array_like
+        1D array with results of Fresnel integral of each value of 'zeta'
+    
+    Notes
+    -----
+    This function uses the module 'mpmath' for high precision quadrature of the
+    integrand.
+    
+    Its complex-conjugate version can be obtained from the 
+    'amiet_tools.fr_int_cc' function.
+    """
 
     # Check if zeta is array or float
     if type(zeta) is np.ndarray:
@@ -939,8 +1206,28 @@ def fr_int(zeta):
 
 
 def fr_int_cc(zeta):
-    """ Calculates the complex conjugate of the Fresnel integral, as defined in
-    Blandeau (2011) - eq. 2.84. """
+    """
+    Calculates the complex-conjugate Fresnel integral of 'zeta'
+    
+    Parameters
+    ----------
+    zeta : (Nz,) array_like
+        1D array of parameter 'zeta' for integration.
+    
+    Returns
+    -------
+    E_conj : (Nz,) array_like
+        1D array with results of complex-conjugate Fresnel integral of each
+        value of 'zeta'
+    
+    Notes
+    -----
+    This function uses the module 'mpmath' for high precision quadrature of the
+    integrand.
+    
+    Its non-complex-conjugate version can be obtained from the
+    'amiet_tools.fr_int' function.
+    """
 
     # Check if zeta is array or float
     if type(zeta) is np.ndarray:
@@ -956,9 +1243,42 @@ def fr_int_cc(zeta):
     return E_conj
 
 
-def delta_p(rho0, b, w0, Ux, Kx, ky, xy, M):
-    """ Calculates the pressure 'jump' across the airfoil from the airfoil
-    response function - see Blandeau (2011), eq. 2.19. """
+def delta_p(rho0, b, w0, Ux, Kx, ky, xy, Mach):
+    """
+    Calculates the pressure jump response 'delta_p' for a single turbulent gust.
+    
+    Parameters
+    ----------
+    rho0 : float
+        Density of air.
+    
+    b : float
+        Airfoil semichord.
+    
+    w0 : float
+        Gust amplitude.
+    
+    Ux : float
+        Mean flow velocity, assumed in '+x' direction.
+    
+    Kx : float
+        Chordwise turbulent gust wavenumber.
+    
+    ky : float
+        Spanwise turbulent gust wavenumber.
+    
+    xy : ({2, 3}, Ny, Nx) array_like
+        2D array containing (x, y) coordinates of airfoil surface mesh.
+    
+    Mach : float
+        Mean flow Mach number.
+     
+    Returns
+    -------
+    delta_p : (Ny, Nx) array_like
+        Surface pressure jump over airfoil surface mesh in response to a single
+        turbulent gust with wavenumbers (Kx, ky) and amplitude 'w0'.
+    """
 
     # pressure difference over the whole airfoil surface
     delta_p = np.zeros(xy[0].shape, 'complex')
@@ -968,7 +1288,7 @@ def delta_p(rho0, b, w0, Ux, Kx, ky, xy, M):
         g_x = np.zeros(xy[0][0].shape, 'complex')
 
         # calculates the unsteady lift over the chord
-        g_x = g_LE(xy[0][0], Kx, ky, M, b)
+        g_x = g_LE(xy[0][0], Kx, ky, Mach, b)
 
         # broadcasts a copy of 'g_x' to 'delta_p'
         delta_p = g_x[np.newaxis, :]
@@ -978,7 +1298,7 @@ def delta_p(rho0, b, w0, Ux, Kx, ky, xy, M):
         g_x = np.zeros(xy[0].shape, 'complex')
 
         # calculates the unsteady lift over the chord
-        delta_p = g_LE(xy[0], Kx, ky, M, b)
+        delta_p = g_LE(xy[0], Kx, ky, Mach, b)
 
     # adds the constants and the 'k_y' oscillating component
     delta_p = 2*np.pi*rho0*w0*delta_p*np.exp(-1j*ky*xy[1])
@@ -986,17 +1306,43 @@ def delta_p(rho0, b, w0, Ux, Kx, ky, xy, M):
     return delta_p
 
 
-def g_LE(xs, Kx, ky, M, b):
+def g_LE(xs, Kx, ky, Mach, b):
     """
-    Implements Amiet leading edge airfoil response function for an incoming
-    turbulent gust (G Reboul's thesis - 2010)
+    Airfoil non-dimensional chordwise pressure jump in response to a single gust.
+    
+    Parameters
+    ----------
+    xs : (Ny, Nx) or (Nx,) array_like
+        Airfoil surface mesh chordwise coordinates.
+    
+    Kx : float
+        Chordwise turbulent gust wavenumber.
+    
+    ky : float
+        Spanwise turbulent gust wavenumber.
+    
+    Mach : float
+        Mean flow Mach number.
+    
+    b : float
+        Airfoil semichord.
 
-    Checks for percentage difference between 'abs(ky)' and 'ky_critical' to
-    define a gust as either subcritical (%diff < 1e-6), supercritical
+    Returns
+    -------
+    g_LE : (Ny, Nx) array_like
+        Non-dimensional chordwise surface pressure jump over airfoil surface
+        mesh in response to a single turbulent gust with wavenumbers (Kx, ky)
+        and amplitude 'w0'.
+    
+    Notes
+    -----
+    This function provides the airfoil responses for either subcritical or
+    supercritical gusts. For critical gusts, the airfoil response is
+    interpolated from slightly sub- and slightly supercritical responses.
     """
 
-    beta = np.sqrt(1-M**2)
-    ky_critical = Kx*M/beta
+    beta = np.sqrt(1-Mach**2)
+    ky_critical = Kx*Mach/beta
 
     # p_diff < 0: supercritical
     # p_diff > 0: subcritical
@@ -1004,11 +1350,11 @@ def g_LE(xs, Kx, ky, M, b):
 
     # supercritical gusts
     if p_diff < -1e-3:
-        g = g_LE_super(xs, Kx, ky, M, beta, b)
+        g = g_LE_super(xs, Kx, ky, Mach, b)
 
     # subcritical gusts
     elif p_diff > 1e-3:
-        g = g_LE_sub(xs, Kx, ky, M, beta, b)
+        g = g_LE_sub(xs, Kx, ky, Mach, b)
 
     # critical gusts (interpolate between super- and subcritical)
     else:
@@ -1017,8 +1363,8 @@ def g_LE(xs, Kx, ky, M, b):
         ky_sp = ky*0.99
         ky_sb = ky*1.01
 
-        g_sp = g_LE_super(xs, Kx, ky_sp, M, beta, b)
-        g_sb = g_LE_sub(xs, Kx, ky_sb, M, beta, b)
+        g_sp = g_LE_super(xs, Kx, ky_sp, Mach, b)
+        g_sb = g_LE_sub(xs, Kx, ky_sb, Mach, b)
 
         g = (g_sp + g_sb)/2.
 
@@ -1040,63 +1386,149 @@ def g_LE(xs, Kx, ky, M, b):
         return g
 
 
-def g_LE_super(xs, Kx, ky, M, beta, b):
+def g_LE_super(xs, Kx, ky, Mach, b):
     """
-    Implements Amiet leading edge airfoil response for supercritical gusts.
+    Returns airfoil non-dimensional pressure jump for supercritical gusts.
 
-    For a gust to be supercritical, it must obey that
+    Parameters
+    ----------
+    xs : (Ny, Nx) or (Nx,) array_like
+        Airfoil surface mesh chordwise coordinates.
+    
+    Kx : float
+        Chordwise turbulent gust wavenumber.
+    
+    ky : float
+        Spanwise turbulent gust wavenumber.
+    
+    Mach : float
+        Mean flow Mach number.
+    
+    b : float
+        Airfoil semichord.
 
-        abs(ky) < Kx*M/beta
-
+    Returns
+    -------
+    g_LE_super : (Ny, Nx) array_like
+        Non-dimensional chordwise surface pressure jump over airfoil surface
+        mesh in response to a single supercritical turbulent gust with
+        wavenumbers (Kx, ky)
+    
+    Notes
+    -----
+    This function includes two terms of the Schwarzchild technique; the first
+    term contains the solution for a infinite-chord airfoil with a leading edge
+    but no trailing edge, while the second term contains a correction factor
+    for a infinite-chord airfoil with a trailing edge but no leading edge.
     """
-
+    
+    beta = np.sqrt(1-Mach**2)
     mu_h = Kx*b/(beta**2)
-    mu_a = mu_h*M
+    mu_a = mu_h*Mach
 
     kappa = np.sqrt(mu_a**2 - (ky*b/beta)**2)
 
-    g1_sp = (np.exp(-1j*((kappa - mu_a*M)*((xs/b) + 1) + np.pi/4))
+    g1_sp = (np.exp(-1j*((kappa - mu_a*Mach)*((xs/b) + 1) + np.pi/4))
              / (np.pi*np.sqrt(np.pi*((xs/b) + 1)*(Kx*b + (beta**2)*kappa))))
 
-    g2_sp = -(np.exp(-1j*((kappa - mu_a*M)*((xs/b) + 1) + np.pi/4))
+    g2_sp = -(np.exp(-1j*((kappa - mu_a*Mach)*((xs/b) + 1) + np.pi/4))
               * (1-(1+1j)*fr_int_cc(2*kappa*(1-xs/b)))
               / (np.pi*np.sqrt(2*np.pi*(Kx*b + (beta**2)*kappa))))
 
     return g1_sp + g2_sp
 
 
-def g_LE_sub(xs, Kx, ky, M, beta, b):
+def g_LE_sub(xs, Kx, ky, Mach, b):
     """
-    Implements Amiet leading edge airfoil response for subcritical gusts.
+    Returns airfoil non-dimensional pressure jump for subcritical gusts.
 
-    For a gust to be supercritical, it must obey that
+    Parameters
+    ----------
+    xs : (Ny, Nx) or (Nx,) array_like
+        Airfoil surface mesh chordwise coordinates.
+    
+    Kx : float
+        Chordwise turbulent gust wavenumber.
+    
+    ky : float
+        Spanwise turbulent gust wavenumber.
+    
+    Mach : float
+        Mean flow Mach number.
+    
+    b : float
+        Airfoil semichord.
 
-        abs(ky) > Kx*M/beta
+    Returns
+    -------
+    g_LE_sub : (Ny, Nx) array_like
+        Non-dimensional chordwise surface pressure jump over airfoil surface
+        mesh in response to a single subcritical turbulent gust with 
+        wavenumbers (Kx, ky)
 
+    Notes
+    -----
+    This function includes two terms of the Schwarzchild technique; the first
+    term contains the solution for a infinite-chord airfoil with a leading edge
+    but no trailing edge, while the second term contains a correction factor
+    for a infinite-chord airfoil with a trailing edge but no leading edge.
     """
 
-    beta = np.sqrt(1-M**2)
+    beta = np.sqrt(1-Mach**2)
     mu_h = Kx*b/(beta**2)
-    mu_a = mu_h*M
+    mu_a = mu_h*Mach
 
     kappa1 = np.sqrt(((ky*b/beta)**2) - mu_a**2)
 
-    g1_sb = (np.exp((-kappa1 + 1j*mu_a*M)*((xs/b) + 1))*np.exp(-1j*np.pi/4)
+    g1_sb = (np.exp((-kappa1 + 1j*mu_a*Mach)*((xs/b) + 1))*np.exp(-1j*np.pi/4)
              / (np.pi*np.sqrt(np.pi*((xs/b) + 1)
                               * (Kx*b - 1j*(beta**2)*kappa1))))
 
-    g2_sb = -(np.exp((-kappa1 + 1j*mu_a*M)*((xs/b) + 1))
+    g2_sb = -(np.exp((-kappa1 + 1j*mu_a*Mach)*((xs/b) + 1))
               * np.exp(-1j*np.pi/4)*(1 - ss.erf(2*kappa1*(1-xs/b)))
               / (np.pi*np.sqrt(2*np.pi*(Kx*b - 1j*(beta**2)*kappa1))))
 
     return g1_sb + g2_sb
 
 
-def L_LE(x, sigma, Kx, ky, M, b):
-    """Effective lift functions (G Reboul's thesis - 2010)"""
+def L_LE(x, sigma, Kx, ky, Mach, b):
+    """
+    Returns the effective lift functions - i.e. chordwise integrated surface pressures
+    
+    Parameters
+    ----------
+    x : (M,) array_like
+        1D array of observer locations 'x'-coordinates 
+        
+    sigma : (M,) array_like
+        1D array of observer locations flow-corrected distances
+    
+    Kx : float
+        Chordwise turbulent gust wavenumber.
+    
+    ky : float
+        Spanwise turbulent gust wavenumber.
 
-    beta = np.sqrt(1-M**2)
-    ky_critical = Kx*M/beta
+    Mach : float
+        Mean flow Mach number.
+    
+    b : float
+        Airfoil semichord.
+    
+    
+    Returns
+    -------
+    L_LE : (M,) array_like
+        Effective lift function for all observer locations.
+        
+    Notes
+    -----
+    These functions are the chordwise integrated surface pressures, and are
+    parts of the far-field-approximated model for airfoil-turbulente noise.
+    """
+
+    beta = np.sqrt(1-Mach**2)
+    ky_critical = Kx*Mach/beta
 
     # percentage difference in ky
     # p_diff < 0: supercritical / p_diff > 0: subcritical
@@ -1104,11 +1536,11 @@ def L_LE(x, sigma, Kx, ky, M, b):
 
     # supercritical gusts
     if p_diff < -1e-3:
-        L = L_LE_super(x, sigma, Kx, ky, M, b)
+        L = L_LE_super(x, sigma, Kx, ky, Mach, b)
 
     # subcritical gusts
     elif p_diff > 1e-3:
-        L = L_LE_sub(x, sigma, Kx, ky, M, b)
+        L = L_LE_sub(x, sigma, Kx, ky, Mach, b)
 
     # critical gusts (interpolate between super- and subcritical)
     else:
@@ -1116,8 +1548,8 @@ def L_LE(x, sigma, Kx, ky, M, b):
         ky_sp = ky*0.99
         ky_sb = ky*1.01
 
-        L_sp = L_LE_super(x, sigma, Kx, ky_sp, M, b)
-        L_sb = L_LE_sub(x, sigma, Kx, ky_sb, M, b)
+        L_sp = L_LE_super(x, sigma, Kx, ky_sp, Mach, b)
+        L_sb = L_LE_sub(x, sigma, Kx, ky_sb, Mach, b)
 
         L = (L_sp + L_sb)/2.
 
@@ -1139,18 +1571,48 @@ def L_LE(x, sigma, Kx, ky, M, b):
         return L
 
 
-def L_LE_super(x, sigma, Kx, Ky, M, b):
+def L_LE_super(x, sigma, Kx, Ky, Mach, b):
     """
-    Effective lift integral - supercritical gust
+    Returns the effective lift functions for supercritical gusts
+    
+    Parameters
+    ----------
+    
+    x : (M,) array_like
+        1D array of observer locations 'x'-coordinates 
+        
+    sigma : (M,) array_like
+        1D array of observer locations flow-corrected distances
+    
+    Kx : float
+        Chordwise turbulent gust wavenumber.
+    
+    ky : float
+        Spanwise turbulent gust wavenumber.
+
+    Mach : float
+        Mean flow Mach number.
+    
+    b : float
+        Airfoil semichord.
+    
+    
+    Returns
+    -------
+    
+    Notes
+    -----
+    These functions are the chordwise integrated surface pressures, and are
+    parts of the far-field-approximated model for airfoil-turbulente noise.
     """
 
-    beta = np.sqrt(1-M**2)
+    beta = np.sqrt(1-Mach**2)
     mu_h = Kx*b/(beta**2)
-    mu_a = mu_h*M
+    mu_a = mu_h*Mach
 
     kappa = np.sqrt(mu_a**2 - (Ky*b/beta)**2)
     H1 = kappa - mu_a*x/sigma
-    H2 = mu_a*(M - x*sigma) - np.pi/4
+    H2 = mu_a*(Mach - x*sigma) - np.pi/4
 
     L1 = ((1/np.pi)*np.sqrt(2/((Kx*b + (beta**2)*kappa)*H1))
           * fr_int_cc(2*H1)*np.exp(1j*H2))
@@ -1166,17 +1628,46 @@ def L_LE_super(x, sigma, Kx, Ky, M, b):
     return L1+L2
 
 
-def L_LE_sub(x, sigma, Kx, Ky, M, b):
+def L_LE_sub(x, sigma, Kx, Ky, Mach, b):
     """
-    Effective lift integral - subcritical gust
+    Returns the effective lift functions for subcritical gusts
+    
+    Parameters
+    ----------
+    
+    x : (M,) array_like
+        1D array of observer locations 'x'-coordinates 
+        
+    sigma : (M,) array_like
+        1D array of observer locations flow-corrected distances
+    
+    Kx : float
+        Chordwise turbulent gust wavenumber.
+    
+    ky : float
+        Spanwise turbulent gust wavenumber.
+
+    Mach : float
+        Mean flow Mach number.
+    
+    b : float
+        Airfoil semichord.
+    
+    Returns
+    -------
+    
+    Notes
+    -----
+    These functions are the chordwise integrated surface pressures, and are
+    parts of the far-field-approximated model for airfoil-turbulente noise.
     """
 
-    beta = np.sqrt(1-M**2)
+    beta = np.sqrt(1-Mach**2)
     mu_h = Kx*b/(beta**2)
-    mu_a = mu_h*M
+    mu_a = mu_h*Mach
 
     kappa1 = np.sqrt((Ky*b/beta)**2 - (mu_a**2))
-    H2 = mu_a*(M - x*sigma) - np.pi/4
+    H2 = mu_a*(Mach - x*sigma) - np.pi/4
     H3 = kappa1 - 1j*mu_a*x/sigma
 
     L1 = ((1/np.pi)*np.sqrt(2/((Kx*b - 1j*(beta**2)*kappa1)
@@ -1197,29 +1688,52 @@ def L_LE_sub(x, sigma, Kx, Ky, M, b):
 
 def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
     """
+    Returns a vector of spanwise gust wavenumbers for acoustic calculations
+    
+    Parameters
+    ----------
+    b : float
+        Airfoil semi chord.
+    
+    d : float
+        Airfoil semi span.
+    
+    k0 : float
+        Acoustic wavenumber 'k0'. Can be obtained from the
+        temporal frequency 'f' [in Hz] and the speed of sound 'c0' [in m/s]
+        as 'k0 = 2*pi*f/c0'.'
+    
+    Mach : float
+        Mean flow Mach number.
+    
+    beta : float
+        Prandtl–Glauert parameter (=sqrt(1-M**2))
+    
+    method : {'AcRad', 'SurfPressure'}, optional
+        Calculation method to use. Defaults to 'AcRad'.
+
+    xs_ref : float, optional
+        Chordwise coordinate of reference point, defined in interval (-b, +b].
+        Used in 'SurfPressure' mode, not required for 'AcRad' mode. Defaults to
+        None.
+    
+    Returns
+    -------
+    Ky : (Nk,) array_like
+        1D array containing spanwise gust wavenumbers in range [-ky_max, +ky_max],
+        with center sample at ky=0
+    
+    Notes
+    -----
     Returns a vector of equally-spaced spanwise hydrodynamic (gust) wavenumber
     values for calculations of airfoil response, either for calculating
     the airfoil acoustic radiation (method = 'AcRad') or for calculating the
     airfoil surface pressure cross-spectrum (method = 'SurfPressure').
 
-    Returned values go from '-ky_max' to 'ky_max', center sample is ky=0.
-
-    d: airfoil semi span
-
-    k0: acoustic wavenumber
-
-    Mach: mean flow Mach number
-
-    beta: sqrt(1-Mach**2)
-
-    method: {'AcRad', 'SurfPressure'}
-        Choose ''AcRad' for calculating airfoil acoustic radiation (smaller
-        range of gusts), or 'SurfPressure'  for calculating airfoil surface
-        pressure cross-spectrum (wider range of gusts)
-
-    xs_ref: float
-        Reference point for surface pressure cross-spectrum (None if
-        interested in acoustic radiation)
+    'AcRad' mode returns a shorter range of gusts for acoustic radiation
+    calculations, and 'SurfPressure' returns a larger range for unsteady
+    surface pressure calculations (excessive for acoustic radiation
+    calculations).
     """
 
     # Assert 'method' string for valid inputs
@@ -1270,15 +1784,38 @@ def ky_vector(b, d, k0, Mach, beta, method='AcRad', xs_ref=None):
     return Ky
 
 
-def ky_att(xs, b, M, k0, Att=-20):
+def ky_att(xs, b, Mach, k0, Att=-20):
     """
-    For a given chord point 'xs', Mach number 'M', ac wavenumber 'k0' and
-    attenuation 'Att' [in dB], calculates the subcritical gust spanwise
-    wavenumber 'ky_att' (> 'ky_crit' by definition) such that the aerofoil
-    response at that point is 'Att' dB reduced.
+    Returns the spanwise gust wavenumber 'ky_att' with response at 'xs' attenuated by 'Att' decibels
+    
+    Parameters
+    ----------
+    xs : float
+        Chordwise coordinate of reference point, defined in interval (-b, +b].
+                                                                      
+    b : float
+        Airfoil semi chord.
+
+    Mach : float
+        Mean flow Mach number.
+    
+    k0 : float
+        Acoustic wavenumber 'k0'. Can be obtained from the
+        temporal frequency 'f' [in Hz] and the speed of sound 'c0' [in m/s]
+        as 'k0 = 2*pi*f/c0'.
+    
+    Att : float, optional
+        Level of attenuation of the surface pressure at point 'xs', in decibels.
+        Defaults to -20 dB.
+    
+    Returns
+    -------
+    ky_att : float
+        Subcritical gust spanwise wavenumber 'ky_att' such that the aerofoil
+        response at point 'xs' is 'Att' dB reduced.
     """
 
-    beta = np.sqrt(1-M**2)
+    beta = np.sqrt(1-Mach**2)
 
     # critical gust spanwise wavenumber
     ky_crit = k0/beta
@@ -1291,22 +1828,48 @@ def ky_att(xs, b, M, k0, Att=-20):
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # turbulent velocity spectra
 
-def Phi_2D(kx, ky, Ux, turb_intensity, length_scale, model='K'):
-    """2D isotropic turbulence spectrum.
+def Phi_2D(Kx, ky_vec, Ux, turb_intensity, length_scale, model='K'):
+    """
+    Returns 2D isotropic turbulence energy spectrum in wavenumber domain.
 
-    'model' can be 'K' for von Karman spectrum, or 'L' for Liepmann
-    spectrum."""
+    Parameters
+    ----------
+    Kx : (N_kx,) array_like or float
+        1D array of chordwise gust wavenumbers.
+        
+    ky_vec : (N_ky,) array_like
+        1D array of spanwise gust wavenumbers.
+        
+    Ux : float
+        Mean flow velocity, assumed in '+x' direction.
+        
+    turb_intensity : float
+        Turbulence intensity: sqrt(w_meanSquared/(Ux**2))
+    
+    length_scale : float
+        Turbulence integral length scale, in meters
+        
+    model : {'K', 'L'}
+        Type of spectrum: 'K' for von Karman spectrum, or 'L' for Liepmann spectrum.
+    
+    Returns
+    -------
+    Phi : (N_kx, N_ky) or (N_ky,) array_like
+        2D or 1D array containing the values of two-dimensional turbulence
+        energy for each wavenumber, according to von Karman or Liepmann
+        spectrum.
+    """
 
     u_mean2 = (Ux*turb_intensity)**2
 
-    if type(kx) is not np.ndarray:
-        kx = np.asarray([kx])
+    if type(Kx) is not np.ndarray:
+        Kx = np.asarray([Kx])
 
     # von Karman model (Amiet 1975)
     if model == 'K':
         ke = (np.sqrt(np.pi)/length_scale)*(ss.gamma(5./6)/ss.gamma(1./3))
 
-        kxe2_ye2 = (kx[:, np.newaxis]/ke)**2 + (ky/ke)**2
+        kxe2_ye2 = (Kx[:, np.newaxis]/ke)**2 + (ky_vec/ke)**2
 
         return (4./(9*np.pi))*(u_mean2/(ke**2))*kxe2_ye2/((1+kxe2_ye2)**(7./3))
 
@@ -1316,16 +1879,96 @@ def Phi_2D(kx, ky, Ux, turb_intensity, length_scale, model='K'):
         ls2 = length_scale**2
 
         return ((u_mean2*ls2/(4*np.pi))
-                * ((1+ls2*(4*kx[:, np.newaxis]**2 + ky**2)))
-                / (1+ls2*(kx[:, np.newaxis]**2 + ky**2))**(5./2))
+                * ((1+ls2*(4*Kx[:, np.newaxis]**2 + ky_vec**2)))
+                / (1+ls2*(Kx[:, np.newaxis]**2 + ky_vec**2))**(5./2))
 
 
-def Phi_1D(kx, u_mean2, length_scale):
-    """1D von Karman isotropic turbulence model (Paterson & Amiet 1976)"""
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# --->>> Other assorted functions
 
-    ke = (np.sqrt(np.pi)/length_scale)*(ss.gamma(5./6)/ss.gamma(1./3))
-    kxe2 = (kx/ke)**2
 
-    return ((u_mean2*length_scale/(2*np.pi))*(1+8.*kxe2/3)
-            / ((1+kxe2)**(11./6)))
+def rect_grid(grid_sides, point_spacings):
+    """
+    Returns the 2D coordinates for a uniformly spaced rectangular grid.
+    
+    Parameters
+    ----------
+    grid_sides : (2,) array_like
+        1D array containing the lengths 'Lx' and 'Ly' of the grid in the 'x'
+        and 'y' directions, respectively.
+    
+    point_spacings : (2,) array_like
+        1D array containing the spacings 'dx' and 'dy' between the points in
+        the 'x' and 'y' directions, respectively.
+    
+    Returns
+    -------
+    XY_grid : (2, Nx*Ny) array_like
+        2D array containing the (x, y) coordinates of all points in the grid.
+        The grid contains 'Nx = Lx/dx+1' points in the 'x' direction, and
+        'Ny = Ly/dy+1' points in the 'y' direction.
+    """
 
+    # number of points on each side = Dx/dx + 1
+    N_points = np.array([round(grid_sides[0]/point_spacings[0] + 1),
+                         round(grid_sides[1]/point_spacings[1] + 1)],
+                        dtype='int')
+
+    x_points = np.linspace(-grid_sides[0]/2., grid_sides[0]/2., N_points[0])
+    y_points = np.linspace(-grid_sides[1]/2., grid_sides[1]/2., N_points[1])
+
+    X_points, Y_points = np.meshgrid(x_points, y_points)
+
+    return np.array([X_points.flatten(), Y_points.flatten()])
+
+
+def read_ffarray_lvm(filename, n_columns = 13):
+    """
+    Reads a .lvm file containing time-domain data acquired from LabView.
+    
+    Parameters
+    ----------
+    filename : string
+        Name of the '.lvm' file to be read.
+    
+    N_columns : int, optional
+        Number of columns to read (time samples + (N-1) signals). Defaults to 13.
+    
+    Returns
+    -------
+    t : (N,) array_like
+        1D array containing the time samples.
+    
+    mics : (M, N) array_like
+        2D array containing the 'M' microphone signals.
+    
+    Notes
+    -----
+    The .lvm file is assuemd to contain the time samples in the first column
+    and each microphone signal in the remaining columns. Default is time signal
+    plus 12 microphones.
+    """
+
+    # open file as text
+    lvm_file = open(filename, 'r')
+
+    # count the number of lines (has to read the whole file,
+    # hence closing and opening again)
+    n_lines = len(list(lvm_file))
+    lvm_file.close()
+
+    t = np.zeros(n_lines)
+    mics = np.zeros((n_lines, n_columns-1))
+
+    # read line ignoring the '\r\n' at the end,
+    # and using '\t' as column separators
+    lvm_file = open(filename, 'r')
+    for line in range(n_lines):
+        current_line = lvm_file.readline().split('\r\n')[0].split('\t')
+        t[line] = float(current_line[0])
+        mics[line, :] = [float(x) for x in current_line][1:]
+
+    # close file
+    lvm_file.close()
+
+    return t, mics.T

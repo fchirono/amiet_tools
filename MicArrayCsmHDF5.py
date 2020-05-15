@@ -521,12 +521,40 @@ def print_hdf5_item_structure(g, offset='    '):
 
 def CSM(mic_signals, N_dft, fs, N_overlap=None, window=None):
     """
-    Calculates the cross-spectral matrix (CSM) from an array 'mic_signals'
-    containing the time-domain microphone recordings.
+    Calculates the cross-spectral matrix (CSM) from an array of time-domain 
+    microphone recordings using Welch's method.
+    
+    Parameters
+    ----------
+    mic_signals : (M, signal_length) array_like
+        Array containing the 'M' time-domain microphone signals, with
+        'signal_length' samples.
+    
+    N_dft : int
+        Number of points used in DFT.
+    
+    fs : int
+        Sampling frequency in Hz.
+    
+    N_overlap : int, optional
+        Number of overlapping points when using Welch's method. Defaults to
+        None, which is internally converted to 'N_dft//2'.
+    
+    window : (N_dft,) array_like, optional
+        1-D array containing coefficients of window function used in Welch's
+        method. Defaults to None, which is internally converted to
+        'scipy.signal.hann(N_dft)'.
 
-    Divides the estimates by 'fs' so that the 'm'-th element of the CSM
-    diagonal is identical to the 'm'-th microphone PSD (note that 'fs*N_dft' is
-    equal to the time length - in seconds - of the DFT frame).
+    Returns
+    -------
+    
+    CSM : (M, M, N_dft) array_like
+        Matrix containing the (M, M) mic array CSM for each frequency.
+    
+    Notes
+    -----
+    The CSM is calculated so the 'm'-th element of its diagonal contains the
+    'm'-th microphone PSD.
     """
 
     # define default 'N_overlap'
