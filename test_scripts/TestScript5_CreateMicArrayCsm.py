@@ -12,6 +12,14 @@ Test script 5: calculates and saves the microphone array CSM for a simulated
     the radiation includes the refraction effects at the planar shear layer.
 
 
+***Note on memory usage:
+    This computation takes a long time and uses a lot of memory, and often
+    crashes when Python runs out of memory at every few frequencies.
+    After a crash, simply restart the computer and run the code again. The code
+    can be run multiple times, as it automatically loads the HDF5 file and
+    verifies the last frequency successfully computed.
+
+
 Author:
 Fabio Casagrande Hirono
 fchirono@gmail.com
@@ -81,6 +89,7 @@ df = fs/Ndft
 freq = np.linspace(0, fs-df, Ndft)[:Ndft//2+1]
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# ---->>> RUN ONLY WHEN CONTINUING THE CSM CALCULATIONS AFTER A CRASH <<<----
 
 # create object to store CSM Essential info for HDF5 file, read data from
 # existing file
@@ -88,7 +97,7 @@ CsmEss_DARP2016 = CsmEssH5.MicArrayCsmEss()
 CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-# *-*-*-*-* ---->>> RUN ONLY WHEN CREATING THE HDF5 FILE ! <<<---- *-*-*-*-*-*
+# ---->>> RUN ONLY WHEN CREATING THE HDF5 FILE FOR THE FIRST TIME <<<----
 
 # # Measurement data from experimental session (check lab notes)
 # temperatureDegC = 13.5
@@ -108,6 +117,7 @@ CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
 # # create object to store CSM Essential info for HDF5 file, populate with
 # # initial data 
 # CsmEss_DARP2016 = CsmEssH5.MicArrayCsmEss()
+# CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
 
 # CsmEss_DARP2016.binCenterFrequenciesHz = (freq+df/2).reshape((1, freq.shape[0]))
 # CsmEss_DARP2016.frequencyBinCount = freq.shape[0]
@@ -138,57 +148,68 @@ CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
 # # write data to HDF5 file
 # CsmEss_DARP2016.writeToHDF5File()
 
-# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# create and store CSM data per frequency
+# %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+# Create and store CSM data per frequency, automatically closes H5 file if
+# code crashes or is interrupted
 
 # Open HDF5 file and create handles for CsmReal, CsmImaginary datasets
-CsmEssH5 = h5py.File(CsmEss_DARP2016.caseID +'CsmEss.h5', 'a')
-
-CsmReal = CsmEssH5['CsmData/CsmReal']
-CsmImaginary = CsmEssH5['CsmData/CsmImaginary']
-
-# set f=0 data to zeros
-CsmReal[:, :, 0] = np.zeros((M, M))
-CsmImaginary[:, :, 0] = np.zeros((M, M))
-
-# iterate over freqs, skip f=0 Hz
-
-# identify last successfully calculated index
-i_stop = np.nonzero(CsmReal[0, 0, 1:])[0][-1] + 1
-
-for i, f in enumerate(freq[1+i_stop:]):
-    print('Calculating f = {:.1f} Hz...'.format(f))
+with h5py.File(CsmEss_DARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5File:
     
-    # account for skipping zero and previous runs
-    i += 1 + i_stop
+    CsmReal = CsmEssH5File['CsmData/CsmReal']
+    CsmImaginary = CsmEssH5File['CsmData/CsmImaginary']
     
-    # frequency-related variables
-    FreqVars = AmT.FrequencyVars(f, DARP2016Setup)
-    (k0, Kx, Ky_crit) = FreqVars.export_values()
+    # set f=0 data to zeros
+    CsmReal[:, :, 0] = np.zeros((M, M))
+    CsmImaginary[:, :, 0] = np.zeros((M, M))
     
-    # vector of spanwise hydrodynamic gust wavenumbers
-    Ky_vec = AmT.ky_vector(b, d, k0, Mach, beta)
+    # iterate over freqs, skip f=0 Hz
     
-    # gust energy spectrum (von Karman)
-    Phi = AmT.Phi_2D(Kx, Ky_vec, Ux, turb_intensity, length_scale)[0]
+    # identify last successfully calculated index
+    nonZeroCsm = np.nonzero(CsmReal[0, 0, 1:])[0]
+    if nonZeroCsm.size == 0:
+        # Csm hasn't been calculated yet; start from scratch
+        i_last_success = 0
+    else:
+        # Csm has been partially calculated; start from last attempted freq
+        i_last_success = nonZeroCsm[-1] + 1
     
-    # convected dipole transfer function - includes shear layer refraction
-    Gdip = AmT.dipole_shear(XYZ_airfoil_calc, XYZ_array, XYZ_shearLayer,
-                            T_shearLayer, k0, c0, Mach)
-    
-    # CSM of mic array pressures
-    MicArrayCsm = AmT.calc_radiated_Spp(DARP2016Setup, DARP2016Airfoil,
-                                        FreqVars, Ky_vec, Phi, Gdip)
-    
-    # write real/imag components to HDF5 file, one freq/chunk at a time
-    CsmReal[:, :, i] = MicArrayCsm.real
-    # imaginary component has diagonals equal to zero
-    CsmImaginary[:, :, i] = MicArrayCsm.imag - np.diag(np.diag(MicArrayCsm.imag))
-    
-    # use garbage collector to (maybe) recover some memory
-    gc.collect()
+    for i, f in enumerate(freq[1+i_last_success:]):
+        print('Calculating f = {:.1f} Hz...'.format(f))
+        
+        # account for skipping zero and previous runs
+        i += 1+i_last_success
+        
+        # frequency-related variables
+        FreqVars = AmT.FrequencyVars(f, DARP2016Setup)
+        (k0, Kx, Ky_crit) = FreqVars.export_values()
+        
+        # vector of spanwise hydrodynamic gust wavenumbers
+        Ky_vec = AmT.ky_vector(b, d, k0, Mach, beta)
+        
+        # gust energy spectrum (von Karman)
+        Phi = AmT.Phi_2D(Kx, Ky_vec, Ux, turb_intensity, length_scale)[0]
+        
+        # convected dipole transfer function - includes shear layer refraction
+        Gdip = AmT.dipole_shear(XYZ_airfoil_calc, XYZ_array, XYZ_shearLayer,
+                                T_shearLayer, k0, c0, Mach)
+        
+        # CSM of mic array pressures
+        MicArrayCsm = AmT.calc_radiated_Spp(DARP2016Setup, DARP2016Airfoil,
+                                            FreqVars, Ky_vec, Phi, Gdip)
+        
+        # write real/imag components to HDF5 file, one freq/chunk at a time
+        CsmReal[:, :, i] = MicArrayCsm.real
+        # force diagonal of imaginary component to zero
+        CsmImaginary[:, :, i] = MicArrayCsm.imag - np.diag(np.diag(MicArrayCsm.imag))
+        
+        # use garbage collector to recover some memory
+        gc.collect()
 
-CsmEssH5.close()
+# %%
+
+# # Manually open H5 file
+# CsmEssH5File = h5py.File(CsmEss_DARP2016.caseID +'CsmEss.h5', 'a')
 
 
-# CsmAbs = np.sqrt(CsmReal[0, 0, :]**2 + CsmImaginary[0, 0, :]**2)
+# # Manually close H5 file
+# CsmEssH5File.close()
