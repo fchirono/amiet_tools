@@ -25,8 +25,7 @@ of Sound and Vibration Research (ISVR), University of Southampton, Southampton, 
 
 ## Dependencies:
 * numpy: array processing for numbers, strings, records, and objects;
-* scipy: scientific library;
-* mpmath: library for arbitrary-precision floating-point arithmetic.
+* scipy: scientific library.
 
 
 All dependencies are already included in the Anaconda Python Distribution, a
