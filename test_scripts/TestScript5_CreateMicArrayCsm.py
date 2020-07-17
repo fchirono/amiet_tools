@@ -76,8 +76,12 @@ M = XYZ_array.shape[1]
 
 # obtain propag time and shear layer crossing point for every source-mic pair
 # (forward problem - frequency independent!)
+print('Calculating shear layer correction - this should take a few minutes...')
+
 T_shearLayer, XYZ_shearLayer = AmT.ShearLayer_matrix(XYZ_airfoil_calc,
                                                      XYZ_array, z_sl, Ux, c0)
+
+print('Shear layer correction calculation done!')
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # define frequency variables
@@ -174,7 +178,7 @@ with h5py.File(CsmEss_DARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5File:
         i_last_success = nonZeroCsm[-1] + 1
     
     for i, f in enumerate(freq[1+i_last_success:]):
-        print('Calculating f = {:.1f} Hz...'.format(f))
+        print('Calculating CSM at f = {:.1f} Hz...'.format(f))
         
         # account for skipping zero and previous runs
         i += 1+i_last_success
