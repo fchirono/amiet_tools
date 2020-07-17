@@ -99,54 +99,54 @@ CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 # ---->>> RUN ONLY WHEN CREATING THE HDF5 FILE FOR THE FIRST TIME <<<----
 
-# # Measurement data from experimental session (check lab notes)
-# temperatureDegC = 13.5
-# relativeHumidityPct = 43.
+# Measurement data from experimental session (check lab notes)
+temperatureDegC = 13.5
+relativeHumidityPct = 43.
 
-# # std atmospheric pressure
-# atmPressurePa = 101325
+# std atmospheric pressure
+atmPressurePa = 101325
 
-# # domain bounds, in metres [min, max]
-# xBounds = np.array([-0.25, 0.25])
-# yBounds = np.array([-0.25, 0.25])
-# zBounds = np.array([-0.075, 0.075])
-# domainBounds = np.concatenate((xBounds[:, np.newaxis],
-#                                 yBounds[:, np.newaxis],
-#                                 zBounds[:, np.newaxis]), axis=1)
+# domain bounds, in metres [min, max]
+xBounds = np.array([-0.25, 0.25])
+yBounds = np.array([-0.25, 0.25])
+zBounds = np.array([-0.075, 0.075])
+domainBounds = np.concatenate((xBounds[:, np.newaxis],
+                                yBounds[:, np.newaxis],
+                                zBounds[:, np.newaxis]), axis=1)
 
-# # create object to store CSM Essential info for HDF5 file, populate with
-# # initial data 
-# CsmEss_DARP2016 = CsmEssH5.MicArrayCsmEss()
-# CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
+# create object to store CSM Essential info for HDF5 file, populate with
+# initial data 
+CsmEss_DARP2016 = CsmEssH5.MicArrayCsmEss()
+CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
 
-# CsmEss_DARP2016.binCenterFrequenciesHz = (freq+df/2).reshape((1, freq.shape[0]))
-# CsmEss_DARP2016.frequencyBinCount = freq.shape[0]
+CsmEss_DARP2016.binCenterFrequenciesHz = (freq+df/2).reshape((1, freq.shape[0]))
+CsmEss_DARP2016.frequencyBinCount = freq.shape[0]
 
-# CsmEss_DARP2016.CsmUnits = 'Pa^2/Hz'
-# CsmEss_DARP2016.fftSign = -1
-# CsmEss_DARP2016.spectrumType = 'psd'
+CsmEss_DARP2016.CsmUnits = 'Pa^2/Hz'
+CsmEss_DARP2016.fftSign = -1
+CsmEss_DARP2016.spectrumType = 'psd'
 
-# CsmEss_DARP2016.machNumber = np.array([Mach, 0, 0], dtype='f8')
-# CsmEss_DARP2016.relativeHumidityPct = relativeHumidityPct
-# CsmEss_DARP2016.speedOfSoundMPerS = CsmEssH5.speed_of_sound(temperatureDegC)
-# CsmEss_DARP2016.staticPressurePa = atmPressurePa
-# CsmEss_DARP2016.staticTemperatureK = temperatureDegC + 273.15
+CsmEss_DARP2016.machNumber = np.array([Mach, 0, 0], dtype='f8')
+CsmEss_DARP2016.relativeHumidityPct = relativeHumidityPct
+CsmEss_DARP2016.speedOfSoundMPerS = CsmEssH5.speed_of_sound(temperatureDegC)
+CsmEss_DARP2016.staticPressurePa = atmPressurePa
+CsmEss_DARP2016.staticTemperatureK = temperatureDegC + 273.15
 
-# CsmEss_DARP2016.revisionNumberMajor = np.array([2], dtype='i4')
-# CsmEss_DARP2016.revisionNumberMinor = np.array([4], dtype='i4')
+CsmEss_DARP2016.revisionNumberMajor = np.array([2], dtype='i4')
+CsmEss_DARP2016.revisionNumberMinor = np.array([4], dtype='i4')
 
-# CsmEss_DARP2016.microphonePositionsM = XYZ_array.T
-# CsmEss_DARP2016.microphoneCount = M
+CsmEss_DARP2016.microphonePositionsM = XYZ_array.T
+CsmEss_DARP2016.microphoneCount = M
 
-# CsmEss_DARP2016.coordinateReference = 'Aerofoil center'
+CsmEss_DARP2016.coordinateReference = 'Aerofoil center'
 
-# CsmEss_DARP2016.domainBoundsM = domainBounds
+CsmEss_DARP2016.domainBoundsM = domainBounds
 
-# CsmEss_DARP2016.flowType = 'Uniform flow in +x dir inside open jet (rectangular nozzle 0.15 x 0.45 m [height x width]), no flow outside'
-# CsmEss_DARP2016.testDescription = 'Analytical model of flat plate-turbulence interaction noise, rectangular open jet, planar mic array parallel to aerofoil'
+CsmEss_DARP2016.flowType = 'Uniform flow in +x dir inside open jet (rectangular nozzle 0.15 x 0.45 m [height x width]), no flow outside'
+CsmEss_DARP2016.testDescription = 'Analytical model of flat plate-turbulence interaction noise, rectangular open jet, planar mic array parallel to aerofoil'
 
-# # write data to HDF5 file
-# CsmEss_DARP2016.writeToHDF5File()
+# write data to HDF5 file
+CsmEss_DARP2016.writeToHDF5File()
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Create and store CSM data per frequency, automatically closes H5 file if

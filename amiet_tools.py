@@ -16,8 +16,7 @@ gusts with amplitudes given by a prescribed energy spectrum.
 
 Dependencies:
     - numpy: array processing for numbers, strings, records, and objects;
-    - scipy: scientific library;
-    - mpmath: library for arbitrary-precision floating-point arithmetic.
+    - scipy: scientific library.
 
 
 All dependencies are already included in the Anaconda Python Distribution, a
