@@ -61,7 +61,7 @@ import scipy.optimize as so     # for shear layer correction functions
 import scipy.integrate as integrate
 #import mpmath as mp
 
-import gc
+# import gc
 
 
 class TestSetup:
@@ -391,10 +391,9 @@ def calc_airfoil_Sqq(testSetup, airfoilGeom, frequencyVars, Ky_vec, Phi):
         # reshape for vector calculation
         delta_p1_calc = delta_p1.reshape(Nx*Ny)
 
-        Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())*(Ux*dky)
+        Sqq[:, :] += np.outer(delta_p1_calc, delta_p1_calc.conj())
 
-    # use garbage collector to (maybe) recover some memory
-    gc.collect()
+    Sqq *= (Ux*dky)
 
     return Sqq, Sqq_dxy
 
@@ -1376,7 +1375,7 @@ def g_LE(xs, Kx, ky, Mach, b):
         g = (g_sp + g_sb)/2.
 
     return g
-    
+
 
 def g_LE_super(xs, Kx, ky, Mach, b):
     """
@@ -1546,7 +1545,7 @@ def L_LE(x, sigma, Kx, ky, Mach, b):
         L = (L_sp + L_sb)/2.
 
     return L
-    
+
 
 
 def L_LE_super(x, sigma, Kx, Ky, Mach, b):
