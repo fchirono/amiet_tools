@@ -21,7 +21,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import patches
 
-import array_tools as ArT
 import amiet_tools as AmT
 
 
@@ -203,58 +202,3 @@ rect_cb3 = [0.66+left+width+0.02, bottom, 0.02, height]
 ax_cb3 = plt.axes(rect_cb3)
 cb_XSpec_Co = fig_XSpec.colorbar(XSpec_Co, cax=ax_cb3)
 cb_XSpec_Co.ax.tick_params(labelsize=11)
-
-
-# %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# calculate wavanumber transform for surface pressure
-
-Nkx = 101
-kx_vec = np.linspace(-1.5*k0, 1.5*k0, Nkx)
-
-Nky = 101
-ky_vec = np.linspace(-1.5*k0, 1.5*k0, Nky)
-
-Kx_mesh, Ky_mesh = np.meshgrid(kx_vec, ky_vec)
-
-Kxy = np.array([Kx_mesh.reshape(Nkx*Nky), Ky_mesh.reshape(Nkx*Nky)])
-
-CSM_k = (ArT.wavenumber_spectrum2(Sqq*np.outer(dxy, dxy),
-                                  XYZ_airfoil_calc[0:2], Kxy) / ((2*np.pi)**4))
-
-CSM_k_dBmax = 10*np.log10(np.abs(np.diag(CSM_k))).max()
-CSM_k_dBmin = CSM_k_dBmax-30
-
-
-# *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-# plot wavenumber autospectrum
-fig_Sqqkx = plt.figure(figsize=(7, 6))
-ax_Sqqkx = plt.axes([0.11, 0.1, 0.685, 0.8])
-
-Sqqkx_plot = ax_Sqqkx.pcolormesh(Kx_mesh/k0, Ky_mesh/k0,
-                                 10*np.log10(np.abs(np.diag(CSM_k))
-                                             .reshape(Nky, Nkx)),
-                                 vmax=CSM_k_dBmax, vmin=CSM_k_dBmin)
-
-ax_Sqqkx.set_title('$k_0 c = {:.1f}$'.format(kc), fontsize=20)
-
-ax_Sqqkx.set_xlabel('$k_x/k_0$', fontsize=18)
-ax_Sqqkx.set_ylabel('$k_y/k_0$', fontsize=18)
-
-ax_Sqqkx.axis('equal')
-
-# add radiation ellipse
-kx1 = k0*Mach/(beta**2)
-r1 = k0/(1-Mach**2)
-r2 = k0/np.sqrt(1-Mach**2)
-
-rad_ellipse = patches.Ellipse(xy=(-kx1/k0, 0), width=2*r1/k0,
-                              height=2*r2/k0, fill=False, edgecolor='w',
-                              linestyle='-.', linewidth=2)
-ax_Sqqkx.add_artist(rad_ellipse)
-
-# add colorbar
-rect_cbar = [0.85, 0.1, 0.04, 0.8]
-ax_Sqqkx_cbar = plt.axes(rect_cbar)
-cb_Sqqkx = fig_Sqqkx.colorbar(Sqqkx_plot, cax=ax_Sqqkx_cbar)
-cb_Sqqkx.ax.tick_params(labelsize=11)
-cb_Sqqkx.set_label('dB', fontsize=12)
