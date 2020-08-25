@@ -6,7 +6,7 @@ https://github.com/fchirono/amiet_tools
 
 Copyright (c) 2020, Fabio Casagrande Hirono
 
-The 'amiet_tools' (AmT) Python package provides a reference implementation of
+The `amiet_tools` (AmT) Python package provides a reference implementation of
 Amiet's [JSV 41, 1975] model for turbulence-aerofoil interaction noise with
 extensions. These functions allow the calculation of the surface pressure jump
 developed over the aerofoil surface (i.e. the acoustic source distribution) in
@@ -22,6 +22,8 @@ These codes were originally written by Fabio Casagrande Hirono between 2014 and
 2018, while studying for a PhD degree in Acoustical Engineering at the Institute
 of Sound and Vibration Research (ISVR), University of Southampton, Southampton, UK.
 
+A reference publication can be found at:
+* Casagrande Hirono,F., Joseph, P., Fazi, F., *"An Open-Source Implementation of Analytical Turbulence-Airfoil Interaction Noise Model"*, 26th AIAA/CEAS Aeroacoustics Conference (part of AVIATION 2020), AIAA Paper 2020-2544, https://doi.org/10.2514/6.2020-2544 , June 2020.
 
 ## Dependencies:
 * numpy: array processing for numbers, strings, records, and objects;
@@ -44,26 +46,26 @@ Fabio Casagrande Hirono - fchirono [at] gmail.com
 
 ## Main Technical References:
 
-Amiet, R. K., "Acoustic radiation from an airfoil in a turbulent stream",
+Amiet, R. K., *"Acoustic radiation from an airfoil in a turbulent stream"*,
 Journal of Sound and Vibration, Vol. 41, No. 4:407–420, 1975.
 
-Blandeau, V., "Aerodynamic Broadband Noise from Contra-Rotating Open
-Rotors", PhD Thesis, Institute of Sound and Vibration Research, University
+Blandeau, V., *"Aerodynamic Broadband Noise from Contra-Rotating Open
+Rotors"*, PhD Thesis, Institute of Sound and Vibration Research, University
 of Southampton, Southampton - UK, 2011.
 
-Casagrande Hirono, F., "Far-Field Microphone Array Techniques for Acoustic
-Characterisation of Aerofoils", PhD Thesis, Institute of Sound and
+Casagrande Hirono, F., *"Far-Field Microphone Array Techniques for Acoustic
+Characterisation of Aerofoils"*, PhD Thesis, Institute of Sound and
 Vibration Research, University of Southampton, Southampton - UK, 2018.
 
-Reboul, G., "Modélisation du bruit à large bande de soufflante de
-turboréacteur", PhD Thesis, Laboratoire de Mécanique des Fluides et
+Reboul, G., *"Modélisation du bruit à large bande de soufflante de
+turboréacteur"*, PhD Thesis, Laboratoire de Mécanique des Fluides et
 d’Acoustique - École Centrale de Lyon, Lyon - France, 2010.
 
-Roger, M., "Broadband noise from lifting surfaces: Analytical modeling and
-experimental validation". In Roberto Camussi, editor, "Noise Sources in
+Roger, M., *"Broadband noise from lifting surfaces: Analytical modeling and
+experimental validation"*. In Roberto Camussi, editor, "Noise Sources in
 Turbulent Shear Flows: Fundamentals and Applications". Springer-Verlag,
 2013.
 
-de Santana, L., "Semi-analytical methodologies for airfoil noise
-prediction", PhD Thesis, Faculty of Engineering Sciences - Katholieke
+de Santana, L., *"Semi-analytical methodologies for airfoil noise
+prediction"*, PhD Thesis, Faculty of Engineering Sciences - Katholieke
 Universiteit Leuven, Leuven, Belgium, 2015.
