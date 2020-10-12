@@ -1,0 +1,2 @@
+# Applies end-of-line conversions to Python files
+*.py text
