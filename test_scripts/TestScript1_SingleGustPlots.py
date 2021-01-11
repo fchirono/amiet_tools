@@ -110,9 +110,9 @@ abs_p1_max = np.max(np.abs(delta_p1))
 
 fig_airfoil = plt.figure(figsize=(6.4, 5))
 ax1_airfoil = plt.subplot(121)
-re_p = ax1_airfoil.pcolor(XYZ_airfoil[0], XYZ_airfoil[1],
-                          np.real(delta_p1)/re_p1_max, cmap='seismic',
-                          vmin=-1, vmax=+1)
+re_p = ax1_airfoil.pcolormesh(XYZ_airfoil[0], XYZ_airfoil[1],
+                              np.real(delta_p1)/re_p1_max, cmap='seismic',
+                              shading='nearest', vmin=-1, vmax=+1)
 ax1_airfoil.axis('equal')
 ax1_airfoil.set_title(r'$Re\{\Delta p(x_s, y_s)\}$ [a.u.]', fontsize=18)
 
@@ -128,9 +128,10 @@ plt.colorbar(re_p)
 
 
 ax2_airfoil = plt.subplot(122)
-abs_p = ax2_airfoil.pcolor(XYZ_airfoil[0], XYZ_airfoil[1],
-                           20*np.log10(np.abs(delta_p1)/abs_p1_max),
-                           cmap='inferno', vmax=0, vmin=-30)
+abs_p = ax2_airfoil.pcolormesh(XYZ_airfoil[0], XYZ_airfoil[1],
+                               20*np.log10(np.abs(delta_p1)/abs_p1_max),
+                               cmap='inferno', shading='nearest',
+                               vmax=0, vmin=-30)
 ax2_airfoil.axis('equal')
 ax2_airfoil.set_title(r'$|\Delta p(x_s, y_s)|$ [dB]', fontsize=18)
 
@@ -240,7 +241,6 @@ if save_fig:
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Calculate the near-field radiation over the 2D cuts
-
 """
 # create mesh for acoustic field 2D cuts
 mesh_side = 6*ac_wavelength  # [m]
@@ -289,7 +289,7 @@ p_max = np.max((p_XZ_max, p_YZ_max))
 plt.figure(figsize=(6.3, 5.))
 plt.pcolormesh(X_mesh1/ac_wavelength, Z_mesh1/ac_wavelength,
                np.real(pressure_XZ)/p_max, cmap='seismic',
-               vmin=-1.5, vmax=1.5)
+               shading='nearest', vmin=-1.5, vmax=1.5)
 plt.plot((-b/ac_wavelength, b/ac_wavelength), (0, 0), 'k', linewidth=6)
 plt.xlabel(r"$x/\lambda_0$", fontsize=18)
 plt.ylabel(r"$z/\lambda_0$", fontsize=18)
@@ -307,7 +307,7 @@ if save_fig:
 plt.figure(figsize=(6.3, 5.))
 plt.pcolormesh(Y_mesh2/ac_wavelength, Z_mesh2/ac_wavelength,
                np.real(pressure_YZ)/p_max, cmap='seismic',
-               vmin=-1.5, vmax=1.5)
+               shading='nearest', vmin=-1.5, vmax=1.5)
 plt.plot((-d/ac_wavelength, d/ac_wavelength), (0, 0), 'k', linewidth=6)
 plt.xlabel(r"$y/\lambda_0$", fontsize=18)
 plt.ylabel(r"$z/\lambda_0$", fontsize=18)
