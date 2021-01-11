@@ -1,0 +1,160 @@
+\documentclass[a4paper, 11pt, twoside]{article}
+
+\usepackage[brazilian]{babel} % Habilita o uso de portugues brasileiro
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+\usepackage[square, numbers, comma, sort&compress]{natbib} 
+%\usepackage{setspace}
+\usepackage{verbatim}  % Comment environment
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}	% Matrices
+\usepackage{subfig}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[retainorgcmds]{IEEEtrantools}
+
+\hypersetup{urlcolor=blue, colorlinks=true, linkcolor=blue, citecolor=blue}  % Colours hyperlinks in blue, but this can be distracting if there are many links.
+
+% Use double bar for vector norm
+\providecommand{\norm}[1]{\lVert#1\rVert}
+
+% "upright" 'd' for integrals
+\newcommand{\ud}{\,\mathrm{d}}
+
+
+\author{Fabio Casagrande Hirono \\ \texttt{fchirono@gmail.com}}
+\title{\texttt{amiet\_tools}: um pacote em Python para predição de ruído de interação turbulência-aerofólio\\\textcolor{red}{EM CONSTRUÇÃO}}
+\date{Janeiro 2021}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+	O pacote \verb|amiet_tools| (AmT), escrito em linguagem Python, é uma implementação do modelo analítico de Amiet \cite{Amiet75} para predição de ruído de interação turbulência-aerofólio, com extensões. As funções permitem o cálculo do ``salto'' de pressão na superfície do aerofólio (i.e. a distribuição da fonte acústica) gerado em resposta à turbulência incidente, e do campo acústico radiado por esta interação. A turbulência incidente pode ser uma única rajada senoidal, ou uma soma de rajadas incoerentes com amplitudes definidas por um espectro energético. Outras funções includem o modelamento de efeitos de convecção e refração na propagação sonora para modelar medições acústicas realizadas em túneis de vento abertos ou fechados. Uma publicação de referência está disponível \cite{Casagrande_etal2020}, e o pacote pode ser encontrado através do link \url{https://github.com/fchirono/amiet_tools}.
+\end{abstract}
+
+% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+\section{Introdução}
+
+Ruído de aerofólio: importância, mecanismos físicos, modelo analítico.
+
+Referências teóricas:
+
+\begin{itemize}
+	\item R. Amiet, ``\emph{Acoustic radiation from an airfoil in a turbulent stream}'', Journal of Sound and Vibration, Vol. 41, No. 4:407–420, 1975 \cite{Amiet75};
+	
+	\item G. Reboul, ``\emph{Modélisation du bruit à large bande de soufflante de turboréacteur}'', PhD Thesis, Laboratoire de Mécanique des Fluides et d’Acoustique - École Centrale de Lyon, Lyon - France, 2010 \cite{Reboul10};
+	
+	\item M. Roger, ``\emph{Broadband noise from lifting surfaces: Analytical modeling and experimental validation}'', in: R. Camussi (Ed.), ``\emph{Noise Sources in Turbulent Shear Flows: Fundamentals and Applications}'', Springer-Verlag, 2013 \cite{Roger13};
+	
+	\item L. de Santana, ``\emph{Semi-analytical methodologies for airfoil noise prediction}'', PhD Thesis, Faculty of Engineering Sciences - Katholieke Universiteit Leuven, Leuven, Belgium, 2015 \cite{deSantana2015};
+	
+	\item F. Casagrande Hirono, ``\emph{Far-Field Microphone Array Techniques for Acoustic Characterisation of Aerofoils}'', PhD Thesis, Institute of Sound and Vibration Research, University of Southampton, Southampton - UK, 2018 \cite{Casagrande18}.
+\end{itemize}
+
+
+% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+\section{Usando o pacote}
+
+\subsection{Requerimentos}
+
+O pacote \verb|amiet_tools| (abreviado por ``AmT'') foi desenvolvido em Python 3.x, e tem como dependências os pacotes \verb|numpy| e \verb|scipy|. Ambos os pacotes estão inclusos na ``\emph{Anaconda Python Distribution}''\footnote{Disponível em \url{https://www.anaconda.com/products/individual}.}, uma distribuição Python gratuita e de código aberto. A distribuição Anaconda é usada para desenvolver o pacote AmT, e é a distribuição recomendada para usar AmT.
+
+%Assim como outros programas de computação científica, o pacote AmT exige  certos recursos computacionais. Por exemplo, um aerofólio cuja superfície é discretizada com $(N_x, N_y)$ pontos terá a sua matriz de espectro cruzado (CSM) com $(N_x \times N_y)^2$ números complexos de precisão dupla (\verb|numpy.complex128|, 128 bits por número complexo), ocupando $(N_x \times N_y)^2 \times 128$ bits de memória RAM \emph{por frequência}. A amostragem padrão do pacote AmT, com $N_x = 100$ e $N_y = 101$, resultará em uma CSM que ocupa aproximadamente 1.6 GB por frequência. 
+
+\subsection{Pseudocódigo}
+
+O pseudocódigo usado para calcular o espectro cruzado $S_{\Delta p \Delta p'}$ da pressão de superfície do aerofólio e/ou o espectro cruzado $S_{pp'}$ do ruído radiado é mostrado abaixo, retirado de \cite{Casagrande_etal2020}. A maior parte das instruções mostradas abaixo possuem funções Python equivalentes ou métodos associados no pacote AmT, e não precisam ser implementadas pelo usuário final. Para mais detalhes sobre o uso destas funções, veja a documentação e os scripts de exemplo no pacote.
+
+\begin{algorithm}
+	\caption{Pseudocódigo para o modelo de predição de ruído de interação turbulência-aerofólio do pacote \texttt{amiet\_tools}}
+	\label{alg:amiet_pseudocode}
+	\begin{algorithmic}[1] % Define line numbers
+		\State Definir as variáveis do ambiente de teste: $c_0, \rho_0, p_{ref}, U_x, \overline{w^2}, \Lambda, z_{sl}, M_x, \beta$
+		\State Definir as variáveis da geometria do aerofólio: $b, d, N_x, N_y, \Delta x_s, \Delta y_s$
+		\State Calcular a amostragem da corda do aerofólio $x_s[n], \ n \in [1, \ldots, N_x]$
+		\State Calcular a amostragem da envergadura do aerofólio $y_s[n], \ n \in [1, \ldots, N_y]$
+		\State Definir as coordenadas dos observadores $\mathbf{r}_m = (x_m, y_m, z_m), \ m \in [1, \ldots, M]$
+		
+		\If{usando correção de camada cisalhante}
+		\ForAll{pares $(m, n)$ de pontos observador-aerofólio $(\mathbf{r}_m|\mathbf{r}_s)$}
+		\State Calcular os pontos de cruzamento da camada cisalhante $\mathbf{r}_l(m, n)$ e tempos de propagação $\tau_{sm}(m, n)$
+		\EndFor
+		\EndIf
+		
+		\For{cada frequência $f \in [f_{min}, \ldots, f_{max}]$}
+		\State Calcular $k_0, \kappa_\chi, k_\psi^{crit}$
+		\State Calcular valores de números de onda de rajada $k_\psi \in [-k_\psi^{max}, k_\psi^{max}]$
+		\State Calcular intervalo de amostragem dos números de onda de rajada $\Delta k_\psi$
+		\State Calcular espectro de energia dos números de onda de rajada $\Phi_{ww}(k_\psi)$
+		\State Calcular matriz $\partial G(\mathbf{r}_m|\mathbf{r}_s)/\partial z_s$ para todos os pares $(m, n)$ de pontos observador-aerofólio; 
+		\State Inicializar $S_{\Delta p \Delta p'} \gets 0$
+		\State Inicializar $S_{p p'} \gets 0$
+		\For{cada rajada $k_\psi \in [-k_\psi^{max}, k_\psi^{max}]$}
+		\State $w(k_\psi) \gets \sqrt{\Phi_{ww}(k_\psi)}$
+		\State Calcular $\Delta p(x_s, y_s, k_\psi)$ usando $w(k_\psi)$ 
+		\State $S_{\Delta p \Delta p'}(\mathbf{r}_s, \mathbf{r}_s') \gets S_{\Delta p \Delta p'}(\mathbf{r}_s, \mathbf{r}_s') + \left[ \Delta p(x_s, y_s, k_\psi) \cdot \Delta p^*(x_s', y_s', k_\psi) \right] \cdot U_x \cdot \Delta k_\psi$ \label{alg:crossproduct}
+		\EndFor
+		\State $S_{pp'}(\mathbf{r}_m, \mathbf{r}_{m'}) \gets 4 \pi \left[ S_{\Delta p \Delta p'} \cdot (\Delta x_s \cdot \Delta y_s) \cdot (\Delta x_s' \cdot \Delta y_s') \right] \cdot \left[ \partial G(\mathbf{r}_m|\mathbf{r}_s)/\partial z_s \right] \cdot \left[ \partial G(\mathbf{r}_{m'}|\mathbf{r}_s')/\partial z_s \right]$
+		\EndFor
+	\end{algorithmic}
+\end{algorithm}
+
+\clearpage
+\newpage
+
+\subsection{Inserção de dados usando classes}
+
+O pacote \verb|amiet_tools| utiliza classes - i.e. estruturas de abstração usadas em programação orientada a objetos - para armazenar dados relacionados aos diferentes aspectos da simulação. As três classes utilizadas em AmT estão descritas abaixo, seguidas de uma lista de seus atributos:
+
+\begin{itemize}
+	\item Classe \verb|TestSetup|:
+	\begin{itemize}
+		\item \verb|TestSetup.c0|: velocidade do som em um meio em repouso $c_0$ (em m/s);
+		\item \verb|TestSetup.rho0|: densidade do ar $\rho_0$ (em kg/m$^3$);
+		\item \verb|TestSetup.p_ref|: pressão acústica de referência $p_{ref} = 20 \mu$Pa RMS;
+		\item \verb|TestSetup.Ux|: velocidade média do escoamento $U_x$ (em m/s);
+		\item \verb|TestSetup.turb_intensity|: intensidade da turbulência $\overline{w^2}/U_x$;
+		\item \verb|TestSetup.length_scale|: escala de comprimento de turbulência $\Lambda$ (em m);
+		\item \verb|TestSetup.z_sl|: altura da camada cisalhante $z_{sl}$ (em m);
+		\item \verb|TestSetup.flow_dir|: caractere único indicando a direção do escoamento (i.e. `\verb|x|' para indicar escoamento na direção $+x$);
+		\item \verb|TestSetup.dipole_axis|: caractere único indicando a direção do eixo dos dipolos (i.e. `\verb|z|' para dipolos apontando ``para cima'', na direção $+z$);
+		\item \verb|TestSetup.Mach|: número de Mach do escoamento $M_x = U_x/c_0$;
+		\item \verb|TestSetup.beta|: fator de Prandtl-Glauert $\beta = \sqrt{1-M_x^2}$.
+	\end{itemize}
+	
+	\item Classe \verb|AirfoilGeom|:
+	\begin{itemize}
+		\item \verb|AirfoilGeom.b|: semi corda do aerofólio $b = c/2$ (em m);
+		\item \verb|AirfoilGeom.d|: semi envergadura do aerofólio $d = L/2$ (em m);
+		\item \verb|AirfoilGeom.Nx|: número de amostras sobre a corda $N_x$, amostragem não-uniforme;
+		\item \verb|AirfoilGeom.Ny|: número de amostras sobre a envergadura $N_y$, amostragem uniforme;
+		\item \verb|AirfoilGeom.dx|: intervalos de amostragem sobre a corda $\Delta x_s$  (calculado internamente)
+		\item \verb|AirfoilGeom.dy|: intervalo de amostragem sobre a envergadura $\Delta y_s$  (calculado internamente).
+	\end{itemize}
+	
+	\item Classe \verb|FrequencyVariables|:
+	\begin{itemize}
+		\item \verb|FrequencyVariables.freq|: frequência $f$ (em Hz);
+		\item \verb|FrequencyVariables.k0|: número de onda acústico $k_0 = 2 \pi f/c_0$;
+		\item \verb|FrequencyVariables.Kx|: número de onda de rajada na direção da corda $\kappa_\chi = \omega/U_x$;
+		\item \verb|FrequencyVariables.Ky_crit|: número de onda crítico de rajada na direção da envergadura $k_\psi^{crit}$.
+	\end{itemize}
+\end{itemize}
+
+Uma instância de cada classe é criada para armazenar os valores das variáveis relacionados às condições de um experimento e para passá-las às diferentes funções no pacote. Valores numéricos podem ser atribuídos diretamente através de um script em Python, ou podem ser lidos em um arquivo externo através das funções \verb|loadTestSetup| e \verb|loadAirfoilGeom|. 
+
+Uma quarta classe chamada \verb|MicArrayCsmHDF5| também está inclusa no pacote, e permite a leitura e escrita de dados de CSM de arranjos de microfones no formato HDF5 adotado pela comunidade ``Array Methods'' \cite{Bahr_etal2017, Sarradj_etal2017} para compartilhar dados de ``beamforming''.
+
+% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+\clearpage
+\newpage
+\label{Bibliography}
+\bibliographystyle{unsrtnat} 
+\bibliography{../Bibliography} 
+\end{document}

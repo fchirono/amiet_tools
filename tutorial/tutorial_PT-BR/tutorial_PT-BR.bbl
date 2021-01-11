@@ -1,0 +1,71 @@
+\begin{thebibliography}{8}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Amiet(1975)]{Amiet75}
+R.~K. Amiet.
+\newblock Acoustic radiation from an airfoil in a turbulent stream.
+\newblock \emph{Journal of Sound and Vibration}, 41, No. 4:\penalty0 407--420,
+  1975.
+
+\bibitem[{Casagrande Hirono} et~al.(2020){Casagrande Hirono}, Joseph, and
+  Fazi]{Casagrande_etal2020}
+Fabio {Casagrande Hirono}, Phillip Joseph, and Filippo Fazi.
+\newblock An open-source implementation of analytical turbulence-airfoil
+  interaction noise model.
+\newblock In \emph{26th {AIAA/CEAS} Aeroacoustics Conference}, 2020.
+\newblock URL \url{https://doi.org/10.2514/6.2020-2544}.
+\newblock {AIAA} Paper 2020-2544.
+
+\bibitem[Reboul(2010)]{Reboul10}
+Gabriel Reboul.
+\newblock \emph{Mod\'elisation du bruit \`a large bande de soufflante de
+  turbor\'eacteur}.
+\newblock {PhD Thesis}, Laboratoire de M\'ecanique des Fluides et d'Acoustique
+  - \'Ecole Centrale de Lyon, Lyon - France, 2010.
+
+\bibitem[Roger(2013)]{Roger13}
+Michel Roger.
+\newblock Broadband noise from lifting surfaces: Analytical modeling and
+  experimental validation.
+\newblock In Roberto Camussi, editor, \emph{Noise Sources in Turbulent Shear
+  Flows: Fundamentals and Applications}. Springer-Verlag Wien, 2013.
+
+\bibitem[{de Santana}(2015)]{deSantana2015}
+Leandro {de Santana}.
+\newblock \emph{Semi-analytical methodologies for airfoil noise prediction}.
+\newblock {PhD Thesis}, Faculty of Engineering Science - Katholieke
+  Universiteit Leuven, Leuven - Belgium, 2015.
+
+\bibitem[{Casagrande Hirono}(2018)]{Casagrande18}
+Fabio {Casagrande Hirono}.
+\newblock \emph{Far-Field Microphone Array Techniques for Acoustic
+  Characterisation of Aerofoils}.
+\newblock {PhD Thesis}, Institute of Sound and Vibration Research - University
+  of Southampton, Southampton - UK, 2018.
+
+\bibitem[Bahr et~al.(2017)Bahr, Jr., Ernst, Ahlefeldt, Spehr, Pereira, Leclere,
+  Picard, Porteous, Moreaux, Fischer, and Doolan]{Bahr_etal2017}
+Christopher Bahr, William~Humphreys Jr., Daniel Ernst, Thomas Ahlefeldt,
+  Carsten Spehr, Antonio Pereira, Quentin Leclere, Christophe Picard, Ric
+  Porteous, Danielle Moreaux, Jeoffrey Fischer, and Con Doolan.
+\newblock A comparison of microphone phased array methods applied to the study
+  of airframe noise in wind tunnel testing.
+\newblock In \emph{23rd {AIAA/CEAS} Aeroacoustics Conference}, 2017.
+\newblock {AIAA} Paper AIAA 2017-3718.
+
+\bibitem[Sarradj et~al.(2017)Sarradj, Herold, Sijtsma, {Merino-Martinez},
+  Malgoezar, Snellen, Geyer, Bahr, Porteous, Moreau, and
+  Doolan]{Sarradj_etal2017}
+Ennes Sarradj, Gert Herold, Pieter Sijtsma, Roberto {Merino-Martinez}, Anwar
+  Malgoezar, Mirjam Snellen, Thomas Geyer, Christopher Bahr, Ric Porteous,
+  Danielle Moreau, and Con Doolan.
+\newblock A microphone array method benchmarking exercise using synthesized
+  input data.
+\newblock In \emph{23rd {AIAA/CEAS} Aeroacoustics Conference}, 2017.
+\newblock {AIAA} Paper AIAA 2017-3719.
+
+\end{thebibliography}
