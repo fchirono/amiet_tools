@@ -41,7 +41,7 @@ plt.close('all')
 save_fig = False
 
 # flag for calculating and plotting near-field radiation slices
-# --->>> may take many minutes!
+# --->>>may take many minutes!
 calc_nearfield = False
 
 # %% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-

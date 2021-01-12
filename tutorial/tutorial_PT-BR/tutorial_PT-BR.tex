@@ -5,7 +5,6 @@
 \usepackage[T1]{fontenc}
 
 \usepackage[square, numbers, comma, sort&compress]{natbib} 
-%\usepackage{setspace}
 \usepackage{verbatim}  % Comment environment
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{amsmath}	% Matrices
@@ -17,6 +16,34 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage[retainorgcmds]{IEEEtrantools}
+
+
+% from https://www.overleaf.com/learn/latex/code_listing
+\usepackage{textcomp}  % required for upticks in listings env
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0, 0.6, 0}
+\definecolor{codegray}{rgb}{0.5, 0.5, 0.5}
+\definecolor{codepurple}{rgb}{0.58, 0, 0.82}
+\definecolor{backcolour}{rgb}{0.95, 0.95, 0.95}
+
+\lstset{backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                                 
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=4,
+	upquote=true,
+	frame=single,
+	language=Python
+}
 
 \hypersetup{urlcolor=blue, colorlinks=true, linkcolor=blue, citecolor=blue}  % Colours hyperlinks in blue, but this can be distracting if there are many links.
 
@@ -63,11 +90,113 @@ Referências teóricas:
 
 \subsection{Requerimentos}
 
-O pacote \verb|amiet_tools| (abreviado por ``AmT'') foi desenvolvido em Python 3.x, e tem como dependências os pacotes \verb|numpy| e \verb|scipy|. Ambos os pacotes estão inclusos na ``\emph{Anaconda Python Distribution}''\footnote{Disponível em \url{https://www.anaconda.com/products/individual}.}, uma distribuição Python gratuita e de código aberto. A distribuição Anaconda é usada para desenvolver o pacote AmT, e é a distribuição recomendada para usar AmT.
+O pacote \verb|amiet_tools| (abreviado por ``AmT'') foi desenvolvido em Python 3.x, e tem como dependências os pacotes \verb|numpy| e \verb|scipy|. Para plotar resultados, esse tutorial usa o pacote \verb|matplotlib|, mas esta não é uma dependência do AmT. Estes pacotes estão inclusos na ``\emph{Anaconda Python Distribution}''\footnote{Disponível em \url{https://www.anaconda.com/products/individual}.}, uma distribuição Python gratuita e de código aberto. A distribuição Anaconda é usada para desenvolver o pacote AmT, e é a distribuição recomendada para usar AmT.
 
 %Assim como outros programas de computação científica, o pacote AmT exige  certos recursos computacionais. Por exemplo, um aerofólio cuja superfície é discretizada com $(N_x, N_y)$ pontos terá a sua matriz de espectro cruzado (CSM) com $(N_x \times N_y)^2$ números complexos de precisão dupla (\verb|numpy.complex128|, 128 bits por número complexo), ocupando $(N_x \times N_y)^2 \times 128$ bits de memória RAM \emph{por frequência}. A amostragem padrão do pacote AmT, com $N_x = 100$ e $N_y = 101$, resultará em uma CSM que ocupa aproximadamente 1.6 GB por frequência. 
 
-\subsection{Pseudocódigo}
+\subsection{Definindo variáveis com arquivos \texttt{.txt}}
+
+O pacote AmT utiliza dois arquivos de texto contendo as variáveis relacionadas às condições do experimento e as variáveis relacionadas à geometria do aerofólio. Usaremos como exemplo os dois arquivos de configuração do teste ``DARP2016'', realizado no túnel de vento DARP da Universidade de Southampton, Reino Unido, e disponíveis no repositório GitHub do projeto.
+
+O primeiro arquivo chama-se \verb|DARP2016_TestSetup.txt|, e os seus conteúdos estão indicados na listagem \ref{lst:TestSetup} abaixo; note que linhas vazias ou iniciadas com o caractere ``\#'' são ignoradas. O programa lerá os valores em cada linha do arquivo, e os interpretará conforme indicado nas respectivas linhas.
+
+\begin{lstlisting}[caption={Arquivo \texttt{DARP2016\_TestSetup.txt}}, label={lst:TestSetup}]
+# amiet_tools Test Setup file
+#
+# DARP2016 test setup, ISVR, Univ. of Southampton, UK
+
+# Acoustic characteristics
+340.	# c0		Speed of sound [m/s]
+1.2		# rho0		Air density [kg/m**3]
+20e-6	# p_ref		Ref acoustic pressure [Pa RMS]
+
+# turbulent flow properties
+60		# Ux				flow velocity [m/s]
+0.025	# turb_intensity	turbulence intensity = u_rms/U
+0.007	# length_scale		turb length scale [m]
+
+# shear layer height
+-0.075	# z_sl			Shear layer height (aerofoil is at z=0) [m]
+\end{lstlisting}
+
+O segundo arquivo chama-se \verb|DARP2016AirfoilGeom.txt|, e contém variáveis relacionadas à geometria do aerofólio. Seus conteúdos estão indicados na listagem \ref{lst:AirfoilGeom} abaixo.
+
+\begin{lstlisting}[caption={Arquivo \texttt{DARP2016\_AirfoilGeom.txt}}, label={lst:AirfoilGeom}]
+# amiet_tools AirfoilGeom file
+#
+# DARP2016 flat plate airfoil, ISVR, Univ. of Southampton, UK
+
+0.075	# b			airfoil half chord [m]
+0.225	# d 		airfoil half span [m]
+100		# Nx 		number of chordwise points (non-uniform sampl)
+101		# Ny 		number of spanwise points (uniform sampl)
+\end{lstlisting}
+
+Para carregar os valores descritos nos arquivos de texto, usa-se o programa descrito na listagem \ref{lst:LoadingVars}. Primeiramente, o pacote AmT é importado pelo script. A função \verb|AmT.loadTestSetup| é usada para carregar as variáveis relacionadas às condições do experimento a partir do arquivo de texto fornecido como argumento, e cria um objeto - aqui chamado de \verb|DARP2016Setup| - para armazenar as variáveis. Este objeto é uma instância da classe \verb|TestSetup|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}.
+
+Similarmente, usa-se a função \verb|AmT.loadAirfoilGeom| para carregar variáveis relacionadas à geometria do aerofólio a a partir de um arquivo de texto. Esta criará um objeto - aqui chamado de \verb|DARP2016Airfoil| - para armazenar as dimensões do aerofólio e as configurações de amostragem de sua superfície. Este objeto é uma instância da classe \verb|AirfoilGeom|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}.
+
+\begin{lstlisting}[caption={Importando pacotes e carregando variáveis},label={lst:LoadingVars}]
+import amiet_tools as AmT
+
+# load test setup from file
+DARP2016Setup = AmT.loadTestSetup('../DARP2016_TestSetup.txt')
+
+# load airfoil geometry from file
+DARP2016Airfoil = AmT.loadAirfoilGeom('../DARP2016_AirfoilGeom.txt')
+\end{lstlisting}
+
+Alternativamente, estas funções podem ser chamadas sem nenhum argumento de entrada; o objeto resultante irá conter as configurações do teste ``DARP2016'' por padrão, e estes podem ser modificados posteriormente dentro do script. Um exemplo deste método alternativo encontra-se na listagem \ref{lst:AltLoadingVars}, onde três variáveis são modificadas e recebem novos valores. Note, porém, que é necessário executar os métodos internos \verb|MyTestSetup._calc_secondary_vars()| e \verb|MyAirfoil._calc_grid()| para recalcular as variáveis secundárias depois das variáveis primárias serem redefinidas.
+
+\begin{lstlisting}[caption={Método alternativo para carregar variáveis},label={lst:AltLoadingVars}]
+import amiet_tools as AmT
+
+# Inicializando os objetos para armazenar variaveis
+MyTestSetup = AmT.loadTestSetup()
+MyAirfoil = AmT.loadAirfoilGeom()
+
+# Definir novos valores
+MyTestSetup.Ux = 120
+MyTestSetup.turb_intensity = 0.05
+MyAirfoil.b = 0.15
+
+# IMPORTANTE: recalcular as variaveis secundarias em ambos objetos
+MyTestSetup._calc_secondary_vars()
+MyAirfoil._calc_grid()
+\end{lstlisting}
+
+Desta forma, as diversas variáveis relacionadas ao setup experimental e ao aerofólio utilizado podem ser importadas e combinadas; por exemplo, pode-se simular dois aerofólios diferentes dentro das mesmas condições experimentais. As variáveis podem ser acessadas como atributos dos objetos criados (por exemplo, \verb|DARP2016Setup.c0| para acessar a velocidade do som), ou ainda podem ser exportadas diretamente para o ``namespace'' atual utilizando o método \verb|export_values| (pertencente às duas classes), conforme indicado na listagem \ref{lst:ExportingVars}. Desta forma, as variáveis agora existem tanto como atributos dos objetos criados quanto como variáveis independentes dentro do namespace atual, facilitando certos cálculos.
+
+\begin{lstlisting}[caption={Exportando as variáveis},label={lst:ExportingVars}]
+# export variables to current namespace
+(c0, rho0, p_ref, Ux, turb_intensity, length_scale, z_sl, Mach, beta,
+flow_param, dipole_axis) = DARP2016Setup.export_values()
+
+(b, d, Nx, Ny, XYZ_airfoil, dx, dy) = DARP2016Airfoil.export_values()
+\end{lstlisting}
+
+Finalmente, as variáveis relacionadas à frequência temporal $f_0$ (em Hz) são criadas dentro do próprio código, dependendo do interesse do usuário. Neste exemplo inicial, vamos definir uma única frequência $f_0$ a partir da frequência normalizada pela corda $k_0 c = 5$. Para tal, definimos o valor desejado de $f_0$ (a partir da frequência não-dimensional $k_0 c$), e passamos esta variável e o objeto \verb|DARP2016TestSetup| como argumentos para a função \verb|AmT.FrequencyVars|, resultando no objeto aqui chamado \verb|FreqVars|. Este objeto é uma instância da classe \verb|FrequencyVariables|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}. Similarmente, os valores aqui calculados podem ser exportados para o namespace atual através do método \verb|FreqVars.export_values|.
+
+\begin{lstlisting}[caption={Criando variáveis relacionadas à frequência},label={lst:FrequencyVars}]
+# frequency of operation
+kc = 5                          # chordwise normalised frequency = k0*(2*b)
+f0 = kc*c0/(2*np.pi*(2*b))      # approx 1.8 kHz
+
+FreqVars = AmT.FrequencyVars(f0, DARP2016Setup)
+(k0, Kx, Ky_crit) = FreqVars.export_values()
+\end{lstlisting}
+
+% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+\section{Exemplos}
+
+\subsection{Exemplo 1: Interação de Rajada Única}
+
+Como primeiro exemplo, vamos usar o pacote AmT para calcular a distribuição do ``salto'' de pressão $\Delta p(x_s, y_s)$ na superfície do aerofólio em resposta a uma única rajada turbulenta, e as funções de diretividade do campo acústico nas direções da corda e da envergadura.
+
+
+
+% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+\section{Pseudocódigo}
 
 O pseudocódigo usado para calcular o espectro cruzado $S_{\Delta p \Delta p'}$ da pressão de superfície do aerofólio e/ou o espectro cruzado $S_{pp'}$ do ruído radiado é mostrado abaixo, retirado de \cite{Casagrande_etal2020}. A maior parte das instruções mostradas abaixo possuem funções Python equivalentes ou métodos associados no pacote AmT, e não precisam ser implementadas pelo usuário final. Para mais detalhes sobre o uso destas funções, veja a documentação e os scripts de exemplo no pacote.
 
@@ -108,7 +237,9 @@ O pseudocódigo usado para calcular o espectro cruzado $S_{\Delta p \Delta p'}$ 
 \clearpage
 \newpage
 
-\subsection{Inserção de dados usando classes}
+% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+\section{Descrição das classes}
+\label{sec:ClassDescription}
 
 O pacote \verb|amiet_tools| utiliza classes - i.e. estruturas de abstração usadas em programação orientada a objetos - para armazenar dados relacionados aos diferentes aspectos da simulação. As três classes utilizadas em AmT estão descritas abaixo, seguidas de uma lista de seus atributos:
 
