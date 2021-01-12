@@ -148,7 +148,7 @@ xspec_dB = 10*np.log10(np.abs(xspec_ref)).reshape(X_plane.shape)
 
 XSpec_dB = ax_XSpec_dB.pcolormesh(X_plane, Y_plane, xspec_dB,
                                   vmax=xspec_dB.max(), vmin=xspec_dB.max()-30,
-                                  cmap='inferno')
+                                  shading='nearest', cmap='inferno')
 ax_XSpec_dB.axis('equal')
 
 ax_XSpec_dB.set_xticks([])
@@ -169,7 +169,8 @@ ax_XSpec_ph = plt.axes(rect_ax2)
 
 XSpec_ph = ax_XSpec_ph.pcolormesh(X_plane, Y_plane,
                                   np.angle(xspec_ref.reshape(X_plane.shape)),
-                                  vmin=-np.pi, vmax=np.pi, cmap='seismic')
+                                  vmin=-np.pi, vmax=np.pi, shading='nearest', 
+                                  cmap='seismic')
 ax_XSpec_ph.axis('equal')
 ax_XSpec_ph.set_xticks([])
 ax_XSpec_ph.set_yticks([])
@@ -192,7 +193,8 @@ cohere_ref = np.real((np.abs(xspec_ref)**2)
 rect_ax3 = [0.66 + left, bottom, width, height]
 ax_XSpec_Co = plt.axes(rect_ax3)
 
-XSpec_Co = ax_XSpec_Co.pcolormesh(X_plane, Y_plane, cohere_ref, vmin=0, vmax=1)
+XSpec_Co = ax_XSpec_Co.pcolormesh(X_plane, Y_plane, cohere_ref, vmin=0, vmax=1,
+                                  shading='nearest')
 ax_XSpec_Co.axis('equal')
 ax_XSpec_Co.set_xticks([])
 ax_XSpec_Co.set_yticks([])

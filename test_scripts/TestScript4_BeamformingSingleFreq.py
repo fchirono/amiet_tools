@@ -192,7 +192,8 @@ colormap = 'plasma'
 
 fig1 = plt.figure(figsize=(6., 4.8))
 map1 = plt.pcolormesh(scan_x, scan_y, 10*np.log10(A_grid/A_grid.max()),
-                      cmap=colormap, vmax=0, vmin=-dynamic_range)
+                      cmap=colormap, vmax=0, vmin=-dynamic_range,
+                      shading='nearest')
 map1.cmap.set_under('w')
 plt.title(r'Conventional Beamforming', fontsize=15)
 plt.axis('equal')
