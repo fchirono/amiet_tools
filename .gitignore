@@ -2,3 +2,8 @@ __pycache__
 *.pyc
 test_scripts/Ky_convergence_study.py
 test_scripts/line_mem_profiler.sh
+tutorial/tutorial_PT-BR/tutorial_PT-BR.aux
+tutorial/tutorial_PT-BR/tutorial_PT-BR.log
+tutorial/tutorial_PT-BR/tutorial_PT-BR.out
+tutorial/tutorial_PT-BR/tutorial_PT-BR.synctex.gz
+tutorial/tutorial_PT-BR/tutorial_PT-BR.tex
