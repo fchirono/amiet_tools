@@ -68,9 +68,58 @@
 % *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 \section{Introdução}
 
-Ruído de aerofólio: importância, mecanismos físicos, modelo analítico.
+\subsection{Contexto}
 
-Referências teóricas:
+O ruído gerado pela interação entre um escoamento turbulento e uma superfície sólida, tal como um aerofólio, é uma das principais fontes de ruído banda larga na indústria de aviação moderna. Apesar dos mecanismos físicos fundamentais desta fonte de ruído estarem bem estabelecidos, métodos eficientes para redução de ruído de interação turbulência-aerofólio ainda são objeto de estudos e pesquisas. Devido ao seu baixo custo computacional, diversos modelos analíticos são frequentemente adotados para analisar os comportamentos físicos fundamentais e escalas do problema. Entre os modelos analíticos mais populares para predição de ruído de aerofólio, o modelo de Amiet \cite{Amiet75} para um aerofólio do tipo placa plana em campo livre é frequentemente considerado um dos mais importantes devido a sua simplicidade formal e extensibilidade.
+
+Em resumo, o modelo de Amiet decompõe um escoamento turbulento em uma soma de Fourier, onde cada componente constitui uma ``rajada senoidal'', e calcula um ``salto de pressão'' distribuído sobre a superfície do aerofólio em resposta à interação com cada rajada. Seguindo a analogia acústica de Curle, a radiação acústica pode ser calculada usando fontes equivalentes - no caso fontes tipo dipolo distribuídas sobre a superfície do aerofólio - com a amplitude dos dipolos dada pelo salto de pressão. O campo acústico radiado é então calculado através de uma integral de radiação, levando-se em conta os efeitos de convecção e/ou refração do som na propagação entre a fonte e o(s) observador(es).
+
+Ao assumir que o aerofólio possui envergadura infinita, pode-se mostrar que apenas uma rajada senoidal será responsável por todo o ruído recebido por um observador distante; a expressão resultante desta simplificação relaciona a densidade espectral de potência (\emph{power spectral density} - PSD) do ruído visto pelo observador diretamente às propriedades do escoamento turbulento e à geometria do aerofólio, evitando o cálculo da distribuição de fonte acústica sobre a superfície do aerofólio e o cálculo da integral de radiação completa. Esta forma simplificada do modelo de Amiet é a mais popular, e frequentemente é suficiente para se obter tendências gerais do ruído radiado. 
+
+Porém, problemas mais avançados podem não permitir que tais aproximações sejam feitas, e exigir o cálculo explícito do campo acústico próximo ao aerofólio ou a inclusão de efeitos de envergadura finita. Sob estas condições, o modelo de Amiet requer o cálculo separado da distribuição de fontes e da integral de radiação completa, aumentando significativamente a complexidade do modelo de Amiet. Neste caso, é válido buscar uma implementação de referência do modelo de Amiet completo, permitindo que os pesquisadores possam rapidamente obter resultados confiáveis e não perder tempo com detalhes de implementação.
+
+Este documento busca introduzir o pacote \verb|amiet_tools| (abreviado por ``AmT''), uma implementação de referência do modelo de Amiet completo para ruído de interação turbulência-aerofólio, e explicar o seu uso. O pacote AmT é desenvolvido em linguagem Python e disponibilizado com uma licença de código aberto, permitindo a sua distribuição, modificação e uso por diversos usuários em múltiplos sistemas operacionais. O pacote encontra-se hospedado na plataforma GitHub através do link:
+
+\begin{itemize}
+	\item \url{https://github.com/fchirono/amiet_tools} .
+\end{itemize}
+
+
+\subsection{O modelo de Amiet}
+
+Esta seção busca descrever sucintamente o modelo analítico de Amiet para o problema de ruído de interação turbulência-aerofólio. Para mais detalhes, consulte a próxima subseção para sugestões de referências teóricas.
+
+As condições experimentais do problema estão indicadas na Figura \ref{fig:experimental_setup}: um aerofólio do tipo placa plana está imerso em um escoamento turbulento subsônico, de número de Mach $M_x = U_x/c_0$ e na direção $+x$. O aerofólio possui corda $c=2b$ e envergadura $L=2d$, e a origem do sistema de coordenadas é colocado no centro do aerofólio, com o eixo $+z$ apontando para cima (``fora da página'' na Fig. \ref{fig:experimental_setup}). Pontos no espaço ao redor do aerofólio são indicados por $\mathbf{r}=(x, y, z)$, e pontos na superfície do aerofólio são indicados com um caractere subescrito ``$_s$'', $\mathbf{r}_s = (x_s, y_s, z_s)$. O aerofólio encontra-se no plano $z_s = 0$.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{../figures/Oblique_Gust_aerofoil.pdf}
+	\caption{Experimental setup diagram, with gust incidence angle $\zeta = \arctan (k_\psi / k_\chi)$.}
+	\label{fig:experimental_setup}
+\end{figure}
+
+Um contínuo de rajadas turbulentas senoidais ``congeladas'' movem-se no plano $z=0$ com velocidade de convecção $U_x$, e cada rajada é denotada por um par de números de onda hidrodinâmicos (isto é, vorticais) longitudinal (\emph{chordwise} - na direção da corda) e transversal (\emph{spanwise} - na direção da envergadura) $(k_\chi, k_\psi)$. Assumindo a dependência temporal da forma $e^{+j \omega t}$, um ``salto'' de pressão de superfície $\Delta p$ irá se formar sobre a superfície do aerofólio em resposta à turbulência incidente, e será da forma
+
+\begin{equation}
+	\Delta p(x_s, y_s, \omega) =  2 \pi \rho_0 \int_{-\infty}^{+\infty} w(\kappa_\chi, k_\psi) \ g(x_s, \kappa_\chi, k_\psi) e^{-j k_\psi y_s} \ud k_\psi,
+	\label{eq:DeltaP_MultGusts_Freq}
+\end{equation}
+
+onde $w(k_\chi, k_\psi)$ é a amplitude da rajada, $\kappa_\chi = \omega/U_x$ é o número de onda longitudinal da rajada na frequência $\omega = 2 \pi f$, e $g$ é o salto de pressão não-dimensional sobre a corda $x_s$ devido a cada componente $(\kappa_\chi, k_\psi)$.
+
+Porém, como turbulência é um fenômeno aleatório, esta deve ser analisada de forma estatística. A densidade espectral de potência cruzada (\emph{cross-power spectral density} - CSD) do salto de pressão de superfície entre dois pontos $(x_s,y_s)$ e $(x_s', y_s')$ é dado por
+
+\vspace{-15pt}
+\begin{IEEEeqnarray}{rCl}
+	S_{\Delta p \Delta p'} (x_s, x_s', y_s, y_s', \omega) & = & \lim_{T \rightarrow \infty} \left[ \frac{\pi}{T} \mathrm{E} \left\{ \Delta p(x_s, y_s, \omega) \Delta p^*(x_s', y_s', \omega) \right\} \right] \\
+	& = &  (2 \pi \rho_0)^2 U_x \int_{-\infty}^{+\infty} \Phi_{ww}(\kappa_\chi, k_\psi) g(x_s, \kappa_\chi, k_\psi) g^*(x_s', \kappa_\chi, k_\psi) e^{-j k_\psi (y_s - y_s')} \ud k_\psi,
+	\label{eq:SurfPressure_CSD}
+\end{IEEEeqnarray}
+
+onde $\Phi_{ww}(k_\chi, k_\psi)$ é a densidade espectral de número de onda da turbulência incidente.
+
+
+\subsection{Referências Teóricas}
 
 \begin{itemize}
 	\item R. Amiet, ``\emph{Acoustic radiation from an airfoil in a turbulent stream}'', Journal of Sound and Vibration, Vol. 41, No. 4:407–420, 1975 \cite{Amiet75};
@@ -85,6 +134,8 @@ Referências teóricas:
 \end{itemize}
 
 
+
+
 % *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 \section{Usando o pacote}
 
@@ -94,11 +145,11 @@ O pacote \verb|amiet_tools| (abreviado por ``AmT'') foi desenvolvido em Python 3
 
 %Assim como outros programas de computação científica, o pacote AmT exige  certos recursos computacionais. Por exemplo, um aerofólio cuja superfície é discretizada com $(N_x, N_y)$ pontos terá a sua matriz de espectro cruzado (CSM) com $(N_x \times N_y)^2$ números complexos de precisão dupla (\verb|numpy.complex128|, 128 bits por número complexo), ocupando $(N_x \times N_y)^2 \times 128$ bits de memória RAM \emph{por frequência}. A amostragem padrão do pacote AmT, com $N_x = 100$ e $N_y = 101$, resultará em uma CSM que ocupa aproximadamente 1.6 GB por frequência. 
 
-\subsection{Definindo variáveis com arquivos \texttt{.txt}}
+\subsection{Inserindo dados experimentais}
 
 O pacote AmT utiliza dois arquivos de texto contendo as variáveis relacionadas às condições do experimento e as variáveis relacionadas à geometria do aerofólio. Usaremos como exemplo os dois arquivos de configuração do teste ``DARP2016'', realizado no túnel de vento DARP da Universidade de Southampton, Reino Unido, e disponíveis no repositório GitHub do projeto.
 
-O primeiro arquivo chama-se \verb|DARP2016_TestSetup.txt|, e os seus conteúdos estão indicados na listagem \ref{lst:TestSetup} abaixo; note que linhas vazias ou iniciadas com o caractere ``\#'' são ignoradas. O programa lerá os valores em cada linha do arquivo, e os interpretará conforme indicado nas respectivas linhas.
+O primeiro arquivo chama-se \verb|DARP2016_TestSetup.txt|, e os seus conteúdos estão indicados na listagem \ref{lst:TestSetup} abaixo; note que linhas vazias são ignoradas, e o caractere ``\#'' indica comentários. O programa lerá os valores em cada linha do arquivo, e os interpretará conforme indicado nas respectivas linhas.
 
 \begin{lstlisting}[caption={Arquivo \texttt{DARP2016\_TestSetup.txt}}, label={lst:TestSetup}]
 # amiet_tools Test Setup file
