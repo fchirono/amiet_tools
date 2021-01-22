@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7400 64-bit) (preloaded format=pdflatex 2020.4.30)  13 JAN 2021 15:38
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7400 64-bit) (preloaded format=pdflatex 2020.4.30)  21 JAN 2021 12:08
 entering extended mode
 **./tutorial_PT-BR.tex
 (tutorial_PT-BR.tex
@@ -641,66 +641,64 @@ File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <10.95> on input line 84.
-<../figures/Oblique_Gust_aerofoil.pdf, id=69, 483.8075pt x 483.8075pt>
+ [2]
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <9> on input line 112.
+<../figures/Oblique_Gust_aerofoil.pdf, id=85, 483.8075pt x 483.8075pt>
 File: ../figures/Oblique_Gust_aerofoil.pdf Graphic file (type pdf)
 <use ../figures/Oblique_Gust_aerofoil.pdf>
 Package pdftex.def Info: ../figures/Oblique_Gust_aerofoil.pdf  used on input li
-ne 96.
+ne 133.
 (pdftex.def)             Requested size: 273.14923pt x 273.1598pt.
+ [3
 
-Overfull \hbox (5.43744pt too wide) in alignment at lines 113--117
- [] [] [] [][]
- []
-
-[2]
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 144.
- [3 <../figures/Oblique_Gust_aerofoil.pdf>]
+]
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 154.
- [4]
+nput line 162.
+ [4 <../figures/Oblique_Gust_aerofoil.pdf>]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-194.
-
-("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmtt.fd"
+202.
+ ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmtt.fd"
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-) [5]
+) [5] [6]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 255.
+put line 265.
 
-Underfull \hbox (badness 10000) in paragraph at lines 283--284
+Underfull \hbox (badness 10000) in paragraph at lines 293--294
 [] $\OML/lmm/m/it/10.95 S[]\OT1/lmr/m/n/10.95 (\OT1/lmr/bx/n/10.95 r[]\OML/lmm/
 m/it/10.95 ; \OT1/lmr/bx/n/10.95 r[]\OT1/lmr/m/n/10.95 ) \OMS/lmsy/m/n/10.95   
 \OT1/lmr/m/n/10.95 4\OML/lmm/m/it/10.95  [] \OMS/lmsy/m/n/10.95  [] 
  []
 
-[6] [7] [8
+[7
+
+] [8
 
 ] (tutorial_PT-BR.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 342.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 352.
  [9
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 342.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 352.
  (tutorial_PT-BR.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 342.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 342.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 352.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 352.
 Package rerunfilecheck Info: File `tutorial_PT-BR.out' has not changed.
-(rerunfilecheck)             Checksum: B5CE056845D2D86CEECC99F9B5800EFD;690.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 342.
+(rerunfilecheck)             Checksum: 9CF71A8926A57712C8B910E5FE20F2AD;703.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 352.
  ) 
 Here is how much of TeX's memory you used:
- 12337 strings out of 480896
- 184109 string characters out of 2908230
- 760295 words of memory out of 3000000
+ 12338 strings out of 480896
+ 184103 string characters out of 2908230
+ 750295 words of memory out of 3000000
  27885 multiletter control sequences out of 15000+200000
- 618847 words of font info for 75 fonts, out of 3000000 for 9000
+ 612970 words of font info for 73 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 50i,8n,48p,999b,1429s stack positions out of 5000i,500n,10000p,200000b,50000s
-{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Program Fil
-es/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Program Files/MiKTeX 2.9/fonts/
-enc/dvips/lm/lm-ec.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathi
-t.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathex.enc}{C:/Program
+ 50i,8n,48p,1004b,1914s stack positions out of 5000i,500n,10000p,200000b,50000s
+{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathex.enc}{C:/Program Fil
+es/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fon
+ts/enc/dvips/lm/lm-ts1.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-e
+c.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit.enc}{C:/Program
  Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-rm.enc}<C:/Program Files/MiKTeX 2.9/fon
 ts/type1/public/lm/lmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/l
 m/lmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmex10.pfb><C:/
@@ -717,9 +715,9 @@ lic/lm/lmsy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy8.pfb><
 C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtt10.pfb><C:/Program Files/
 MiKTeX 2.9/fonts/type1/public/lm/lmtt12.pfb><C:/Program Files/MiKTeX 2.9/fonts/
 type1/public/lm/lmtt9.pfb>
-Output written on tutorial_PT-BR.pdf (9 pages, 419863 bytes).
+Output written on tutorial_PT-BR.pdf (9 pages, 418625 bytes).
 PDF statistics:
- 315 PDF objects out of 1000 (max. 8388607)
- 98 named destinations out of 1000 (max. 500000)
+ 318 PDF objects out of 1000 (max. 8388607)
+ 101 named destinations out of 1000 (max. 500000)
  94 words of extra memory for PDF output out of 10000 (max. 10000000)
 

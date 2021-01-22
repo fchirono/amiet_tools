@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{9}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -19,6 +19,14 @@ Fabio {Casagrande Hirono}, Phillip Joseph, and Filippo Fazi.
 \newblock In \emph{26th {AIAA/CEAS} Aeroacoustics Conference}, 2020.
 \newblock URL \url{https://doi.org/10.2514/6.2020-2544}.
 \newblock {AIAA} Paper 2020-2544.
+
+\bibitem[Clair et~al.(2013)Clair, Polacsek, Garrec, Reboul, Gruber, and
+  Joseph]{Clair13}
+Vincent Clair, Cyril Polacsek, Thomas~Le Garrec, Gabriel Reboul, Mathieu
+  Gruber, and Phillip Joseph.
+\newblock Experimental and numerical investigation of turbulence-airfoil noise
+  reduction using wavy edges.
+\newblock \emph{AIAA Journal}, 51\penalty0 (11):\penalty0 2695--2713, 2013.
 
 \bibitem[Reboul(2010)]{Reboul10}
 Gabriel Reboul.
