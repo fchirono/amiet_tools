@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7400 64-bit) (preloaded format=pdflatex 2020.4.30)  27 JAN 2021 16:56
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7400 64-bit) (preloaded format=pdflatex 2020.4.30)  28 JAN 2021 12:50
 entering extended mode
 **./tutorial_PT-BR.tex
 (tutorial_PT-BR.tex
@@ -642,71 +642,76 @@ File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <10.95> on input line 84.
  [2]
-<../figures/Oblique_Gust_aerofoil.pdf, id=95, 483.8075pt x 483.8075pt>
+<../figures/Oblique_Gust_aerofoil.pdf, id=115, 483.8075pt x 483.8075pt>
 File: ../figures/Oblique_Gust_aerofoil.pdf Graphic file (type pdf)
 <use ../figures/Oblique_Gust_aerofoil.pdf>
 Package pdftex.def Info: ../figures/Oblique_Gust_aerofoil.pdf  used on input li
-ne 126.
+ne 122.
 (pdftex.def)             Requested size: 273.14923pt x 273.1598pt.
- [3
-
-]
-Overfull \hbox (21.2543pt too wide) in alignment at lines 167--171
+<../figures/gust_ProfGil_ITA_aula06.jpg, id=117, 1004.75375pt x 451.6875pt>
+File: ../figures/gust_ProfGil_ITA_aula06.jpg Graphic file (type jpg)
+<use ../figures/gust_ProfGil_ITA_aula06.jpg>
+Package pdftex.def Info: ../figures/gust_ProfGil_ITA_aula06.jpg  used on input 
+line 139.
+(pdftex.def)             Requested size: 364.19667pt x 163.7239pt.
+ [3 <../figures/Oblique_Gust_aerofoil.pdf>]
+Overfull \hbox (21.2543pt too wide) in alignment at lines 171--175
  [] [] [] [][]
  []
 
-[4 <../figures/Oblique_Gust_aerofoil.pdf>]
-Overfull \hbox (30.65233pt too wide) in alignment at lines 177--181
+[4 <../figures/gust_ProfGil_ITA_aula06.jpg>]
+Overfull \hbox (30.65233pt too wide) in alignment at lines 181--185
  [] [] [] [][]
  []
 
 [5]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 209.
+(Font)              <9> on input line 213.
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 219.
+nput line 235.
  [6
 
 ]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-259.
+283.
  ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmtt.fd"
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 ) [7] [8]
+[9]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 322.
+put line 356.
 
-Underfull \hbox (badness 10000) in paragraph at lines 350--351
+Underfull \hbox (badness 10000) in paragraph at lines 384--385
 [] $\OML/lmm/m/it/10.95 S[]\OT1/lmr/m/n/10.95 (\OT1/lmr/bx/n/10.95 r[]\OML/lmm/
 m/it/10.95 ; \OT1/lmr/bx/n/10.95 r[]\OT1/lmr/m/n/10.95 ) \OMS/lmsy/m/n/10.95   
 \OT1/lmr/m/n/10.95 4\OML/lmm/m/it/10.95  [] \OMS/lmsy/m/n/10.95  [] 
  []
 
-[9
+[10
 
-] [10
+] [11
 
 ] (tutorial_PT-BR.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 409.
- [11
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 443.
+ [12
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 409.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 443.
  (tutorial_PT-BR.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 409.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 409.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 443.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 443.
 Package rerunfilecheck Info: File `tutorial_PT-BR.out' has not changed.
-(rerunfilecheck)             Checksum: DCA2D312CDBA6D23D4D3AD2C27E345FD;986.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 409.
+(rerunfilecheck)             Checksum: E98D691CC88A86B05BCE2FD12A13E3A9;1450.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 443.
  ) 
 Here is how much of TeX's memory you used:
- 12356 strings out of 480896
- 184337 string characters out of 2908230
- 760295 words of memory out of 3000000
- 27890 multiletter control sequences out of 15000+200000
- 618847 words of font info for 75 fonts, out of 3000000 for 9000
+ 12380 strings out of 480896
+ 184897 string characters out of 2908230
+ 750295 words of memory out of 3000000
+ 27904 multiletter control sequences out of 15000+200000
+ 619264 words of font info for 76 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 50i,8n,48p,1001b,1429s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 50i,8n,48p,1011b,1916s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Program Files/
 MiKTeX 2.9/fonts/enc/dvips/lm/lm-ec.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/
 dvips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathe
@@ -727,9 +732,9 @@ lic/lm/lmsy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy8.pfb><
 C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtt10.pfb><C:/Program Files/
 MiKTeX 2.9/fonts/type1/public/lm/lmtt12.pfb><C:/Program Files/MiKTeX 2.9/fonts/
 type1/public/lm/lmtt9.pfb>
-Output written on tutorial_PT-BR.pdf (11 pages, 435073 bytes).
+Output written on tutorial_PT-BR.pdf (12 pages, 496161 bytes).
 PDF statistics:
- 348 PDF objects out of 1000 (max. 8388607)
- 112 named destinations out of 1000 (max. 500000)
- 118 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 378 PDF objects out of 1000 (max. 8388607)
+ 119 named destinations out of 1000 (max. 500000)
+ 155 words of extra memory for PDF output out of 10000 (max. 10000000)
 

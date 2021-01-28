@@ -62,7 +62,7 @@
 \maketitle
 
 \begin{abstract}
-	O pacote \verb|amiet_tools| (AmT), escrito em linguagem Python, é uma implementação do modelo analítico de Amiet \cite{Amiet75} para predição de ruído de interação turbulência-aerofólio, com extensões. As funções permitem o cálculo do ``salto'' de pressão na superfície do aerofólio (i.e. a distribuição da fonte acústica) gerado em resposta à turbulência incidente, e do campo acústico radiado por esta interação. A turbulência incidente pode ser uma única rajada senoidal, ou uma soma de rajadas incoerentes com amplitudes definidas por um espectro energético. Outras funções includem o modelamento de efeitos de convecção e refração na propagação sonora para modelar medições acústicas realizadas em túneis de vento abertos ou fechados. Uma publicação de referência está disponível \cite{Casagrande_etal2020}, e o pacote pode ser encontrado através do link \url{https://github.com/fchirono/amiet_tools}.
+	O pacote \verb|amiet_tools| (AmT), escrito em linguagem Python, é uma implementação do modelo analítico de Amiet \cite{Amiet75} para predição de ruído de interação turbulência-aerofólio, com extensões. As funções permitem o cálculo da flutuação de pressão na superfície do aerofólio (i.e. a distribuição da fonte acústica) gerado em resposta à turbulência incidente, e do campo acústico radiado por esta interação. A turbulência incidente pode ser uma única rajada senoidal, ou uma soma incoerente de rajadas com amplitudes definidas por um espectro energético. Outras funções includem a modelagem de efeitos de convecção e refração na propagação sonora para modelar medições acústicas realizadas em túneis de vento abertos ou fechados. Uma publicação de referência está disponível \cite{Casagrande_etal2020}, e o pacote pode ser encontrado através do link \url{https://github.com/fchirono/amiet_tools}.
 \end{abstract}
 
 % *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -72,13 +72,13 @@
 
 O ruído gerado pela interação entre um escoamento turbulento e uma superfície sólida, tal como um aerofólio, é uma das principais fontes de ruído banda larga na indústria de aviação moderna. Apesar dos mecanismos físicos fundamentais desta fonte de ruído estarem bem estabelecidos, métodos eficientes para redução de ruído de interação turbulência-aerofólio ainda são objeto de estudos e pesquisas. Devido ao seu baixo custo computacional, diversos modelos analíticos são frequentemente adotados para analisar os comportamentos físicos fundamentais e escalas do problema. Entre os modelos analíticos mais populares para predição de ruído de aerofólio, o modelo de Amiet \cite{Amiet75} para um aerofólio do tipo placa plana em campo livre é frequentemente considerado um dos mais importantes devido a sua simplicidade formal e extensibilidade.
 
-Em resumo, o modelo de Amiet decompõe um escoamento turbulento em uma soma de Fourier, onde cada componente constitui uma ``rajada'' senoidal, e calcula o ``salto de pressão'' distribuído sobre a superfície do aerofólio em resposta à interação com cada rajada. Seguindo a analogia acústica de Ffowcs Williams e Hawkings, a radiação acústica pode ser calculada usando fontes pontuais tipo dipolo distribuídas sobre a superfície do aerofólio, cuja amplitude é dada pelo salto de pressão. O campo acústico radiado é então calculado através de uma integral de radiação, levando-se em conta os efeitos de convecção e/ou refração do som na propagação entre a fonte e o(s) observador(es).
+Em resumo, o modelo de Amiet decompõe um escoamento turbulento em uma soma de Fourier, onde cada componente constitui uma ``rajada'' senoidal, e calcula a flutuação de pressão - também denominada ``salto de pressão'' - distribuída sobre a superfície do aerofólio em resposta à interação com cada rajada. Seguindo a analogia acústica de Ffowcs Williams e Hawkings, a radiação acústica pode ser calculada usando uma distribuição de fontes tipo dipolo pontual sobre a superfície do aerofólio, cuja amplitude é dada pelo salto de pressão. O campo acústico radiado é então calculado através de uma integral de radiação, levando-se em conta os efeitos de convecção e/ou refração do som na propagação entre a fonte e o(s) observador(es).
 
 Ao assumir que o aerofólio possui envergadura infinita, pode-se mostrar que uma única rajada senoidal será responsável por todo o ruído recebido por um observador distante. A expressão resultante desta simplificação relaciona a densidade espectral de potência (\emph{power spectral density} - PSD) do ruído visto pelo observador diretamente às propriedades do escoamento turbulento e à geometria do aerofólio, evitando assim o cálculo explícito da distribuição de fonte acústica sobre a superfície do aerofólio e da integral de radiação completa. Esta forma simplificada do modelo de Amiet é a mais popular, e frequentemente é suficiente para se obter tendências gerais do ruído radiado. 
 
-Porém, tais aproximações podem ser simplórias demais para problemas mais avançados, tais como o cálculo explícito do campo acústico próximo ao aerofólio ou a inclusão de efeitos de envergadura finita. Sob estas condições, o modelo de Amiet requer o cálculo separado da distribuição de fontes e da integral de radiação completa, aumentando significativamente a complexidade do modelo de Amiet. Neste caso, é interessante buscar uma implementação de referência do modelo de Amiet completo, permitindo que os pesquisadores possam rapidamente obter resultados confiáveis e não perder tempo com detalhes de implementação.
+Porém, tais aproximações podem ser simplórias demais para problemas mais avançados, tais como o cálculo explícito do campo acústico próximo ao aerofólio ou a inclusão de efeitos de envergadura finita. Sob estas condições, o modelo de Amiet requer o cálculo separado da distribuição de fontes e da integral de radiação, aumentando significativamente a complexidade do modelo de Amiet. Neste caso, é interessante buscar uma implementação de referência do modelo de Amiet completo, permitindo que os pesquisadores possam obter resultados confiáveis rapidamente e não perder tempo com detalhes de implementação.
 
-Este documento busca introduzir o pacote \verb|amiet_tools| (abreviado por ``AmT''), uma implementação de referência do modelo de Amiet completo para ruído de interação turbulência-aerofólio, e explicar o seu uso. O pacote AmT é desenvolvido em linguagem Python e disponibilizado com uma licença de código aberto, permitindo a sua distribuição, modificação e uso por diversos usuários em múltiplos sistemas operacionais. O pacote encontra-se hospedado na plataforma GitHub através do link:
+Este documento busca introduzir o pacote \verb|amiet_tools| (abreviado por ``AmT''), uma implementação de referência do modelo de Amiet completo para ruído de interação turbulência-aerofólio \cite{Casagrande_etal2020}, e explicar o seu uso. O pacote AmT é desenvolvido em linguagem Python e disponibilizado com uma licença de código aberto, permitindo a sua distribuição, modificação e uso por diversos usuários em múltiplos sistemas operacionais. O pacote encontra-se hospedado na plataforma GitHub através do link:
 
 \begin{itemize}
 	\item \url{https://github.com/fchirono/amiet_tools} .
@@ -102,24 +102,20 @@ Este documento não busca explicar completamente a teoria por trás do modelo de
 \end{itemize}
 
 
-% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-\clearpage
-\newpage
+\subsection{O modelo de Amiet}
 
-\section{O modelo de Amiet}
-
-Esta seção busca descrever a implementação numérica do modelo de Amiet usada no pacote AmT. O modelo requer como entrada as condições experimentais do problema: as propriedades do escoamento turbulento, a geometria do aerofólio, e a localização dos observadores no campo acústico. Todos os cálculos são realizados no domínio da frequência (isto é, assume-se que todos os pontos no aerofólio oscilam harmonicamente), e a cada frequência de interesse são realizadas três etapas:
+Esta seção busca descrever os principais conceitos por trás do modelo de Amiet. O modelo requer como entrada as condições experimentais do problema: as propriedades do escoamento turbulento, a geometria do aerofólio, e a localização dos observadores no campo acústico. Todos os cálculos são realizados no domínio da frequência (isto é, assume-se que todas as variáveis acústicas oscilam harmonicamente), e a cada frequência de interesse são realizadas três etapas:
 
 \begin{enumerate}
-	\item Decomposição do escoamento turbulento em múltiplas rajadas senoidais, caracterizadas por seu número de onda lateral $k_\psi$;
-	\item Cálculo do ``salto'' de pressão sobre o aerofólio $\Delta p$ em resposta a cada rajada turbulenta;
+	\item Decomposição do escoamento turbulento em múltiplas rajadas senoidais, cada uma caracterizada por seu número de onda lateral $k_\psi$;
+	\item Cálculo do ``salto'' de pressão $\Delta p$ sobre o aerofólio em resposta a cada rajada turbulenta;
 	\item Cálculo do campo acústico radiado através de uma integral de radiação, levando em consideração efeitos de convecção e/ou refração na propagação do som.
 \end{enumerate}
 
 
-Ao considerarmos a interação do aerofólio com uma rajada única, tanto a distribuição de pressão sobre o aerofólio quanto o ruído radiado a partir desta são determinísticos, isto é, coerentes: nesse caso, haverá interferência construtiva e destrutiva entre os sons gerados por cada ponto. Porém, as múltiplas rajadas que compõem um escoamento turbulento são incoerentes entre si, e a soma das contribuições de diferentes rajadas será um processo estocástico. Portanto, o ruído gerado também será de natureza estocástica, e deve ser analizado de forma probabilística através da função densidade espectral cruzada (\emph{cross spectral density} - CSD).
+%Ao considerarmos a interação do aerofólio com uma rajada única, tanto a distribuição de pressão sobre o aerofólio quanto o ruído radiado a partir desta são determinísticos, isto é, coerentes: nesse caso, haverá interferência construtiva e destrutiva entre os sons gerados por cada ponto. Porém, as múltiplas rajadas que compõem um escoamento turbulento são incoerentes entre si, e a soma das contribuições de diferentes rajadas será um processo estocástico. Portanto, o ruído gerado também será de natureza estocástica, e deve ser analizado de forma probabilística através da função densidade espectral cruzada (\emph{cross spectral density} - CSD).
 
-As condições experimentais do problema estão indicadas na Figura \ref{fig:experimental_setup}: um aerofólio do tipo placa plana, de espessura infinitesimal, está imerso em um escoamento turbulento subsônico de velocidade $U_x$ e número Mach $M_x = U_x/c_0$ na direção $+x$. O aerofólio possui corda $c=2b$ e envergadura $L=2d$, e a origem do sistema de coordenadas é colocado no centro do aerofólio, com o eixo $+z$ perpendicular ao aerofólio (apontando ``fora da página'' na Fig. \ref{fig:experimental_setup}). Pontos no espaço ao redor do aerofólio são indicados por um vetor $\mathbf{r}=(x, y, z)$, e pontos na superfície do aerofólio são indicados com um caractere subescrito ``$_s$'', da forma $\mathbf{r}_s = (x_s, y_s, z_s)$. O aerofólio encontra-se no plano $z_s = 0$. A análise a seguir encontra-se no domínio da frequência $\omega = 2 \pi f$, e assume-se uma dependência temporal implícita da forma $e^{+j \omega t}$.
+As condições experimentais do problema estão indicadas na Figura \ref{fig:experimental_setup}: um aerofólio do tipo placa plana retangular, de espessura infinitesimal, está imerso em um escoamento turbulento subsônico de velocidade $U_x$ e número Mach $M_x = U_x/c_0$ na direção $+x$. O aerofólio possui corda $c=2b$ e envergadura $L=2d$, e a origem do sistema de coordenadas é colocado no centro do aerofólio, com o eixo $+z$ perpendicular ao aerofólio (apontando ``fora da página'' na Fig. \ref{fig:experimental_setup}). Pontos no espaço ao redor do aerofólio são indicados por um vetor $\mathbf{r}=(x, y, z)$, e pontos na superfície do aerofólio são indicados com um caractere subescrito ``$_s$'', da forma $\mathbf{r}_s = (x_s, y_s, z_s)$. O aerofólio encontra-se no plano $z_s = 0$. A análise a seguir encontra-se no domínio da frequência angular $\omega = 2 \pi f$, e a dependência temporal implícita é da forma $e^{+j \omega t}$.
 
 \begin{figure}[htbp]
 	\centering
@@ -128,15 +124,23 @@ As condições experimentais do problema estão indicadas na Figura \ref{fig:exp
 	\label{fig:experimental_setup}
 \end{figure}
 
-\subsection{Interação com uma rajada única}
+\subsubsection{Interação com uma rajada única}
 
-Um espectro contínuo de rajadas turbulentas senoidais ``congeladas'' move-se no plano $z=0$ com velocidade de convecção $U_x$, e cada rajada é definida por um par de números de onda hidrodinâmicos (isto é, vorticais) longitudinal e lateral $(k_\chi, k_\psi)$. Uma rajada única representa uma perturbação de velocidade vertical, e é da forma
+Um espectro contínuo de rajadas turbulentas senoidais ``congeladas'' move-se no plano $z=0$ com velocidade de convecção $U_x$, e cada rajada é definida por um par de números de onda hidrodinâmicos (isto é, vorticais) longitudinal e lateral $(k_\chi, k_\psi)$. Uma rajada única representa uma perturbação de velocidade vertical, conforme indicado na Figura \ref{fig:gust_airfoil_2D}, e é da forma
 
 \begin{equation}
 w(x, y, \omega) = \hat{w}_0(\kappa_\chi, k_\psi) e^{-j\kappa_\chi x} e^{-j k_\psi y },
 \end{equation}
 
-\noindent onde $\kappa_\chi = \omega/U_x$ é o número de onda longitudinal da rajada, associado diretamente à frequência do ruído radiado. Note, porém, que o número de onda lateral $k_\psi$ pode assumir qualquer valor real em qualquer frequência, e portanto em problemas envolvendo múltiplas rajadas será necessário integrar a contribuição dos diferentes números de onda laterais a cada frequência.
+\noindent onde $\kappa_\chi = \omega/U_x$ é o número de onda longitudinal da rajada, associado unicamente à frequência do ruído radiado, e $\hat{w}_0$ é a amplitude desta rajada. %Note que o número de onda lateral $k_\psi$ pode assumir qualquer valor real em qualquer frequência, e portanto em problemas envolvendo múltiplas rajadas será necessário integrar a contribuição dos diferentes números de onda laterais a cada frequência.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.8\textwidth]{../figures/gust_ProfGil_ITA_aula06.jpg}
+	\caption{Diagrama 2D indicando uma perturbação de velocidade vertical $w(x, t)$ (``rajada'' turbulenta) interagindo com um aerofólio. (Figura reproduzida a partir dos materiais da disciplina \emph{AA-220 - Aerodinâmica Não Estacionária}, Prof. Dr. Roberto Gil Annes da Silva, ITA - \url{http://www.aer.ita.br/~gil/disciplinas/aa-220/aa2206.pdf}).}
+	\label{fig:gust_airfoil_2D}
+\end{figure}
+
 
 Em resposta à incidência de uma única rajada turbulenta, haverá uma flutuação na pressão sobre a superfície do aerofólio, denominada aqui de ``salto'' de pressão $\Delta p$. Este salto de pressão será da forma
 
@@ -147,19 +151,19 @@ Em resposta à incidência de uma única rajada turbulenta, haverá uma flutuaç
 
 \noindent onde $g$ é o salto de pressão não-dimensional sobre a corda $x_s$ devido a uma rajada $(\kappa_\chi, k_\psi)$.
 
-Segundo a analogia de Ffowcs Williams \& Hawkings, o ruído gerado por esta interação pode ser calculado usando uma distribuição equivalente de fontes pontuais tipo dipolo, com a flutuação de pressão $\Delta p$ sobre o aerofólio exercendo o papel de amplitude dos dipolos equivalentes. Analiticamente, escrevemos
+Segundo a analogia de Ffowcs Williams e Hawkings, o ruído gerado por esta interação pode ser calculado usando uma distribuição equivalente de fontes pontuais tipo dipolo, com a flutuação de pressão $\Delta p$ sobre o aerofólio exercendo o papel de amplitude dos dipolos equivalentes. Analiticamente, a pressão acústica $p(\mathbf{r}, \omega)$ recebida por um observador no ponto $\mathbf{r} = (x, y, z)$ é dada por
 
 \begin{equation}
 	p(\mathbf{r}, \omega) = \int_{-d}^{+d} \int_{-b}^{+b} \Delta p(\mathbf{r}_s, \omega) \frac{\partial }{\partial z_s} G_{U_x}(\mathbf{r} | \mathbf{r}_s, \omega) \ud x_s \ud y_s,
 \end{equation}
 
-\noindent onde o termo $\partial G_{U_x}(\mathbf{r} | \mathbf{r}_s, \omega) / \partial z_s$ representa a função de transferência de uma fonte tipo dipolo localizada em $\mathbf{r}_s$ e um observador localizado em $\mathbf{r}$, onde ambos estão imersos em um escoamento uniforme de velocidade $U_x$ e portanto inclui efeitos de convecção nas ondas acústicas. Alternativamente, se as condições experimentais adotam um túnel de vento aberto, esta função pode ser modificada para incluir efeitos de refração das ondas acústicas na camada cisalhante gerada entre o escoamento gerado pelo túnel e o ar estacionário ao redor deste.
+\noindent onde o termo $\partial G_{U_x}(\mathbf{r} | \mathbf{r}_s, \omega) / \partial z_s$ representa a função de transferência de uma fonte tipo dipolo localizada em $\mathbf{r}_s$ e o observador em $\mathbf{r}$, onde ambos estão imersos em um escoamento uniforme de velocidade $U_x$ e portanto inclui efeitos de convecção nas ondas acústicas. Se as condições experimentais adotam um túnel de vento aberto, esta função pode ser modificada para incluir efeitos de refração das ondas acústicas na camada cisalhante gerada entre o escoamento gerado pelo túnel e o ar estacionário ao redor deste.
 
 Conforme descrito acima, a flutuação de pressão $\Delta p$ em resposta a uma única rajada turbulenta será completamente coerente - isto é, todos os pontos na superfície do aerofólio flutuarão perfeitamente em fase, de forma estatisticamente \emph{dependente}, e o campo acústico $p$ gerado por esta interação exibirá efeitos de interferência construtiva e destrutiva entre as diferentes regiões do aerofólio.
 
-\subsection{Interação com múltiplas rajadas}
+\subsubsection{Interação com múltiplas rajadas}
 
-Conforme descrito anteriormente, um escoamento turbulento isotrópico é um processo estocástico, e pode ser decomposto em um espectro contínuo de rajadas turbulentas incoerentes (estatisticamente \emph{independentes}) entre si. Portanto, a soma das contribuições de diferentes rajadas deve ser realizada de forma probabilística através das funções densidade espectral cruzada (CSD) da flutuação de pressão e do campo acústico, que capturam as relações de magnitude e fase média destas grandezas entre dois pontos arbitrários.
+Um escoamento turbulento isotrópico é um processo estocástico, e pode ser decomposto em um espectro contínuo de rajadas turbulentas incoerentes - isto é, estatisticamente \emph{independentes} entre si. Portanto, a soma das contribuições de diferentes rajadas deve ser realizada de forma probabilística através das funções densidade espectral cruzada (CSD) da flutuação de pressão $S_{\Delta p \Delta p'}$ e do campo acústico $S_{pp'}$, que capturam as relações de magnitude e fase média destas grandezas entre dois pontos arbitrários.
 
 A densidade espectral cruzada da flutuação de pressão $S_{\Delta p \Delta p'} (x_s, x_s', y_s, y_s', \omega)$ entre dois pontos $(x_s,y_s)$ e $(x_s', y_s')$ na superfície do aerofólio é dada por
 
@@ -170,7 +174,7 @@ A densidade espectral cruzada da flutuação de pressão $S_{\Delta p \Delta p'}
 	\label{eq:SurfPressure_CSD}
 \end{IEEEeqnarray}
 
-\noindent onde $\Phi_{ww}(k_\chi, k_\psi)$ é a densidade espectral de número de onda da turbulência incidente. Observe a integração sobre os números de onda laterais $k_\psi$ da turbulência.
+\noindent onde $\Phi_{ww}(k_\chi, k_\psi)$ é a densidade espectral de número de onda da turbulência incidente. Observe que esta CSD é obtida a partir da integração sobre todos os números de onda laterais $k_\psi$ da turbulência, e portanto incorpora os efeitos de múltiplas rajadas.
 
 Por sua vez, a densidade espectral cruzada do campo acústico $S_{pp'}(\mathbf{r}, \mathbf{r}', \omega)$ entre dois observadores em $\mathbf{r}$ e $\mathbf{r}'$ é dada por
 
@@ -182,15 +186,15 @@ Por sua vez, a densidade espectral cruzada do campo acústico $S_{pp'}(\mathbf{r
 
 \subsubsection{Densidade espectral de número de onda da turbulência}
 
-Para a densidade espectral de número de onda da turbulência $\Phi_{ww}(k_\chi, k_\psi)$, pode-se por exemplo adotar o espectro energético de número de onda de von Karman \cite{Amiet75}, definido a partir da velocidade média quadrática de turbulência $\overline{w^2}$ e da escala de comprimento integral $\Lambda$ da forma
+Para a densidade espectral de número de onda da turbulência $\Phi_{ww}(k_\chi, k_\psi)$, pode-se por exemplo adotar o espectro energético de número de onda de von Karman \cite{Amiet75}, definido a partir da velocidade vertical média quadrática $\overline{w^2}$ e da escala de comprimento integral $\Lambda$ do escoamento. Esta densidade espectral possui a forma
 
 \begin{equation}
-\Phi_{ww}(k_\chi, k_\psi) = \frac{4}{9 \pi} \frac{\overline{w^2}}{k_e^2} \frac{\check{k}_\chi^2 + \check{k}_\psi^2}{\left(1 + \check{k}_\chi^2 + \check{k}_\psi^2 \right)^{7/3}},
-\label{eq:vonKarmanModel}
+	\Phi_{ww}(k_\chi, k_\psi) = \frac{4}{9 \pi} \frac{\overline{w^2}}{k_e^2} \frac{\check{k}_\chi^2 + \check{k}_\psi^2}{\left(1 + \check{k}_\chi^2 + \check{k}_\psi^2 \right)^{7/3}},
+	\label{eq:vonKarmanModel}
 \end{equation}
 
 \begin{equation}
-k_e = \frac{\sqrt{\pi}}{\Lambda} \frac{\Gamma (5/6)}{\Gamma (1/3)},
+	k_e = \frac{\sqrt{\pi}}{\Lambda} \frac{\Gamma (5/6)}{\Gamma (1/3)},
 \end{equation}
 
 \noindent onde $\check{k}_i = k_i/k_e$ e $\Gamma (\cdot)$ é a função gama. Outros modelos, tais como o de Liepmann, também são possíveis.
@@ -210,13 +214,25 @@ O pacote \verb|amiet_tools| (abreviado por ``AmT'') foi desenvolvido em linguage
 
 %Assim como outros programas de computação científica, o pacote AmT exige  certos recursos computacionais. Por exemplo, um aerofólio cuja superfície é discretizada com $(N_x, N_y)$ pontos terá a sua matriz de espectro cruzado (CSM) com $(N_x \times N_y)^2$ números complexos de precisão dupla (\verb|numpy.complex128|, 128 bits por número complexo), ocupando $(N_x \times N_y)^2 \times 128$ bits de memória RAM \emph{por frequência}. A amostragem padrão do pacote AmT, com $N_x = 100$ e $N_y = 101$, resultará em uma CSM que ocupa aproximadamente 1.6 GB por frequência. 
 
-\subsection{Inserindo dados experimentais}
+\subsection{Definindo as variáveis}
 
-O pacote AmT utiliza dois arquivos de texto contendo as variáveis relacionadas às condições do experimento e as variáveis relacionadas à geometria do aerofólio. Usaremos como exemplo os dois arquivos de configuração do teste ``DARP2016'', realizado no túnel de vento DARP da Universidade de Southampton, Reino Unido, e disponíveis no repositório GitHub do projeto.
+\subsubsection{Inserindo variáveis experimentais - método recomendado}
 
-O primeiro arquivo chama-se \verb|DARP2016_TestSetup.txt|, e os seus conteúdos estão indicados na listagem \ref{lst:TestSetup} abaixo; note que linhas vazias são ignoradas, e o caractere ``\#'' indica comentários. O programa lerá os valores em cada linha do arquivo, e os interpretará conforme indicado nas respectivas linhas.
+O pacote AmT pode ler as variáveis relacionadas às condições do experimento e à geometria do aerofólio a partir de dois arquivos de texto. Usaremos como exemplo os dois arquivos de configuração do experimento ``DARP2016'', realizado no túnel de vento DARP da Universidade de Southampton, Reino Unido, e disponíveis no repositório GitHub do projeto.
 
-\begin{lstlisting}[caption={Arquivo \texttt{DARP2016\_TestSetup.txt}}, label={lst:TestSetup}]
+O primeiro arquivo, chamado \verb|DARP2016_TestSetup.txt|, e os seus conteúdos estão indicados na listagem \ref{lst:TestSetup} abaixo; note que linhas vazias são ignoradas, e o caractere ``\#'' indica comentários. O programa lerá os valores em cada linha do arquivo, e os interpretará conforme indicado nas respectivas linhas. O arquivo deve conter as seguintes variáveis, listadas em ordem:
+
+\begin{itemize}
+	\item velocidade do som $c_0$ [m/s];
+	\item densidade do ar $\rho_0$ [kg/m$^3$];
+	\item pressão acústica de referência $p_{ref}$ [Pa RMS];
+	\item velocidade do escoamento $U_x$ [m/s];
+	\item intensidade de turbulência $\sqrt{\overline{w^2}}/U_x$ [adimensional];
+	\item escala de comprimento de turbulência $\Lambda$ [m];
+	\item altura da camada cisalhante $z_{sl}$ (para túnel de vento aberto) [m].
+\end{itemize}
+
+\begin{lstlisting}[caption={Arquivo \texttt{DARP2016\_TestSetup.txt}}, label={lst:TestSetup}, style=]
 # amiet_tools Test Setup file
 #
 # DARP2016 test setup, ISVR, Univ. of Southampton, UK
@@ -235,9 +251,16 @@ O primeiro arquivo chama-se \verb|DARP2016_TestSetup.txt|, e os seus conteúdos 
 -0.075	# z_sl			Shear layer height (aerofoil is at z=0) [m]
 \end{lstlisting}
 
-O segundo arquivo chama-se \verb|DARP2016AirfoilGeom.txt|, e contém variáveis relacionadas à geometria do aerofólio. Seus conteúdos estão indicados na listagem \ref{lst:AirfoilGeom} abaixo.
+O segundo arquivo chama-se \verb|DARP2016AirfoilGeom.txt|, e contém variáveis relacionadas à geometria do aerofólio. Seus conteúdos estão indicados na listagem \ref{lst:AirfoilGeom} abaixo. Este arquivo deve conter as seguintes variáveis, listadas em ordem:
 
-\begin{lstlisting}[caption={Arquivo \texttt{DARP2016\_AirfoilGeom.txt}}, label={lst:AirfoilGeom}]
+\begin{itemize}
+	\item semi corda do aerofólio $b$ [m];
+	\item semi envergadura do aerofólio $d$ [m];
+	\item número de pontos para amostragem da corda (não uniforme) $N_x$;
+	\item número de pontos para amostragem da envergadura (uniforme) $N_y$.
+\end{itemize}
+
+\begin{lstlisting}[caption={Arquivo \texttt{DARP2016\_AirfoilGeom.txt}}, label={lst:AirfoilGeom}, style=]
 # amiet_tools AirfoilGeom file
 #
 # DARP2016 flat plate airfoil, ISVR, Univ. of Southampton, UK
@@ -248,11 +271,12 @@ O segundo arquivo chama-se \verb|DARP2016AirfoilGeom.txt|, e contém variáveis 
 101		# Ny 		number of spanwise points (uniform sampl)
 \end{lstlisting}
 
-Para carregar os valores descritos nos arquivos de texto, usa-se o programa descrito na listagem \ref{lst:LoadingVars}. Primeiramente, o pacote AmT é importado pelo script. A função \verb|AmT.loadTestSetup| é usada para carregar as variáveis relacionadas às condições do experimento a partir do arquivo de texto fornecido como argumento, e cria um objeto - aqui chamado de \verb|DARP2016Setup| - para armazenar as variáveis. Este objeto é uma instância da classe \verb|TestSetup|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}.
+Para carregar os valores descritos nos arquivos de texto, recomenda-se usar os comandos em Python descrito na listagem \ref{lst:LoadingVars}. Primeiramente, o pacote \verb|numpy| e o pacote AmT são importados pelo script. A função \verb|AmT.loadTestSetup| é usada para carregar as variáveis relacionadas às condições do experimento a partir do arquivo de texto fornecido como argumento, e cria um objeto - aqui chamado de \verb|DARP2016Setup| - para armazenar estas variáveis. Este objeto é uma instância da classe \verb|TestSetup|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}.
 
-Similarmente, usa-se a função \verb|AmT.loadAirfoilGeom| para carregar variáveis relacionadas à geometria do aerofólio a a partir de um arquivo de texto. Esta criará um objeto - aqui chamado de \verb|DARP2016Airfoil| - para armazenar as dimensões do aerofólio e as configurações de amostragem de sua superfície. Este objeto é uma instância da classe \verb|AirfoilGeom|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}.
+Similarmente, usa-se a função \verb|AmT.loadAirfoilGeom| para carregar variáveis relacionadas à geometria do aerofólio a partir do arquivo de texto fornecido como argumento. Esta função criará um objeto - aqui chamado de \verb|DARP2016Airfoil| - para armazenar as dimensões do aerofólio e as configurações de amostragem de sua superfície. Este objeto é uma instância da classe \verb|AirfoilGeom|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}.
 
-\begin{lstlisting}[caption={Importando pacotes e carregando variáveis},label={lst:LoadingVars}]
+\begin{lstlisting}[caption={Método recomendado para importar pacotes e carregar variáveis},label={lst:LoadingVars}]
+import numpy as np
 import amiet_tools as AmT
 
 # load test setup from file
@@ -262,7 +286,9 @@ DARP2016Setup = AmT.loadTestSetup('../DARP2016_TestSetup.txt')
 DARP2016Airfoil = AmT.loadAirfoilGeom('../DARP2016_AirfoilGeom.txt')
 \end{lstlisting}
 
-Alternativamente, estas funções podem ser chamadas sem nenhum argumento de entrada; o objeto resultante irá conter as configurações do teste ``DARP2016'' por padrão, e estes podem ser modificados posteriormente dentro do script. Um exemplo deste método alternativo encontra-se na listagem \ref{lst:AltLoadingVars}, onde três variáveis são modificadas e recebem novos valores. Note, porém, que é necessário executar os métodos internos \verb|MyTestSetup._calc_secondary_vars()| e \verb|MyAirfoil._calc_grid()| para recalcular as variáveis secundárias depois das variáveis primárias serem redefinidas.
+\subsubsection{Inserindo variáveis experimentais - método alternativo}
+
+Alternativamente, estas funções podem ser chamadas sem nenhum argumento de entrada; os objetos resultantes conterão as configurações do teste ``DARP2016'' por padrão, e estes podem ser modificados posteriormente dentro do script. Um exemplo deste método alternativo encontra-se na listagem \ref{lst:AltLoadingVars}, onde três variáveis são modificadas e recebem novos valores. Note, porém, que é necessário executar os métodos internos \verb|MyTestSetup._calc_secondary_vars()| e \verb|MyAirfoil._calc_grid()| para recalcular as variáveis secundárias depois das variáveis primárias serem redefinidas.
 
 \begin{lstlisting}[caption={Método alternativo para carregar variáveis},label={lst:AltLoadingVars}]
 import amiet_tools as AmT
@@ -271,7 +297,7 @@ import amiet_tools as AmT
 MyTestSetup = AmT.loadTestSetup()
 MyAirfoil = AmT.loadAirfoilGeom()
 
-# Definir novos valores
+# Definindo novos valores
 MyTestSetup.Ux = 120
 MyTestSetup.turb_intensity = 0.05
 MyAirfoil.b = 0.15
@@ -281,17 +307,23 @@ MyTestSetup._calc_secondary_vars()
 MyAirfoil._calc_grid()
 \end{lstlisting}
 
-Desta forma, as diversas variáveis relacionadas ao setup experimental e ao aerofólio utilizado podem ser importadas e combinadas; por exemplo, pode-se simular dois aerofólios diferentes dentro das mesmas condições experimentais. As variáveis podem ser acessadas como atributos dos objetos criados (por exemplo, \verb|DARP2016Setup.c0| para acessar a velocidade do som), ou ainda podem ser exportadas diretamente para o ``namespace'' atual utilizando o método \verb|export_values| (pertencente às duas classes), conforme indicado na listagem \ref{lst:ExportingVars}. Desta forma, as variáveis agora existem tanto como atributos dos objetos criados quanto como variáveis independentes dentro do namespace atual, facilitando certos cálculos.
+Desta forma, as diversas variáveis relacionadas ao setup experimental e ao aerofólio utilizado podem ser importadas e combinadas; por exemplo, pode-se simular dois aerofólios diferentes dentro das mesmas condições experimentais. 
 
-\begin{lstlisting}[caption={Exportando as variáveis},label={lst:ExportingVars}]
-# export variables to current namespace
+\subsubsection{Acessando as variáveis experimentais}
+
+As variáveis podem ser acessadas como atributos dos objetos criados: por exemplo, usa-se o comando \verb|DARP2016Setup.c0| para acessar a velocidade do som contida neste objeto. As variáveis também podem ser exportadas diretamente para o ``namespace'' atual utilizando o método \verb|export_values| (pertencente às duas classes), conforme indicado na listagem \ref{lst:ExportingVars}. Desta forma, as variáveis agora existem tanto como atributos dos objetos criados quanto como variáveis independentes dentro do namespace atual, facilitando certos cálculos.
+
+\begin{lstlisting}[caption={Exportando as variáveis para o ``namespace'' atual},label={lst:ExportingVars}]
+# exportando variaveis para o namespace atual
 (c0, rho0, p_ref, Ux, turb_intensity, length_scale, z_sl, Mach, beta,
 flow_param, dipole_axis) = DARP2016Setup.export_values()
 
 (b, d, Nx, Ny, XYZ_airfoil, dx, dy) = DARP2016Airfoil.export_values()
 \end{lstlisting}
 
-Finalmente, as variáveis relacionadas à frequência temporal $f_0$ (em Hz) são criadas dentro do próprio código, dependendo do interesse do usuário. Neste exemplo inicial, vamos definir uma única frequência $f_0$ a partir da frequência normalizada pela corda $k_0 c = 5$. Para tal, definimos o valor desejado de $f_0$ (a partir da frequência não-dimensional $k_0 c$), e passamos esta variável e o objeto \verb|DARP2016TestSetup| como argumentos para a função \verb|AmT.FrequencyVars|, resultando no objeto aqui chamado \verb|FreqVars|. Este objeto é uma instância da classe \verb|FrequencyVariables|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}. Similarmente, os valores aqui calculados podem ser exportados para o namespace atual através do método \verb|FreqVars.export_values|.
+\subsubsection{Definindo as variáveis temporais}
+
+As variáveis relacionadas à frequência temporal $f$ (em Hz) são criadas dentro do próprio código, dependendo do interesse do usuário. Como exemplo, vamos definir uma única frequência $f_0$ a partir da frequência não dimensional normalizada pela corda $k_0 c = 5$. Para tal, definimos o valor desejado de $f_0$ (a partir da frequência não dimensional $k_0 c$), e passamos esta variável e o objeto \verb|DARP2016TestSetup| como argumentos para a função \verb|AmT.FrequencyVars|, resultando no objeto aqui chamado \verb|FreqVars|. Este objeto é uma instância da classe \verb|FrequencyVariables|, definida no pacote AmT; mais informações sobre as classes usadas no pacote AmT podem ser encontradas na Seção \ref{sec:ClassDescription}. Similarmente, os valores aqui calculados podem ser acessados como atributos do objeto \verb|FreqVars|, ou exportados para o namespace atual através do método \verb|FreqVars.export_values|.
 
 \begin{lstlisting}[caption={Criando variáveis relacionadas à frequência},label={lst:FrequencyVars}]
 # frequency of operation
@@ -301,6 +333,8 @@ f0 = kc*c0/(2*np.pi*(2*b))      # approx 1.8 kHz
 FreqVars = AmT.FrequencyVars(f0, DARP2016Setup)
 (k0, Kx, Ky_crit) = FreqVars.export_values()
 \end{lstlisting}
+
+Para cálculos envolvendo múltiplas frequências, recomenda-se realizar um loop sobre as frequências de interesse, e recalcular o objeto \verb|FreqVars| ao início de cada iteração.
 
 % *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 \section{Exemplos}
@@ -368,7 +402,7 @@ O pacote \verb|amiet_tools| utiliza classes - i.e. estruturas de abstração usa
 		\item \verb|TestSetup.rho0|: densidade do ar $\rho_0$ (em kg/m$^3$);
 		\item \verb|TestSetup.p_ref|: pressão acústica de referência $p_{ref} = 20 \mu$Pa RMS;
 		\item \verb|TestSetup.Ux|: velocidade média do escoamento $U_x$ (em m/s);
-		\item \verb|TestSetup.turb_intensity|: intensidade da turbulência $\overline{w^2}/U_x$;
+		\item \verb|TestSetup.turb_intensity|: intensidade da turbulência $\sqrt{\overline{w^2}}/U_x$;
 		\item \verb|TestSetup.length_scale|: escala de comprimento de turbulência $\Lambda$ (em m);
 		\item \verb|TestSetup.z_sl|: altura da camada cisalhante $z_{sl}$ (em m);
 		\item \verb|TestSetup.flow_dir|: caractere único indicando a direção do escoamento (i.e. `\verb|x|' para indicar escoamento na direção $+x$);
