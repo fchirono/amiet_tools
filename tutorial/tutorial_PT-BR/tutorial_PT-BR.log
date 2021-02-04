@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7400 64-bit) (preloaded format=pdflatex 2020.4.30)  28 JAN 2021 12:50
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7400 64-bit) (preloaded format=pdflatex 2020.4.30)  3 FEB 2021 18:48
 entering extended mode
 **./tutorial_PT-BR.tex
 (tutorial_PT-BR.tex
@@ -449,9 +449,13 @@ Package: IEEEtrantools 2015/08/26 V1.5 by Michael Shell
 \@IEEEeqncolcnt=\count292
 \@IEEEsubeqnnumrollback=\count293
 \IEEEPARstartletwidth=\dimen182
-) ("C:\Program Files\MiKTeX 2.9\tex/latex/base\textcomp.sty"
+) ("C:\Program Files\MiKTeX 2.9\tex/latex/upquote\upquote.sty"
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
+tim
+
+("C:\Program Files\MiKTeX 2.9\tex/latex/base\textcomp.sty"
 Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
-)
+))
 ("C:\Program Files\MiKTeX 2.9\tex/latex/listings\listings.sty"
 \lst@mode=\count294
 \lst@gtempboxa=\box49
@@ -480,7 +484,7 @@ Package: listings 2020/03/24 1.8d (Carsten Heinz)
 ("C:\Program Files\MiKTeX 2.9\tex/latex/listings\lstlang1.sty"
 File: lstlang1.sty 2020/03/24 1.8d listings language file
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 48.
+Package hyperref Info: Option `colorlinks' set `true' on input line 47.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/l3backend\l3backend-pdfmode.def"
 File: l3backend-pdfmode.def 2020-03-12 L3 backend support: PDF mode
@@ -490,22 +494,22 @@ File: l3backend-pdfmode.def 2020-03-12 L3 backend support: PDF mode
 (tutorial_PT-BR.aux)
 \openout1 = `tutorial_PT-BR.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 61.
-LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -566,7 +570,7 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 85.
 )
 \AtBeginShipoutBox=\box53
-Package hyperref Info: Link coloring ON on input line 61.
+Package hyperref Info: Link coloring ON on input line 64.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/hyperref\nameref.sty"
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
@@ -579,9 +583,9 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count309
 )
-LaTeX Info: Redefining \ref on input line 61.
-LaTeX Info: Redefining \pageref on input line 61.
-LaTeX Info: Redefining \nameref on input line 61.
+LaTeX Info: Redefining \ref on input line 64.
+LaTeX Info: Redefining \pageref on input line 64.
+LaTeX Info: Redefining \nameref on input line 64.
 
 (tutorial_PT-BR.out) (tutorial_PT-BR.out)
 \@outlinefile=\write3
@@ -589,152 +593,208 @@ LaTeX Info: Redefining \nameref on input line 61.
 
 \c@lstlisting=\count310
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 6
-3.
+6.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\t1lmtt.fd"
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 6
-3.
+6.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ot1lmr.fd"
 File: ot1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 6
-3.
+6.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\omllmm.fd"
 File: omllmm.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-63.
+66.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\omslmsy.fd"
 File: omslmsy.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-63.
+66.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\omxlmex.fd"
 File: omxlmex.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 63.
+(Font)              <12> on input line 66.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 63.
+(Font)              <8> on input line 66.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 63.
+(Font)              <6> on input line 66.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 65.
+(Font)              <10> on input line 68.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 65.
+(Font)              <7> on input line 68.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 65.
+(Font)              <5> on input line 68.
  [1
 
 {C:/Users/HironoASUS/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 8
-4.
+7.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmr.fd"
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 84.
+(Font)              <10.95> on input line 87.
  [2]
-<../figures/Oblique_Gust_aerofoil.pdf, id=115, 483.8075pt x 483.8075pt>
+<../figures/Oblique_Gust_aerofoil.pdf, id=116, 483.8075pt x 483.8075pt>
 File: ../figures/Oblique_Gust_aerofoil.pdf Graphic file (type pdf)
 <use ../figures/Oblique_Gust_aerofoil.pdf>
 Package pdftex.def Info: ../figures/Oblique_Gust_aerofoil.pdf  used on input li
-ne 122.
+ne 125.
 (pdftex.def)             Requested size: 273.14923pt x 273.1598pt.
-<../figures/gust_ProfGil_ITA_aula06.jpg, id=117, 1004.75375pt x 451.6875pt>
+ [3 <../figures/Oblique_Gust_aerofoil.pdf>]
+<../figures/gust_ProfGil_ITA_aula06.jpg, id=144, 1004.75375pt x 451.6875pt>
 File: ../figures/gust_ProfGil_ITA_aula06.jpg Graphic file (type jpg)
 <use ../figures/gust_ProfGil_ITA_aula06.jpg>
 Package pdftex.def Info: ../figures/gust_ProfGil_ITA_aula06.jpg  used on input 
-line 139.
+line 142.
 (pdftex.def)             Requested size: 364.19667pt x 163.7239pt.
- [3 <../figures/Oblique_Gust_aerofoil.pdf>]
-Overfull \hbox (21.2543pt too wide) in alignment at lines 171--175
+ [4 <../figures/gust_ProfGil_ITA_aula06.jpg>]
+Overfull \hbox (21.2543pt too wide) in alignment at lines 189--193
  [] [] [] [][]
  []
 
-[4 <../figures/gust_ProfGil_ITA_aula06.jpg>]
-Overfull \hbox (30.65233pt too wide) in alignment at lines 181--185
+
+Overfull \hbox (30.65233pt too wide) in alignment at lines 199--203
  [] [] [] [][]
  []
 
 [5]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 213.
+(Font)              <9> on input line 232.
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 235.
+nput line 254.
  [6
 
 ]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-283.
+306.
  ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmtt.fd"
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-) [7] [8]
-[9]
-Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 356.
+) [7]
+Package epstopdf Info: Source file: <../figures/Aerofoil_mesh.eps>
+(epstopdf)                    date: 2018-09-30 02:12:38
+(epstopdf)                    size: 181989 bytes
+(epstopdf)             Output file: <../figures/Aerofoil_mesh-eps-converted-to.
+pdf>
+(epstopdf)                    date: 2021-01-15 10:53:57
+(epstopdf)                    size: 7507 bytes
+(epstopdf)             Command: <epstopdf --outfile=../figures/Aerofoil_mesh-ep
+s-converted-to.pdf ../figures/Aerofoil_mesh.eps>
+(epstopdf)             \includegraphics on input line 316.
+Package epstopdf Info: Output file is already uptodate.
 
-Underfull \hbox (badness 10000) in paragraph at lines 384--385
+
+pdfTeX warning: pdflatex.exe (file ../figures/Aerofoil_mesh-eps-converted-to.pd
+f): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
+<../figures/Aerofoil_mesh-eps-converted-to.pdf, id=239, 433.62pt x 433.62pt>
+File: ../figures/Aerofoil_mesh-eps-converted-to.pdf Graphic file (type pdf)
+<use ../figures/Aerofoil_mesh-eps-converted-to.pdf>
+Package pdftex.def Info: ../figures/Aerofoil_mesh-eps-converted-to.pdf  used on
+ input line 316.
+(pdftex.def)             Requested size: 273.14923pt x 273.1622pt.
+
+Overfull \hbox (12.22835pt too wide) in paragraph at lines 332--333
+[][][]\T1/lmtt/m/n/10.95 flow_param = (flow_dir, Mach)[]\T1/lmr/m/n/10.95 : tu-
+pla de pa-râ-me-tros do es-co-a-mento, onde [][]\T1/lmtt/m/n/10.95 flow_dir
+ []
+
+[8 <../figures/Aerofoil_mesh-eps-converted-to.pdf>] [9] [10] [11]
+<../figures/DeltaP_Kphi_035.png, id=336, 462.528pt x 361.35pt>
+File: ../figures/DeltaP_Kphi_035.png Graphic file (type png)
+<use ../figures/DeltaP_Kphi_035.png>
+Package pdftex.def Info: ../figures/DeltaP_Kphi_035.png  used on input line 474
+.
+(pdftex.def)             Requested size: 295.90588pt x 231.18602pt.
+ [12 <../figures/DeltaP_Kphi_035.png>]
+<../figures/dir_XZ_Kphi_035.png, id=359, 433.62pt x 289.08pt>
+File: ../figures/dir_XZ_Kphi_035.png Graphic file (type png)
+<use ../figures/dir_XZ_Kphi_035.png>
+Package pdftex.def Info: ../figures/dir_XZ_Kphi_035.png  used on input line 526
+.
+(pdftex.def)             Requested size: 227.62206pt x 151.74721pt.
+<../figures/dir_YZ_Kphi_035.png, id=360, 433.62pt x 289.08pt>
+File: ../figures/dir_YZ_Kphi_035.png Graphic file (type png)
+<use ../figures/dir_YZ_Kphi_035.png>
+Package pdftex.def Info: ../figures/dir_YZ_Kphi_035.png  used on input line 530
+.
+(pdftex.def)             Requested size: 227.62206pt x 151.74721pt.
+
+Overfull \hbox (14.59998pt too wide) in paragraph at lines 526--531
+ [][][][] 
+ []
+
+[13] [14 <../figures/dir_XZ_Kphi_035.png> <../figures/dir_YZ_Kphi_035.png>]
+Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
+put line 545.
+
+Underfull \hbox (badness 10000) in paragraph at lines 573--574
 [] $\OML/lmm/m/it/10.95 S[]\OT1/lmr/m/n/10.95 (\OT1/lmr/bx/n/10.95 r[]\OML/lmm/
 m/it/10.95 ; \OT1/lmr/bx/n/10.95 r[]\OT1/lmr/m/n/10.95 ) \OMS/lmsy/m/n/10.95   
 \OT1/lmr/m/n/10.95 4\OML/lmm/m/it/10.95  [] \OMS/lmsy/m/n/10.95  [] 
  []
 
-[10
+[15
 
-] [11
+] [16
 
 ] (tutorial_PT-BR.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 443.
- [12
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 632.
+ [17
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 443.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 632.
  (tutorial_PT-BR.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 443.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 443.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 632.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 632.
 Package rerunfilecheck Info: File `tutorial_PT-BR.out' has not changed.
-(rerunfilecheck)             Checksum: E98D691CC88A86B05BCE2FD12A13E3A9;1450.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 443.
+(rerunfilecheck)             Checksum: B655B9748057C96CBE162473161AC4C6;1554.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 632.
  ) 
 Here is how much of TeX's memory you used:
- 12380 strings out of 480896
- 184897 string characters out of 2908230
- 750295 words of memory out of 3000000
- 27904 multiletter control sequences out of 15000+200000
- 619264 words of font info for 76 fonts, out of 3000000 for 9000
+ 12553 strings out of 480896
+ 188030 string characters out of 2908230
+ 769417 words of memory out of 3000000
+ 27985 multiletter control sequences out of 15000+200000
+ 619569 words of font info for 77 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 50i,8n,48p,1011b,1916s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 50i,10n,49p,1060b,1429s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Program Files/
 MiKTeX 2.9/fonts/enc/dvips/lm/lm-ec.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/
-dvips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathe
-x.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit.enc}{C:/Program
- Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-rm.enc}<C:/Program Files/MiKTeX 2.9/fon
-ts/type1/public/lm/lmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/l
-m/lmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmex10.pfb><C:/
-Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmmi10.pfb><C:/Program Files/MiK
-TeX 2.9/fonts/type1/public/lm/lmmi6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type
-1/public/lm/lmmi8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr10.
-pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr12.pfb><C:/Program Fi
-les/MiKTeX 2.9/fonts/type1/public/lm/lmr17.pfb><C:/Program Files/MiKTeX 2.9/fon
-ts/type1/public/lm/lmr6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/
-lmr8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr9.pfb><C:/Progra
-m Files/MiKTeX 2.9/fonts/type1/public/lm/lmri10.pfb><C:/Program Files/MiKTeX 2.
-9/fonts/type1/public/lm/lmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/pub
-lic/lm/lmsy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy8.pfb><
-C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtt10.pfb><C:/Program Files/
-MiKTeX 2.9/fonts/type1/public/lm/lmtt12.pfb><C:/Program Files/MiKTeX 2.9/fonts/
-type1/public/lm/lmtt9.pfb>
-Output written on tutorial_PT-BR.pdf (12 pages, 496161 bytes).
+dvips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-rm.en
+c}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathex.enc}{C:/Program Fil
+es/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit.enc}<C:/Program Files/MiKTeX 2.9/fon
+ts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
+/public/amsfonts/cm/cmr17.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/a
+msfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmbx10
+.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmbx12.pfb><C:/Program 
+Files/MiKTeX 2.9/fonts/type1/public/lm/lmex10.pfb><C:/Program Files/MiKTeX 2.9/
+fonts/type1/public/lm/lmmi10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/publi
+c/lm/lmmi6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmmi8.pfb><C:
+/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr10.pfb><C:/Program Files/MiK
+TeX 2.9/fonts/type1/public/lm/lmr12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type
+1/public/lm/lmr17.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr6.p
+fb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr8.pfb><C:/Program File
+s/MiKTeX 2.9/fonts/type1/public/lm/lmr9.pfb><C:/Program Files/MiKTeX 2.9/fonts/
+type1/public/lm/lmri10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/l
+msy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy6.pfb><C:/Prog
+ram Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy8.pfb><C:/Program Files/MiKTeX 2
+.9/fonts/type1/public/lm/lmtt10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/pu
+blic/lm/lmtt12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtt9.pfb
+>
+Output written on tutorial_PT-BR.pdf (17 pages, 646328 bytes).
 PDF statistics:
- 378 PDF objects out of 1000 (max. 8388607)
- 119 named destinations out of 1000 (max. 500000)
- 155 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 545 PDF objects out of 1000 (max. 8388607)
+ 200 named destinations out of 1000 (max. 500000)
+ 183 words of extra memory for PDF output out of 10000 (max. 10000000)
 

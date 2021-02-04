@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{10}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -46,6 +46,18 @@ Fabio {Casagrande Hirono}.
   Characterisation of Aerofoils}.
 \newblock {PhD Thesis}, Institute of Sound and Vibration Research - University
   of Southampton, Southampton - UK, 2018.
+
+\bibitem[Chapman(2000)]{Chapman00}
+C.~J. Chapman.
+\newblock Similarity variables for sound radiation in a uniform flow.
+\newblock \emph{Journal of Sound and Vibration}, 233, No. 1:\penalty0 157--164,
+  2000.
+
+\bibitem[Paruchuri(2017)]{Paruchuri2017}
+Chaitanya Paruchuri.
+\newblock \emph{Aerofoil geometry effects on turbulence interaction noise}.
+\newblock {PhD Thesis}, Institute of Sound and Vibration Research - University
+  of Southampton, Southampton - UK, 2017.
 
 \bibitem[Bahr et~al.(2017)Bahr, Jr., Ernst, Ahlefeldt, Spehr, Pereira, Leclere,
   Picard, Porteous, Moreaux, Fischer, and Doolan]{Bahr_etal2017}
