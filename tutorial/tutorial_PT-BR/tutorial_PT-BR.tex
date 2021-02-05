@@ -17,6 +17,8 @@
 \usepackage{algpseudocode}
 \usepackage[retainorgcmds]{IEEEtrantools}
 
+\usepackage[margin=10pt, font=small, labelfont=bf]{caption}  % customise caption style
+
 % from https://www.overleaf.com/learn/latex/code_listing
 \usepackage{upquote, textcomp}  % required for upticks in listings env
 \usepackage{listings}
@@ -127,7 +129,7 @@ As condições experimentais do problema estão indicadas na Figura \ref{fig:exp
 	\label{fig:experimental_setup}
 \end{figure}
 
-\subsubsection{Interação com uma rajada única}
+\subsubsection{Interação com uma rajada única - flutuação de pressão sobre o aerofólio}
 
 Um espectro contínuo de rajadas turbulentas senoidais ``congeladas'' move-se no plano $z=0$ com velocidade de convecção $U_x$, e cada rajada é definida por um par de números de onda hidrodinâmicos (isto é, vorticais) longitudinal e lateral $(k_\chi, k_\psi)$. Uma rajada única representa uma perturbação de velocidade vertical, conforme indicado na Figura \ref{fig:gust_airfoil_2D}, e é da forma
 
@@ -140,7 +142,7 @@ w(x, y, \omega) = \hat{w}_0(\kappa_\chi, k_\psi) e^{-j\kappa_\chi x} e^{-j k_\ps
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=0.8\textwidth]{../figures/gust_ProfGil_ITA_aula06.jpg}
-	\caption{Diagrama 2D indicando uma perturbação de velocidade vertical $w(x, t)$ (``rajada'' turbulenta) interagindo com um aerofólio. (Figura reproduzida a partir dos materiais da disciplina \emph{AA-220 -- Aerodinâmica Não Estacionária}, Prof. Dr. Roberto Gil Annes da Silva, ITA, Brasil -- \url{http://www.aer.ita.br/~gil/disciplinas/aa-220/aa2206.pdf}).}
+	\caption{Diagrama 2D indicando uma perturbação de velocidade vertical $w(x, t)$ (``rajada'' turbulenta) interagindo com um aerofólio. [Figura reproduzida a partir dos materiais da disciplina \emph{AA-220 -- Aerodinâmica Não Estacionária}, Prof. Dr. Roberto Gil Annes da Silva, ITA, Brasil -- \url{http://www.aer.ita.br/~gil/disciplinas/aa-220/aa2206.pdf}].}
 	\label{fig:gust_airfoil_2D}
 \end{figure}
 
@@ -152,7 +154,19 @@ Em resposta à incidência de uma única rajada turbulenta, haverá uma flutuaç
 \label{eq:DeltaP_SingleGust}
 \end{equation}
 
-\noindent onde $g$ é o salto de pressão não-dimensional sobre a corda $x_s$ devido a uma rajada $(\kappa_\chi, k_\psi)$.
+\noindent onde $g$ é o salto de pressão não-dimensional sobre a corda $x_s$ devido a uma rajada $(\kappa_\chi, k_\psi)$. Note que a distribuição da flutuação de pressão ao longo da envergadura apresenta o mesmo comportamento lateral da rajada turbulenta, dado por $e^{-j k_\psi y_s}$.
+
+O salto de pressão não dimensional $g(x_s, \kappa_\chi, k_\psi)$, também chamado de função de resposta do aerofólio, associa a distribuição da flutuação de pressão $\Delta p$ sobre a corda do aerofólio aos números de onda $(\kappa_\chi, k_\psi)$ da rajada turbulenta que o gerou. Alguns exemplos de $g$ para diferentes valores de $k_\psi$ estão plotados na Figura \ref{fig:Abs_gLE_kc50}. Esta função apresenta uma singularidade no bordo de ataque, e tende a zero no bordo de fuga.
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.85\textwidth]{../figures/Abs_gLE_ky_kc50.eps}
+	\caption{Magnitude da função de resposta do aerofólio $g(x_s)$ para diferentes rajadas turbulentas, em unidades arbitrárias. A linha sólida indica uma rajada de incidência paralela (supercrítica); as linhas tracejadas indicam rajadas supercríticas de incidência oblíqua; a linha traço e ponto indica uma rajada crítica; e as linhas pontilhadas indicam rajadas subcríticas; $k_0 c = 5$, $M_x \approx 0.17$. [Figura adaptada de \citet{Roger13}]}
+	\label{fig:Abs_gLE_kc50}
+\end{figure}
+
+\subsubsection{Interação com uma rajada única - radiação acústica}
 
 Segundo a analogia de Ffowcs Williams e Hawkings, o ruído gerado por esta interação pode ser calculado usando uma distribuição equivalente de fontes pontuais tipo dipolo, com a flutuação de pressão $\Delta p$ sobre o aerofólio exercendo o papel de amplitude dos dipolos equivalentes. Analiticamente, a pressão acústica $p(\mathbf{r}, \omega)$ recebida por um observador no ponto $\mathbf{r} = (x, y, z)$ é dada por
 
@@ -202,6 +216,18 @@ Por sua vez, a densidade espectral cruzada do campo acústico $S_{pp'}(\mathbf{r
 	\label{eq:Spp_cross_freq}
 \end{IEEEeqnarray}
 
+Vale observar que é comum expressar a densidade espectral cruzada no domínio da frequência temporal $f$ ao invés da frequência angular $\omega = 2 \pi f$, levando às expressões alternativas para as CSDs:
+
+\begin{equation}
+	S_{\Delta p \Delta p'} (x_s, x_s', y_s, y_s', f) = 2 \pi S_{\Delta p \Delta p'} (x_s, x_s', y_s, y_s', \omega),
+\end{equation}
+
+\begin{equation}
+	S_{p p'} (x, x', y, y', f) = 2 \pi S_{p p'} (x, x', y, y', \omega).
+\end{equation}
+
+Também é importante notar que todas as expressões aqui apresentadas para densidades espectrais estão definidas como espectros bilaterais (contendo frequências positivas e negativas). Frequentemente, é mais conveniente utilizar espectros unilaterais (contendo apenas frequências positivas) para comparar predições com medições experimentais. Ao utilizar espectros unilaterais, os espectros aqui apresentados devem ser multiplicados por um fator $2$.
+
 \subsubsection{Densidade espectral de número de onda da turbulência}
 
 Para a densidade espectral de número de onda da turbulência $\Phi_{ww}(k_\chi, k_\psi)$, pode-se por exemplo adotar o espectro energético de número de onda de von Karman \cite{Amiet75}, definido a partir da velocidade vertical média quadrática $\overline{w^2}$ e da escala de comprimento integral $\Lambda$ do escoamento. Esta densidade espectral possui a forma
@@ -229,7 +255,7 @@ Para a densidade espectral de número de onda da turbulência $\Phi_{ww}(k_\chi,
 
 \subsection{Requerimentos}
 
-O pacote \verb|amiet_tools| foi desenvolvido em linguagem Python 3.x, e tem como dependências os pacotes \verb|numpy| e \verb|scipy|. Para plotar resultados, esse tutorial usa o pacote \verb|matplotlib|, mas esta não é uma dependência do \AmT{}. Estes pacotes estão inclusos na ``\emph{Anaconda Python Distribution}''\footnote{Disponível em \url{https://www.anaconda.com/products/individual}.}, uma distribuição Python gratuita e de código aberto. A distribuição Anaconda é usada para desenvolver o pacote \AmT{}, e é a distribuição recomendada para usar \AmT{}.
+O pacote \verb|amiet_tools| foi desenvolvido em linguagem Python 3, e tem como dependências os pacotes \verb|numpy| e \verb|scipy|. Para plotar resultados, esse tutorial usa o pacote \verb|matplotlib|, mas esta não é uma dependência do \AmT{}. Estes pacotes estão inclusos na ``\emph{Anaconda Python Distribution}''\footnote{Disponível em \url{https://www.anaconda.com/products/individual}.}, uma distribuição Python gratuita e de código aberto. A distribuição Anaconda é usada para desenvolver o pacote \AmT{}, e é a distribuição recomendada para usar \AmT{}.
 
 %Assim como outros programas de computação científica, o pacote\AmT{} exige  certos recursos computacionais. Por exemplo, um aerofólio cuja superfície é discretizada com $(N_x, N_y)$ pontos terá a sua matriz de espectro cruzado (CSM) com $(N_x \times N_y)^2$ números complexos de precisão dupla (\verb|numpy.complex128|, 128 bits por número complexo), ocupando $(N_x \times N_y)^2 \times 128$ bits de memória RAM \emph{por frequência}. A amostragem padrão do pacote\AmT{}, com $N_x = 100$ e $N_y = 101$, resultará em uma CSM que ocupa aproximadamente 1.6 GB por frequência. 
 
