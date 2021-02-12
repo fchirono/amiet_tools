@@ -106,8 +106,10 @@ Este documento não busca explicar completamente a teoria por trás do modelo de
 	\item F. Casagrande Hirono, ``\emph{Far-Field Microphone Array Techniques for Acoustic Characterisation of Aerofoils}'', PhD Thesis, Institute of Sound and Vibration Research, University of Southampton, Southampton -- UK, 2018 \cite{Casagrande18}.
 \end{itemize}
 
-
-\subsection{O modelo de Amiet}
+% *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+\clearpage
+\newpage
+\section{O modelo de Amiet}
 
 Esta seção busca descrever os principais conceitos por trás do modelo de Amiet. O modelo estima as características do campo acústico radiado como função das condições experimentais do problema: as propriedades do escoamento turbulento, a geometria do aerofólio, e a localização dos observadores no campo acústico. Todos os cálculos são realizados no domínio da frequência (isto é, assume-se que todas as variáveis acústicas oscilam harmonicamente), e a cada frequência de interesse são realizadas três etapas:
 
@@ -129,7 +131,9 @@ As condições experimentais do problema estão indicadas na Figura \ref{fig:exp
 	\label{fig:experimental_setup}
 \end{figure}
 
-\subsubsection{Interação com uma rajada única - flutuação de pressão sobre o aerofólio}
+\subsection{Interação com uma rajada única}
+
+\subsubsection{Flutuação de pressão sobre o aerofólio}
 
 Um espectro contínuo de rajadas turbulentas senoidais ``congeladas'' move-se no plano $z=0$ com velocidade de convecção $U_x$, e cada rajada é definida por um par de números de onda hidrodinâmicos (isto é, vorticais) longitudinal e lateral $(k_\chi, k_\psi)$. Uma rajada única representa uma perturbação de velocidade vertical, conforme indicado na Figura \ref{fig:gust_airfoil_2D}, e é da forma
 
@@ -166,7 +170,7 @@ O salto de pressão não dimensional $g(x_s, \kappa_\chi, k_\psi)$, também cham
 	\label{fig:Abs_gLE_kc50}
 \end{figure}
 
-\subsubsection{Interação com uma rajada única - radiação acústica}
+\subsubsection{Radiação acústica}
 
 Segundo a analogia de Ffowcs Williams e Hawkings, o ruído gerado por esta interação pode ser calculado usando uma distribuição equivalente de fontes pontuais tipo dipolo, com a flutuação de pressão $\Delta p$ sobre o aerofólio exercendo o papel de amplitude dos dipolos equivalentes. Analiticamente, a pressão acústica $p(\mathbf{r}, \omega)$ recebida por um observador no ponto $\mathbf{r} = (x, y, z)$ é dada por
 
@@ -193,7 +197,47 @@ Se as condições experimentais adotam um túnel de vento aberto, a função de 
 
 Conforme descrito acima, a flutuação de pressão $\Delta p$ em resposta a uma única rajada turbulenta será completamente coerente --- isto é, todos os pontos na superfície do aerofólio flutuarão na mesma frequência e perfeitamente em fase, de forma estatisticamente \emph{dependente}, e o campo acústico $p$ gerado por esta interação exibirá efeitos de interferência construtiva e destrutiva entre as diferentes regiões do aerofólio.
 
-\subsubsection{Interação com múltiplas rajadas}
+
+\subsubsection{Implementação numérica}
+\label{sec:NumericalImplementation_SingleGust}
+
+Para calcular a radiação acústica recebida por uma série de observadores em $M$ posições $\mathbf{r}_m$, $m \in [1, \ldots, M]$, adotamos uma formulação matricial do problema. Primeiramente, definimos um vetor $\mathbf{p} = [p(\mathbf{r}_1), p(\mathbf{r}_2), \ldots, p(\mathbf{r}_M)]^T$ contendo as pressões acústicas nas $M$ posições de interesse. Este vetor de pressões acústicas está relacionado a um vetor contendo $N$ ``amplitudes de fonte'' discretizadas $\mathbf{q} = [q_1, \ldots, q_N]$ e a uma matriz de funções de transferências $\mathbf{G}$ da forma
+
+\begin{IEEEeqnarray}{rCl}
+	\mathbf{p} & = & \begin{bmatrix}
+		|				&	|				&			& | \\
+		\mathbf{g}_1	&	\mathbf{g}_2	&	\ldots 	& \mathbf{g}_N \\
+		|				&	|				&			& | \\
+	\end{bmatrix}
+	\begin{bmatrix}
+		q_1 \\
+		q_2 \\
+		\vdots \\
+		q_N
+	\end{bmatrix} \\
+	& = & \mathbf{G} \mathbf{q}.
+	\label{eq:ac_radiation_narrowband_discrete}
+\end{IEEEeqnarray}
+
+A matriz $\mathbf{G}$ contém as $M \times N$ funções de transferência ligando as $N$ fontes discretizadas à pressão acústica observada em $M$ pontos. Para popular a matriz $\mathbf{G}$, pode-se adotar a Equação \ref{eq:ConvDipole} para observadores imersos em um escoamento uniforme, ou ainda versões modificadas para incluir efeitos de refração acústica na camada cisalhante.
+
+Para definir o vetor de fontes $\mathbf{q}$, a superfície do aerofólio é discretizada em $N$ pontos $\mathbf{r}_{s,n}$, $n \in [1, \ldots, N]$. O pacote \AmT{} usa uma discretização não uniforme na direção da corda com $N_x$ pontos, e uma discretização uniforme na direção da envergadura com $N_y$ pontos, de forma que $N = N_x \cdot N_y$. Assim, cada amostra $\mathbf{r}_{s,n} = (x_{s,n}, y_{s,n})$ na superfície do aerofólio possuirá uma ``área'' equivalente $dx[n] \cdot dy[n]$. 
+
+Para que a Equação \ref{eq:ac_radiation_narrowband_discrete} seja uma aproximação discreta da Equação \ref{eq:ac_radiation_single_gust}, o vetor de fontes $\mathbf{q}$ é construído de forma que o seu $n$-ésimo elemento $q_n$ contenha a flutuação de pressão $\Delta p(x_{s,n}, y_{s,n})$ amostrada no ponto $\mathbf{r}_{s,n}$ multiplicado pela ``área'' equivalente $dx[n] \cdot dy[n]$ desta mesma amostra:
+
+\begin{equation}
+	\mathbf{q} =
+	\begin{bmatrix}
+		\Delta p(x_{s,1}, y_{s,1}) \cdot dx[1] \cdot dy[1] \\
+		\Delta p(x_{s,2}, y_{s,2}) \cdot dx[2] \cdot dy[2]  \\
+		\vdots \\
+		\Delta p(x_{s,N}, y_{s,N}) \cdot dx[N] \cdot dy[N]
+	\end{bmatrix}.
+\end{equation}
+
+A discretização da superfície do aerofólio é discutido em mais detalhes na Seção \ref{sec:SingleGustInteraction}.
+
+\subsection{Interação com múltiplas rajadas}
 
 Um escoamento turbulento isotrópico é um processo estocástico, e pode ser decomposto em um espectro contínuo de rajadas turbulentas incoerentes --- isto é, estatisticamente \emph{independentes} entre si. Portanto, a soma das contribuições de diferentes rajadas deve ser realizada de forma probabilística através das funções densidade espectral cruzada (CSD) da flutuação de pressão $S_{\Delta p \Delta p'}$ e do campo acústico $S_{pp'}$, que capturam as relações de magnitude e fase média destas grandezas entre dois pontos arbitrários.
 
@@ -243,6 +287,32 @@ Para a densidade espectral de número de onda da turbulência $\Phi_{ww}(k_\chi,
 
 \noindent onde $\check{k}_i = k_i/k_e$ e $\Gamma (\cdot)$ é a função gama. Outros modelos, tais como o de Liepmann \cite{Paruchuri2017}, também são possíveis.
 
+
+\subsubsection{Implementação numérica}
+
+Para a implementação numérica da interação com rajadas múltiplas, partimos da implementação para rajada única descrito na Seção \ref{sec:NumericalImplementation_SingleGust}, e definimos aqui uma matriz de espectro cruzado (\emph{cross-spectral matrix} - CSM) $\mathbf{S}_{pp'}$ do vetor de pressão acústica $\mathbf{p}$ da forma
+
+\begin{IEEEeqnarray}{rCl}
+	\mathbf{S}_{pp'} & = & \mathrm{E} \left\{\mathbf{p} \mathbf{p}^H \right\} \\
+	& = & \mathrm{E} \left\{ \begin{bmatrix}
+		p_1 p_1^*	&	p_1 p_2 ^*	&	\ldots	& p_1 p_M^* \\
+		p_2 p_1^*	&	p_2 p_2 ^*	&	\ldots 	& p_2 p_M^* \\
+		\vdots		&	\vdots		&	\ddots	& \vdots 	\\
+		p_M p_1^*	&	p_M p_2^*	&	\ldots	& p_M p_M^*
+	\end{bmatrix}\right\}.
+	\label{eq:mic_array_CSM}
+\end{IEEEeqnarray}
+
+Esta matriz de espectro cruzado está relacionada à matriz de funções de transferência $\mathbf{G}$ e às amplitudes de fonte $\mathbf{q}$ da forma
+
+\begin{IEEEeqnarray}{rCl}
+	\mathbf{S}_{pp'} & = & \mathrm{E} \left\{ \mathbf{p} \mathbf{p}^H \right\} \\
+		& = & \mathbf{G} \mathbf{S}_{qq'} \mathbf{G}^H,
+\end{IEEEeqnarray}
+
+\noindent onde $\mathbf{S}_{qq'} = \mathrm{E} \left\{ \mathbf{q} \mathbf{q}^H \right\}$ é a matriz de espectro cruzado das fontes $\mathbf{q}$.
+
+$\rightarrow$ cálculo da $\mathbf{S}_{qq'}$ a partir da $\mathbf{q}$ para rajada única!
 
 %\subsection{Aproximações de envergadura infinita e observador distante}
 
@@ -431,10 +501,12 @@ Para cálculos envolvendo múltiplas frequências, recomenda-se realizar um loop
 % *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 \newpage
 \section{Exemplos}
+\label{sec:Examples}
 
 Esta Seção irá descrever alguns aspectos dos scripts de teste contidos dentro do diretório \verb|test_scripts|, armazenados na página do projeto \AmT{} no GitHub. Este tutorial descreverá o uso das funções contidas no pacote \AmT{} e seus resultados, mas não descreverá em detalhes outras partes dos códigos, tais como comandos usados para plotar uma figura.
 
 \subsection{Exemplo 1: Interação de Rajada Única}
+\label{sec:SingleGustInteraction}
 
 Como primeiro exemplo, vamos usar o pacote \AmT{} para calcular a distribuição do ``salto'' de pressão $\Delta p(x_s, y_s)$ na superfície do aerofólio em resposta a uma única rajada turbulenta em uma única frequência, e as funções de diretividade do campo acústico nas direções da corda e da envergadura. Este exemplo corresponde ao script de teste \verb|TestScript1_SingleGustPlots.py|.
 
