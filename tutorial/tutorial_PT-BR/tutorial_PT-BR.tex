@@ -81,7 +81,7 @@ Em resumo, o modelo de Amiet decompõe um escoamento turbulento em uma soma de F
 
 Ao assumir que o aerofólio possui envergadura infinita (uma aproximação teórica para aerofólios de alta razão de aspecto, ou para envergaduras muito maiores que o comprimento de onda acústico), pode-se mostrar que uma única rajada senoidal será responsável por todo o ruído recebido por um observador distante. A expressão resultante desta simplificação relaciona a densidade espectral de potência (\emph{power spectral density} -- PSD) do ruído visto pelo observador diretamente às propriedades do escoamento turbulento e à geometria do aerofólio, evitando assim o cálculo da distribuição de fonte acústica sobre a superfície do aerofólio e da integral de radiação completa. Esta forma simplificada do modelo de Amiet é a mais popular, e é geralmente suficiente para se obter as tendências gerais do ruído radiado. 
 
-Porém, tais aproximações podem ser simplórias demais para problemas mais avançados, tais como o cálculo explícito do campo acústico próximo ao aerofólio, ou a inclusão de efeitos de envergadura finita ou de rajadas múltiplas. Sob estas condições, o modelo de Amiet requer o cálculo separado da distribuição de fontes e da integral de radiação, realizados de forma probabilística no domínio das funções densidade espectral cruzada (\emph{cross-power spectral density} -- CSD), aumentando significativamente a complexidade das operações necessárias. Neste caso, é interessante buscar uma implementação de referência do modelo de Amiet completo, permitindo que os pesquisadores possam obter resultados confiáveis rapidamente e não perder tempo com detalhes de implementação.
+Porém, tais aproximações podem ser simplórias demais para problemas mais avançados, tais como o cálculo explícito do campo acústico próximo ao aerofólio, ou a inclusão de efeitos de envergadura finita ou de rajadas múltiplas. Sob estas condições, o modelo de Amiet requer o cálculo separado da distribuição de fontes e da integral de radiação, realizados de forma probabilística através das funções densidade espectral cruzada (\emph{cross-power spectral density} -- CSD), aumentando significativamente a complexidade das operações necessárias. Neste caso, é interessante buscar uma implementação de referência do modelo de Amiet completo, permitindo que os pesquisadores possam obter resultados confiáveis rapidamente e não perder tempo com detalhes de implementação.
 
 Este documento busca introduzir o pacote \verb|amiet_tools| (abreviado por ``\AmT{}''), uma implementação de referência do modelo de Amiet completo para ruído de interação turbulência-aerofólio \cite{Casagrande_etal2020}, e explicar o seu uso. O pacote \AmT{} é desenvolvido em linguagem Python e disponibilizado com uma licença de código aberto, permitindo a sua distribuição, modificação e uso por diversos usuários em múltiplos sistemas operacionais. O pacote encontra-se hospedado na plataforma GitHub através do link:
 
@@ -160,7 +160,7 @@ Em resposta à incidência de uma única rajada turbulenta, haverá uma flutuaç
 
 \noindent onde $g$ é o salto de pressão não-dimensional sobre a corda $x_s$ devido a uma rajada $(\kappa_\chi, k_\psi)$. Note que a distribuição da flutuação de pressão ao longo da envergadura apresenta o mesmo comportamento lateral da rajada turbulenta, dado por $e^{-j k_\psi y_s}$.
 
-O salto de pressão não dimensional $g(x_s, \kappa_\chi, k_\psi)$, também chamado de função de resposta do aerofólio, associa a distribuição da flutuação de pressão $\Delta p$ sobre a corda do aerofólio aos números de onda $(\kappa_\chi, k_\psi)$ da rajada turbulenta que o gerou. Alguns exemplos de $g$ para diferentes valores de $k_\psi$ estão plotados na Figura \ref{fig:Abs_gLE_kc50}. Esta função apresenta uma singularidade no bordo de ataque, e tende a zero no bordo de fuga.
+O salto de pressão não dimensional $g(x_s, \kappa_\chi, k_\psi)$, também chamado de função de resposta do aerofólio, associa a distribuição da flutuação de pressão $\Delta p$ sobre a corda do aerofólio aos números de onda $(\kappa_\chi, k_\psi)$ da rajada turbulenta que o gerou. Alguns exemplos de $g$ para diferentes valores de $k_\psi$ estão plotados na Figura \ref{fig:Abs_gLE_kc50}. Esta função apresenta uma singularidade no bordo de ataque, e tende a zero no bordo de fuga devido à condição de Kutta.
 
 
 \begin{figure}
@@ -201,7 +201,7 @@ Conforme descrito acima, a flutuação de pressão $\Delta p$ em resposta a uma 
 \subsubsection{Implementação numérica}
 \label{sec:NumericalImplementation_SingleGust}
 
-Para calcular a radiação acústica recebida por uma série de observadores em $M$ posições $\mathbf{r}_m$, $m \in [1, \ldots, M]$, adotamos uma formulação matricial do problema. Primeiramente, definimos um vetor $\mathbf{p} = [p(\mathbf{r}_1), p(\mathbf{r}_2), \ldots, p(\mathbf{r}_M)]^T$ contendo as pressões acústicas nas $M$ posições de interesse. Este vetor de pressões acústicas está relacionado a um vetor contendo $N$ ``amplitudes de fonte'' discretizadas $\mathbf{q} = [q_1, \ldots, q_N]$ e a uma matriz de funções de transferências $\mathbf{G}$ da forma
+Para calcular numericamente a radiação acústica recebida por uma série de observadores em $M$ posições $\mathbf{r}_m$, $m \in [1, \ldots, M]$, adotamos uma formulação matricial do problema. Primeiramente, definimos um vetor $\mathbf{p} = [p(\mathbf{r}_1), p(\mathbf{r}_2), \ldots, p(\mathbf{r}_M)]^T$ contendo as pressões acústicas nas $M$ posições de interesse. Este vetor de pressões acústicas está relacionado a um vetor contendo $N$ ``amplitudes de fonte'' discretizadas $\mathbf{q} = [q_1, \ldots, q_N]$ e a uma matriz de funções de transferências $\mathbf{G}$ da forma
 
 \begin{IEEEeqnarray}{rCl}
 	\mathbf{p} & = & \begin{bmatrix}
@@ -221,7 +221,7 @@ Para calcular a radiação acústica recebida por uma série de observadores em 
 
 A matriz $\mathbf{G}$ contém as $M \times N$ funções de transferência ligando as $N$ fontes discretizadas à pressão acústica observada em $M$ pontos. Para popular a matriz $\mathbf{G}$, pode-se adotar a Equação \ref{eq:ConvDipole} para observadores imersos em um escoamento uniforme, ou ainda versões modificadas para incluir efeitos de refração acústica na camada cisalhante.
 
-Para definir o vetor de fontes $\mathbf{q}$, a superfície do aerofólio é discretizada em $N$ pontos $\mathbf{r}_{s,n}$, $n \in [1, \ldots, N]$. O pacote \AmT{} usa uma discretização não uniforme na direção da corda com $N_x$ pontos, e uma discretização uniforme na direção da envergadura com $N_y$ pontos, de forma que $N = N_x \cdot N_y$. Assim, cada amostra $\mathbf{r}_{s,n} = (x_{s,n}, y_{s,n})$ na superfície do aerofólio possuirá uma ``área'' equivalente $dx[n] \cdot dy[n]$. 
+Para definir o vetor de fontes $\mathbf{q}$, a superfície do aerofólio é discretizada em $N$ pontos $\mathbf{r}_{s,n}$, $n \in [1, \ldots, N]$. O pacote \AmT{} usa uma discretização não uniforme na direção da corda com $N_x$ pontos, e uma discretização uniforme na direção da envergadura com $N_y$ pontos, de forma que $N = N_x \cdot N_y$. Assim, cada amostra $\mathbf{r}_{s,n} = (x_{s,n}, y_{s,n})$ na superfície do aerofólio possuirá uma ``área'' equivalente $dx[n] \cdot dy[n]$, onde $dx$ varia em funcão de $n$ e $dy$ é constante. 
 
 Para que a Equação \ref{eq:ac_radiation_narrowband_discrete} seja uma aproximação discreta da Equação \ref{eq:ac_radiation_single_gust}, o vetor de fontes $\mathbf{q}$ é construído de forma que o seu $n$-ésimo elemento $q_n$ contenha a flutuação de pressão $\Delta p(x_{s,n}, y_{s,n})$ amostrada no ponto $\mathbf{r}_{s,n}$ multiplicado pela ``área'' equivalente $dx[n] \cdot dy[n]$ desta mesma amostra:
 
@@ -233,6 +233,7 @@ Para que a Equação \ref{eq:ac_radiation_narrowband_discrete} seja uma aproxima
 		\vdots \\
 		\Delta p(x_{s,N}, y_{s,N}) \cdot dx[N] \cdot dy[N]
 	\end{bmatrix}.
+	\label{eq:sourceVector_q}
 \end{equation}
 
 A discretização da superfície do aerofólio é discutido em mais detalhes na Seção \ref{sec:SingleGustInteraction}.
@@ -250,7 +251,14 @@ A densidade espectral cruzada da flutuação de pressão $S_{\Delta p \Delta p'}
 	\label{eq:SurfPressure_CSD}
 \end{IEEEeqnarray}
 
-\noindent onde $\Phi_{ww}(k_\chi, k_\psi)$ é a densidade espectral de número de onda da turbulência incidente. Observe que esta CSD é obtida a partir da integração sobre todos os números de onda laterais $k_\psi$ da turbulência, e portanto incorpora os efeitos de múltiplas rajadas.
+\noindent onde $\Phi_{ww}(k_\chi, k_\psi)$ é a densidade espectral de número de onda da turbulência incidente. Aqui usamos a relação de ortogonalidade entre os diferentes números de onda em um escoamento turbulento homgêneo \cite{Amiet75}, dada por
+
+\begin{equation}
+	\lim_{T \rightarrow \infty} \left[ \frac{\pi}{T} \mathrm{E} \left\{ w(\kappa_\chi, k_\psi) w^*(\kappa_\chi, k_\psi') \right\} \right] = U_x \delta(k_\psi - k_\psi') \Phi_{ww}(\kappa_\chi, k_\psi).
+	\label{eq:gust_orthogonality}
+\end{equation}
+
+Observe que a CSD apresentada na Equação \ref{eq:SurfPressure_CSD} é obtida a partir da integração sobre todos os números de onda laterais $k_\psi$ da turbulência, e portanto incorpora os efeitos de múltiplas rajadas.
 
 Por sua vez, a densidade espectral cruzada do campo acústico $S_{pp'}(\mathbf{r}, \mathbf{r}', \omega)$ entre dois observadores em $\mathbf{r}$ e $\mathbf{r}'$ é dada por
 
@@ -270,7 +278,7 @@ Vale observar que é comum expressar a densidade espectral cruzada no domínio d
 	S_{p p'} (x, x', y, y', f) = 2 \pi S_{p p'} (x, x', y, y', \omega).
 \end{equation}
 
-Também é importante notar que todas as expressões aqui apresentadas para densidades espectrais estão definidas como espectros bilaterais (contendo frequências positivas e negativas). Frequentemente, é mais conveniente utilizar espectros unilaterais (contendo apenas frequências positivas) para comparar predições com medições experimentais. Ao utilizar espectros unilaterais, os espectros aqui apresentados devem ser multiplicados por um fator $2$.
+Também é importante notar que todas as expressões aqui apresentadas para densidades espectrais estão definidas como espectros bilaterais,e contém frequências positivas e negativas. Frequentemente, é mais conveniente comparar predições com medições experimentais utilizando espectros unilaterais, contendo apenas frequências positivas. Ao utilizar espectros unilaterais, os espectros aqui apresentados devem ser multiplicados por um fator $2$ adicional.
 
 \subsubsection{Densidade espectral de número de onda da turbulência}
 
@@ -310,9 +318,20 @@ Esta matriz de espectro cruzado está relacionada à matriz de funções de tran
 		& = & \mathbf{G} \mathbf{S}_{qq'} \mathbf{G}^H,
 \end{IEEEeqnarray}
 
-\noindent onde $\mathbf{S}_{qq'} = \mathrm{E} \left\{ \mathbf{q} \mathbf{q}^H \right\}$ é a matriz de espectro cruzado das fontes $\mathbf{q}$.
+\noindent onde $\mathbf{S}_{qq'} = \mathrm{E} \left\{ \mathbf{q} \mathbf{q}^H \right\}$ é a matriz de espectro cruzado das fontes $\mathbf{q}$. Esta equação pode ser interpretada como uma versão discretizada da Equação \ref{eq:Spp_cross_freq}.
 
-$\rightarrow$ cálculo da $\mathbf{S}_{qq'}$ a partir da $\mathbf{q}$ para rajada única!
+A matriz de espectro cruzado $\mathbf{S}_{qq'}$ da fonte contém as relações de magnitude e fase média entre pontos arbitrários na fonte, e portanto a soma das contribuições das diferentes rajadas turbulentas pode ser realizada através desta matriz. Para tanto, realizamos o seguinte pseudocódigo para cada frequência de interesse:
+
+\begin{itemize}
+	\item Iniciar $\mathbf{S}_{qq'} \leftarrow \mathbf{0}_{M \times M}$;
+	\item Para cada rajada $k_\psi$:
+	\begin{itemize}
+		\item Calcular o vetor de fontes $\mathbf{q}$ (Eq. \ref{eq:sourceVector_q});
+		\item $\mathbf{S}_{qq'} \leftarrow \mathbf{S}_{qq'} + \left[ \mathbf{q} \mathbf{q}^H \right] \cdot U_x \cdot \Delta k_\psi$,
+	\end{itemize}
+\end{itemize}
+
+\noindent onde o termo $U_x$ surge a partir da relação de ortogonalidade entre as rajadas turbulentas (Eq. \ref{eq:gust_orthogonality}), e o termo $\Delta k_\psi$ representa o intervalo de discretização do número de onda lateral $k_\psi$.
 
 %\subsection{Aproximações de envergadura infinita e observador distante}
 
