@@ -6,7 +6,7 @@ Copyright (c) 2020, Fabio Casagrande Hirono
 
 TestScript5_CreateMicArrayCsm.py
 
-Test script 5: calculates and saves the microphone array CSM for a simulated 
+Test script 5: calculates and saves the microphone array CSM for a simulated
     flat-plate Aerofoil-turbulence Interaction Noise (ATIN) case. The aerofoil
     interacts with isotropic turbulence and radiates to the microphone array;
     the radiation includes the refraction effects at the planar shear layer.
@@ -115,15 +115,16 @@ xBounds = np.array([-0.25, 0.25])
 yBounds = np.array([-0.25, 0.25])
 zBounds = np.array([-0.075, 0.075])
 domainBounds = np.concatenate((xBounds[:, np.newaxis],
-                                yBounds[:, np.newaxis],
-                                zBounds[:, np.newaxis]), axis=1)
+                               yBounds[:, np.newaxis],
+                               zBounds[:, np.newaxis]), axis=1)
 
 # create object to store CSM Essential info for HDF5 file, populate with
-# initial data 
+# initial data
 CsmEss_DARP2016 = CsmEssH5.MicArrayCsmEss()
 CsmEss_DARP2016.caseID = 'DARP2016_FlatPlate_Analytical'
 
-CsmEss_DARP2016.binCenterFrequenciesHz = (freq+df/2).reshape((1, freq.shape[0]))
+CsmEss_DARP2016.binCenterFrequenciesHz = (
+    freq+df/2).reshape((1, freq.shape[0]))
 CsmEss_DARP2016.frequencyBinCount = freq.shape[0]
 
 CsmEss_DARP2016.CsmUnits = 'Pa^2/Hz'
@@ -157,17 +158,17 @@ CsmEss_DARP2016.writeToHDF5File()
 # code crashes or is interrupted
 
 # Open HDF5 file and create handles for CsmReal, CsmImaginary datasets
-with h5py.File(CsmEss_DARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5File:
-    
+with h5py.File(CsmEss_DARP2016.caseID + 'CsmEss.h5', 'a') as CsmEssH5File:
+
     CsmReal = CsmEssH5File['CsmData/CsmReal']
     CsmImaginary = CsmEssH5File['CsmData/CsmImaginary']
-    
+
     # set f=0 data to zeros
     CsmReal[:, :, 0] = np.zeros((M, M))
     CsmImaginary[:, :, 0] = np.zeros((M, M))
-    
+
     # iterate over freqs, skip f=0 Hz
-    
+
     # identify last successfully calculated index
     nonZeroCsm = np.nonzero(CsmReal[0, 0, 1:])[0]
     if nonZeroCsm.size == 0:
@@ -176,36 +177,37 @@ with h5py.File(CsmEss_DARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5File:
     else:
         # Csm has been partially calculated; start from last attempted freq
         i_last_success = nonZeroCsm[-1] + 1
-    
+
     for i, f in enumerate(freq[1+i_last_success:]):
         print('Calculating CSM at f = {:.1f} Hz...'.format(f))
-        
+
         # account for skipping zero and previous runs
         i += 1+i_last_success
-        
+
         # frequency-related variables
         FreqVars = AmT.FrequencyVars(f, DARP2016Setup)
         (k0, Kx, Ky_crit) = FreqVars.export_values()
-        
+
         # vector of spanwise hydrodynamic gust wavenumbers
         Ky_vec = AmT.ky_vector(b, d, k0, Mach, beta)
-        
+
         # gust energy spectrum (von Karman)
         Phi = AmT.Phi_2D(Kx, Ky_vec, Ux, turb_intensity, length_scale)[0]
-        
+
         # convected dipole transfer function - includes shear layer refraction
         Gdip = AmT.dipole_shear(XYZ_airfoil_calc, XYZ_array, XYZ_shearLayer,
                                 T_shearLayer, k0, c0, Mach)
-        
+
         # CSM of mic array pressures
         MicArrayCsm = AmT.calc_radiated_Spp(DARP2016Setup, DARP2016Airfoil,
                                             FreqVars, Ky_vec, Phi, Gdip)
-        
+
         # write real/imag components to HDF5 file, one freq/chunk at a time
         CsmReal[:, :, i] = MicArrayCsm.real
         # force diagonal of imaginary component to zero
-        CsmImaginary[:, :, i] = MicArrayCsm.imag - np.diag(np.diag(MicArrayCsm.imag))
-        
+        CsmImaginary[:, :, i] = MicArrayCsm.imag - \
+            np.diag(np.diag(MicArrayCsm.imag))
+
         # use garbage collector to recover some memory
         gc.collect()
 

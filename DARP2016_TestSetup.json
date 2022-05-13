@@ -1,0 +1,9 @@
+{
+    "c0" : 340,
+    "rho0" : 1.2,
+    "p_ref" : 20e-6,
+    "Ux" : 60,
+    "turb_intensity" : 0.025,
+    "length_scale" : 0.007,
+    "z_sl": -0.075
+}

@@ -92,7 +92,7 @@ ac_wavelength = 2*np.pi/k0
 # xy_phase_ref = np.array([XYZ_airfoil[0, 0, 2], 0])
 # ref_chord = '001c'
 
-## just before leading edge, mid span (10% chord)
+# just before leading edge, mid span (10% chord)
 #xy_phase_ref = np.array([0.8*(-b), 0])
 #ref_chord = '01c'
 
@@ -123,7 +123,8 @@ Ky, dKy = np.linspace(-ky_max, ky_max, (2*N_ky)+1, retstep=True)
 Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 
 # Calculate CSM for airfoil surface
-Sqq, Sqq_dxy = AmT.calc_airfoil_Sqq(DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
+Sqq, Sqq_dxy = AmT.calc_airfoil_Sqq(
+    DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
 
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # display cross-spectrum magnitude, phase and coherence on aerofoil surface
@@ -169,7 +170,7 @@ ax_XSpec_ph = plt.axes(rect_ax2)
 
 XSpec_ph = ax_XSpec_ph.pcolormesh(X_plane, Y_plane,
                                   np.angle(xspec_ref.reshape(X_plane.shape)),
-                                  vmin=-np.pi, vmax=np.pi, shading='nearest', 
+                                  vmin=-np.pi, vmax=np.pi, shading='nearest',
                                   cmap='seismic')
 ax_XSpec_ph.axis('equal')
 ax_XSpec_ph.set_xticks([])
@@ -198,7 +199,8 @@ XSpec_Co = ax_XSpec_Co.pcolormesh(X_plane, Y_plane, cohere_ref, vmin=0, vmax=1,
 ax_XSpec_Co.axis('equal')
 ax_XSpec_Co.set_xticks([])
 ax_XSpec_Co.set_yticks([])
-ax_XSpec_Co.set_title('$\gamma^2(\mathbf{r}_s, \mathbf{r}_{ref})$', fontsize=15)
+ax_XSpec_Co.set_title(
+    '$\gamma^2(\mathbf{r}_s, \mathbf{r}_{ref})$', fontsize=15)
 
 rect_cb3 = [0.66+left+width+0.02, bottom, 0.02, height]
 ax_cb3 = plt.axes(rect_cb3)

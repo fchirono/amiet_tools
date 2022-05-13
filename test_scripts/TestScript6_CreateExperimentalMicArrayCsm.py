@@ -88,10 +88,11 @@ xBounds = np.array([-0.25, 0.25])
 yBounds = np.array([-0.25, 0.25])
 zBounds = np.array([-0.075, 0.075])
 domainBounds = np.concatenate((xBounds[:, np.newaxis],
-                                yBounds[:, np.newaxis],
-                                zBounds[:, np.newaxis]), axis=1)
+                               yBounds[:, np.newaxis],
+                               zBounds[:, np.newaxis]), axis=1)
 
-CsmEss_ExpDARP2016.binCenterFrequenciesHz = (freq+df/2).reshape((1, freq.shape[0]))
+CsmEss_ExpDARP2016.binCenterFrequenciesHz = (
+    freq+df/2).reshape((1, freq.shape[0]))
 CsmEss_ExpDARP2016.frequencyBinCount = freq.shape[0]
 
 CsmEss_ExpDARP2016.CsmUnits = 'Pa^2/Hz'
@@ -143,7 +144,7 @@ CSM = CsmEssH5.CSM(signals, Ndft, fs, N_overlap, window)
 
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Open HDF5 file, automatically closes at end of loop
-with h5py.File(CsmEss_ExpDARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5:
+with h5py.File(CsmEss_ExpDARP2016.caseID + 'CsmEss.h5', 'a') as CsmEssH5:
 
     # Create handles for CsmReal, CsmImaginary datasets
     CsmReal = CsmEssH5['CsmData/CsmReal']
@@ -163,7 +164,7 @@ with h5py.File(CsmEss_ExpDARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5:
 # %%*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 # Test reading experimental CSM file: plot coherence-squared function across mics
 
-with h5py.File(CsmEss_ExpDARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5:
+with h5py.File(CsmEss_ExpDARP2016.caseID + 'CsmEss.h5', 'a') as CsmEssH5:
 
     # Create handles for CsmReal, CsmImaginary datasets
     CsmReal = CsmEssH5['CsmData/CsmReal']
@@ -171,14 +172,15 @@ with h5py.File(CsmEss_ExpDARP2016.caseID +'CsmEss.h5', 'a') as CsmEssH5:
 
     CsmComplex = CsmReal[:] + 1j*CsmImaginary[:]
 
-    line_styles=['-', '--', '-.', ':', '-']
+    line_styles = ['-', '--', '-.', ':', '-']
 
     plt.figure()
 
     for m in range(31, M):
         cohere_m = (np.abs(CsmComplex[0, m, :])**2
                     / np.real(CsmComplex[0, 0, :]*CsmComplex[m, m, :]))
-        plt.semilogx(freq, cohere_m, label='Mic {}'.format(m+1), linestyle=line_styles[m-31])
+        plt.semilogx(freq, cohere_m, label='Mic {}'.format(
+            m+1), linestyle=line_styles[m-31])
 
     plt.legend()
     plt.xlim(100, 20e3)

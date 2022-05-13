@@ -31,7 +31,7 @@ plt.close('all')
 
 
 def H(A):
-    """ Calculate the Hermitian conjugate transpose of a matrix 'A' """
+    """Calculate the Hermitian conjugate transpose of a matrix 'A'"""
     return A.conj().T
 
 
@@ -91,7 +91,8 @@ Ky = AmT.ky_vector(b, d, k0, Mach, beta, method='AcRad')
 Phi2 = AmT.Phi_2D(Kx, Ky, Ux, turb_intensity, length_scale, model='K')[0]
 
 # calculate source CSM
-Sqq, Sqq_dxy = AmT.calc_airfoil_Sqq(DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
+Sqq, Sqq_dxy = AmT.calc_airfoil_Sqq(
+    DARP2016Setup, DARP2016Airfoil, FreqVars, Ky, Phi2)
 
 # apply airfoil grid area weighting to source CSM
 Sqq *= Sqq_dxy
@@ -147,7 +148,6 @@ title_dir_XZ = ax_dir_XZ.set_title('Normalised Directivity on $y=0$ plane ($\phi
                                    fontsize=18, pad=-55)
 
 
-
 fig_dir_YZ = plt.figure(figsize=(6, 4))
 ax_dir_YZ = fig_dir_YZ.add_subplot(111, polar=True)
 plot_dir_YZ = ax_dir_YZ.plot(theta_farfield, 10*np.log10(np.abs(Spp_Ynorm)))
@@ -171,16 +171,5 @@ title_dir_YZ = ax_dir_YZ.set_title('Normalised Directivity on $x=0$ plane ($\phi
                                    fontsize=18, pad=-55)
 
 if save_fig:
-
-    if kc == 0.5:
-        fig_dir_XZ.savefig('MultGust_Xdir_kc05.png'.format(kc))
-        fig_dir_YZ.savefig('MultGust_Ydir_kc05.png'.format(kc))
-
-    elif kc == 5:
-        fig_dir_XZ.savefig('MultGust_Xdir_kc5.png'.format(kc))
-        fig_dir_YZ.savefig('MultGust_Ydir_kc5.png'.format(kc))
-
-    elif kc == 20:
-        fig_dir_XZ.savefig('MultGust_Xdir_kc20.png'.format(kc))
-        fig_dir_YZ.savefig('MultGust_Ydir_kc20.png'.format(kc))
-
+    fig_dir_XZ.savefig('MultGust_Xdir_kc_{}.png'.format(kc))
+    fig_dir_YZ.savefig('MultGust_Ydir_kc_{}.png'.format(kc))
