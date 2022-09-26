@@ -34,6 +34,14 @@ All dependencies are already included in the Anaconda Python Distribution, a
 free and open source distribution of Python. Anaconda 4.8.2 (with Python 3.7)
 was used to develop and test AmT, and is recommended for using AmT.
 
+## How to install:
+1. First make sure that you have the package [*setuptools*](https://pypi.org/project/setuptools/) installed.
+2. Install through pip, by using the following command:
+    ``` pip install git+https://github.com/fchirono/amiet_tools ```
+
+## How to uninstall:
+1. Uninstall with pip, by using the following command:
+    ``` pip uninstall amiet_tools ```
 
 ## Python Tutorials
 Here are some recommended tutorials on Python programming for scientists and engineers. All are of excellent quality, and discuss not only the Python language itself but also good programming practices in general:

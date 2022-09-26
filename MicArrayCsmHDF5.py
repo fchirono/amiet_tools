@@ -27,15 +27,14 @@ fchirono@gmail.com
 File name: <caseID>CsmEss.h5
 
 File structure:
-\
-    \MetaData
-        \revisionNumberMajor
+    -MetaData
+        -revisionNumberMajor
             Attribute, int
 
-        \revisionNumberMinor
+        -revisionNumberMinor
             Attribute, int
 
-        \dataLayout
+        -dataLayout
             Dataset, int
             Shape: (2, 3, 4) - (rows, columns, pages)
             Example data structure for validating data read orientation
@@ -46,85 +45,85 @@ File structure:
                          8 10 12]
                 etc.
 
-        \ArrayAttributes
-            \microphonePositionsM
+        -ArrayAttributes
+            -microphonePositionsM
                 Dataset, float
                 Shape: (microphoneCount, 3)
                 Each row contains a single mic (x, y, z) coordinate; in meters
 
-            \microphoneCount
+            -microphoneCount
                 Attribute, int
                 Number of microphones in array
 
 
-        \TestAttributes
-            \coordinateReference
+        -TestAttributes
+            -coordinateReference
                 Attribute, string
                 String describing coordinate reference frame and/or origin
 
-            \domainBoundsM
+            -domainBoundsM
                 Dataset, float
                 Shape: (2, 3)
                 Bounds of the volume containing the source region of interest
                 Rows are domain min,max; columns are x, y, z bounds; in meters
 
-            \flowType
+            -flowType
                 Attribute, string
                 String describing flow field
                 Ex.: 'no flow', 'uniform flow', 'open jet'
 
-            \testDescription
+            -testDescription
                 Attribute, string
                 String outlining details of simulation/measurement
 
 
-    \MeasurementData
-        \machNumber
+    -MeasurementData
+        -machNumber
             Dataset, float
             Mach number of flow field in x, y and z directions
             Shape: (1, 3)
 
-        \relativeHumidityPct
+        -relativeHumidityPct
             Dataset, float
 
-        \speedOfSoundMPerS
+        -speedOfSoundMPerS
             Dataset, float
 
-        \staticPressurePa
+        -staticPressurePa
             Dataset, float
 
-        \staticTemperatureK
+        -staticTemperatureK
             Dataset, float
 
-    \CsmData
-        \binCenterFrequenciesHz
+    -CsmData
+        -binCenterFrequenciesHz
             Dataset, float
             Shape: (1, frequencyBinCount)
 
-            \frequencyBinCount
+            -frequencyBinCount
                 Attribute, 32bit signed int [np.dtype('i4')]
 
-        \CsmImaginary
+        -CsmImaginary
             Dataset, float
             Shape: (microphoneCount, microphoneCount, frequencyBinCount)
             Chunk size: (microphoneCount, microphoneCount, 1)
 
-        \CsmReal
+        -CsmReal
             Dataset, float
             Shape: (microphoneCount, microphoneCount, frequencyBinCount)
             Chunk size: (microphoneCount, microphoneCount, 1)
 
-        \CsmUnits
+        -CsmUnits
             Attribute, string
             - 'Pa^2' for spectrumType 'narrowband' and 'octave-n';
             - 'Pa^2/Hz' for spectrumType 'psd';
 
-        \fftSign
+        -fftSign
             Attribute, int
             - sign of the exponent used to Fourier Transform the data (j*omega*t vs. -j*omega*t)
             - +1 or -1
 
-        \spectrumType
+        -spectrumType
             Attribute, string:
             - type of spectrum in CSM data
             - ex: 'narrowband', 'octave-n', 'psd'
@@ -186,7 +185,6 @@ class MicArrayCsmEss:
         self.flowType = ''
         self.testDescription = ''
 
-
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     def assertContents(self):
         """
@@ -194,7 +192,6 @@ class MicArrayCsmEss:
         (e.g. recently created but not used yet). This is a precondition for
         writing/saving to a HDF5 file.
         """
-
         hasData = True
 
         for attr, value in self.__dict__.items():
@@ -211,16 +208,15 @@ class MicArrayCsmEss:
 
         return hasData
 
-
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     def writeToHDF5File(self):
         """
         Writes current instance contents to <caseID>CsmEss.h5 file
         """
-
         # Assert whether object has been filled with data, stop writing .h5
         # file otherwise
-        assert(self.assertContents()), 'MicArrayCsmEss instance has empty attributes - cannot write <caseID>CsmEss.h5 file!'
+        assert(self.assertContents(
+        )), 'MicArrayCsmEss instance has empty attributes - cannot write <caseID>CsmEss.h5 file!'
 
         # Open file in the “append” mode - Read/write if exists, create otherwise
         with h5py.File(self.caseID + 'CsmEss.h5', 'w') as CsmEssFile:
@@ -229,24 +225,31 @@ class MicArrayCsmEss:
             CsmData = CsmEssFile.create_group('CsmData')
 
             binCenterFrequenciesHz = CsmData.create_dataset('binCenterFrequenciesHz',
-                                                            shape = (1, self.frequencyBinCount),
-                                                            data = self.binCenterFrequenciesHz,
-                                                            dtype = 'f8')
+                                                            shape=(
+                                                                1, self.frequencyBinCount),
+                                                            data=self.binCenterFrequenciesHz,
+                                                            dtype='f8')
             binCenterFrequenciesHz.attrs['frequencyBinCount'] = self.frequencyBinCount
 
             # CSM is first written as zeros, to be populated later in a
             # per-freq/per-chunk basis
             CsmData.create_dataset('CsmImaginary',
-                                    shape = (self.microphoneCount, self.microphoneCount, self.frequencyBinCount),
-                                    chunks = (self.microphoneCount, self.microphoneCount, 1),
-                                    data = np.zeros((self.microphoneCount, self.microphoneCount, self.frequencyBinCount)),
-                                    dtype = 'f8')
+                                   shape=(
+                                       self.microphoneCount, self.microphoneCount, self.frequencyBinCount),
+                                   chunks=(self.microphoneCount,
+                                           self.microphoneCount, 1),
+                                   data=np.zeros(
+                                       (self.microphoneCount, self.microphoneCount, self.frequencyBinCount)),
+                                   dtype='f8')
 
             CsmData.create_dataset('CsmReal',
-                                    shape = (self.microphoneCount, self.microphoneCount, self.frequencyBinCount),
-                                    chunks = (self.microphoneCount, self.microphoneCount, 1),
-                                    data = np.zeros((self.microphoneCount, self.microphoneCount, self.frequencyBinCount)),
-                                    dtype = 'f8')
+                                   shape=(
+                                       self.microphoneCount, self.microphoneCount, self.frequencyBinCount),
+                                   chunks=(self.microphoneCount,
+                                           self.microphoneCount, 1),
+                                   data=np.zeros(
+                                       (self.microphoneCount, self.microphoneCount, self.frequencyBinCount)),
+                                   dtype='f8')
 
             CsmData.attrs['CsmUnits'] = 'Pa^2/Hz'
             CsmData.attrs['fftSign'] = np.array([-1], dtype='i4')
@@ -256,24 +259,24 @@ class MicArrayCsmEss:
             MeasurementData = CsmEssFile.create_group('MeasurementData')
 
             MeasurementData.create_dataset('machNumber',
-                                           shape = (1, 3),
-                                           data = self.machNumber,
+                                           shape=(1, 3),
+                                           data=self.machNumber,
                                            dtype='f8')
             MeasurementData.create_dataset('relativeHumidityPct',
-                                           shape = (1,),
-                                           data = self.relativeHumidityPct,
+                                           shape=(1,),
+                                           data=self.relativeHumidityPct,
                                            dtype='f8')
             MeasurementData.create_dataset('speedOfSoundMPerS',
-                                           shape = (1,),
-                                           data = self.speedOfSoundMPerS,
+                                           shape=(1,),
+                                           data=self.speedOfSoundMPerS,
                                            dtype='f8')
             MeasurementData.create_dataset('staticPressurePa',
-                                           shape = (1,),
-                                           data = self.staticPressurePa,
+                                           shape=(1,),
+                                           data=self.staticPressurePa,
                                            dtype='f8')
             MeasurementData.create_dataset('staticTemperatureK',
-                                           shape = (1,),
-                                           data = self.staticTemperatureK,
+                                           shape=(1,),
+                                           data=self.staticTemperatureK,
                                            dtype='f8')
 
             # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -283,34 +286,31 @@ class MicArrayCsmEss:
             MetaData.attrs['revisionNumberMinor'] = np.array([4], dtype='i4')
 
             MetaData.create_dataset("dataLayout",
-                                    shape = (2, 3, 4),
-                                    data=np.arange(1, 25).reshape((2, 3, 4), order='F'),
+                                    shape=(2, 3, 4),
+                                    data=np.arange(1, 25).reshape(
+                                        (2, 3, 4), order='F'),
                                     dtype='i4')
 
             ArrayAttributes = MetaData.create_group("ArrayAttributes")
             ArrayAttributes.create_dataset("microphonePositionsM",
-                                           shape = (self.microphoneCount, 3),
-                                           data = self.microphonePositionsM,
+                                           shape=(self.microphoneCount, 3),
+                                           data=self.microphonePositionsM,
                                            dtype='f8')
             ArrayAttributes.create_dataset("microphoneCount",
-                                           shape = (1,),
-                                           data = self.microphoneCount,
+                                           shape=(1,),
+                                           data=self.microphoneCount,
                                            dtype='i4')
-
 
             TestAttributes = MetaData.create_group('TestAttributes')
             TestAttributes.attrs['coordinateReference'] = self.coordinateReference
 
             TestAttributes.create_dataset('domainBoundsM',
-                                          shape = (2, 3),
-                                          data = self.domainBoundsM,
+                                          shape=(2, 3),
+                                          data=self.domainBoundsM,
                                           dtype='f8')
 
             TestAttributes.attrs['flowType'] = self.flowType
             TestAttributes.attrs['testDescription'] = self.testDescription
-
-        # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     def readFromHDF5File(self, h5Filename):
@@ -324,20 +324,13 @@ class MicArrayCsmEss:
         If a message appears, use function 'print_hdf5_file_structure' to
         manually search for missing data and read it manually. These might be
         in wrong location, and/or saved as wrong type (dataset <-> attribute).
-
         """
-
         missingDataFlag = 0
 
         h5file = h5py.File(h5Filename, 'r')
 
-        if ('CsmEss.h5' in h5Filename):
-            # If name includes 'CsmEss.h5' string at the end, removes it:
-            self.caseID = h5Filename[:-9]
-        else:
-            # If not, remove only '.h5' ending
-            self.caseID = h5Filename[:-3]
-
+        self.caseID = h5Filename[:-
+                                 9] if 'CsmEss.h5' in h5Filename else h5Filename[:-3]
         # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         # MetaData group
 
@@ -350,11 +343,11 @@ class MicArrayCsmEss:
         if (self.revisionNumberMajor != RevisionNumberMajor
                 or self.revisionNumberMinor != RevisionNumberMinor):
             print('File revision No. ('
-                   + str(self.revisionNumberMajor) + '.'
-                   + str(self.revisionNumberMinor)
-                   + ') differs from current revision No. ('
-                   + str(RevisionNumberMajor) + '.'
-                   + str(RevisionNumberMinor) + ')!\n')
+                  + str(self.revisionNumberMajor) + '.'
+                  + str(self.revisionNumberMinor)
+                  + ') differs from current revision No. ('
+                  + str(RevisionNumberMajor) + '.'
+                  + str(RevisionNumberMinor) + ')!\n')
 
             # set flag to print message
             missingDataFlag = 1
@@ -371,13 +364,14 @@ class MicArrayCsmEss:
 
         self.coordinateReference = h5file['MetaData/TestAttributes'].attrs['coordinateReference']
 
-        if ('domainBoundsM' in list(h5file['MetaData/TestAttributes'].keys())):
+        if 'domainBoundsM' in list(h5file['MetaData/TestAttributes'].keys()):
             self.domainBoundsM = h5file['MetaData/TestAttributes/domainBoundsM'][:]
         else:
-            print("'domainBoundsM' not found as dataset under '/MetaData/TestAttributes' !")
+            print(
+                "'domainBoundsM' not found as dataset under '/MetaData/TestAttributes' !")
             missingDataFlag = 1
 
-        if ('flowType' in h5file['MetaData/TestAttributes'].attrs.keys()):
+        if 'flowType' in h5file['MetaData/TestAttributes'].attrs.keys():
             self.flowType = h5file['MetaData/TestAttributes'].attrs['flowType']
         else:
             print("'flowType' not found as attribute under '/MetaData/TestAttributes' !")
@@ -408,31 +402,31 @@ class MicArrayCsmEss:
         # search for info as dataset in '/MeasurementData':
         #   (some files have these as '/MetaData' attributes, others as
         #    '/MetaData/TestAttributes' attributes; if so, user must read by hand)
-        if ('machNumber' in h5file['MeasurementData'].keys()):
+        if 'machNumber' in h5file['MeasurementData'].keys():
             self.machNumber = h5file['MeasurementData/machNumber'][:]
         else:
             print("'machNumber' not found as dataset under '/MeasurementData' !")
             missingDataFlag = 1
 
-        if ('relativeHumidityPct' in h5file['MeasurementData'].keys()):
+        if 'relativeHumidityPct' in h5file['MeasurementData'].keys():
             self.relativeHumidityPct = h5file['MeasurementData/relativeHumidityPct'][:]
         else:
             print("'relativeHumidityPct' not found as dataset under '/MeasurementData' !")
             missingDataFlag = 1
 
-        if ('speedOfSoundMPerS' in h5file['MeasurementData'].keys()):
+        if 'speedOfSoundMPerS' in h5file['MeasurementData'].keys():
             self.speedOfSoundMPerS = h5file['MeasurementData/speedOfSoundMPerS'][:]
         else:
             print("'speedOfSoundMPerS' not found as dataset under '/MeasurementData' !")
             missingDataFlag = 1
 
-        if ('staticPressurePa' in h5file['MeasurementData'].keys()):
+        if 'staticPressurePa' in h5file['MeasurementData'].keys():
             self.staticPressurePa = h5file['MeasurementData/staticPressurePa'][:]
         else:
             print("'staticPressurePa' not found as dataset under '/MeasurementData' !")
             missingDataFlag = 1
 
-        if ('staticTemperatureK' in h5file['MeasurementData'].keys()):
+        if 'staticTemperatureK' in h5file['MeasurementData'].keys():
             self.staticTemperatureK = h5file['MeasurementData/staticTemperatureK'][:]
         else:
             print("'staticTemperatureK' not found as dataset under '/MeasurementData' !")
@@ -441,9 +435,12 @@ class MicArrayCsmEss:
         # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         # check missing data flag; print message if 1
         if missingDataFlag:
-            print('\n*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*')
-            print('  --->>> Check whether .h5 file data has been interpreted correctly! <<<---   ')
-            print('*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n')
+            print(
+                '\n*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*')
+            print(
+                '  --->>> Check whether .h5 file data has been interpreted correctly! <<<---   ')
+            print(
+                '*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n')
 
         # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         # close file
@@ -485,7 +482,6 @@ def print_hdf5_item_structure(g, offset='    '):
             print('    ', f_attr, ': ', g.attrs[f_attr])
 
     elif isinstance(g, h5py.Dataset):
-        # print('(Dataset)', g.name, '    shape =', g.shape)    # , g.dtype
         print('\n')
         print(offset + '[Dataset]', g.name)
         print(offset + 'shape =', g.shape)
@@ -509,7 +505,7 @@ def print_hdf5_item_structure(g, offset='    '):
         print('WARNING: UNKNOWN ITEM IN HDF5 FILE', g.name)
         sys.exit('EXECUTION IS TERMINATED')
 
-    if isinstance(g, h5py.File) or isinstance(g, h5py.Group):
+    if isinstance(g, (h5py.File, h5py.Group)):
         for key in g.keys():
             subg = g[key]
             # print(offset, key,)
@@ -521,25 +517,25 @@ def print_hdf5_item_structure(g, offset='    '):
 
 def CSM(mic_signals, N_dft, fs, N_overlap=None, window=None):
     """
-    Calculates the cross-spectral matrix (CSM) from an array of time-domain 
+    Calculates the cross-spectral matrix (CSM) from an array of time-domain
     microphone recordings using Welch's method.
-    
+
     Parameters
     ----------
     mic_signals : (M, signal_length) array_like
         Array containing the 'M' time-domain microphone signals, with
         'signal_length' samples.
-    
+
     N_dft : int
         Number of points used in DFT.
-    
+
     fs : int
         Sampling frequency in Hz.
-    
+
     N_overlap : int, optional
         Number of overlapping points when using Welch's method. Defaults to
         None, which is internally converted to 'N_dft//2'.
-    
+
     window : (N_dft,) array_like, optional
         1-D array containing coefficients of window function used in Welch's
         method. Defaults to None, which is internally converted to
@@ -547,16 +543,15 @@ def CSM(mic_signals, N_dft, fs, N_overlap=None, window=None):
 
     Returns
     -------
-    
+
     CSM : (M, M, N_dft) array_like
         Matrix containing the (M, M) mic array CSM for each frequency.
-    
+
     Notes
     -----
     The CSM is calculated so the 'm'-th element of its diagonal contains the
     'm'-th microphone PSD.
     """
-
     # define default 'N_overlap'
     if N_overlap is None:
         N_overlap = N_dft//2
@@ -607,13 +602,13 @@ def CSM(mic_signals, N_dft, fs, N_overlap=None, window=None):
 
 
 def speed_of_sound(Tc):
-    """ Returns the estimated speed of sound 'c' in air as a function of the
+    """
+    Returns the estimated speed of sound 'c' in air as a function of the
     ambient temperature 'temp' (in degrees Celsius).
 
     Uses Equation 5.6.6, p. 121, from Kinsler et al, "Fundamentals of
     Acoustics", 4th Ed., 2000.
     """
-
     # speed of sound in air at 0 deg Celsius and 1 atm pressure
     c0 = 331.5
 

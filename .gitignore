@@ -1,4 +1,6 @@
 __pycache__
+.vscode
+.vscode/settings.json
 *.pyc
 test_scripts/Ky_convergence_study.py
 test_scripts/line_mem_profiler.sh
